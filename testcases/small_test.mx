@@ -1,0 +1,16 @@
+class A {
+    int func1(int a, int b, int c)
+    {
+        if (a == 1)
+        {
+            Println("1");
+        }
+        else
+        {
+            Println("2");
+        }
+        a = new int[3][];
+        Println("Hello World");
+        return 0;
+    }
+}
