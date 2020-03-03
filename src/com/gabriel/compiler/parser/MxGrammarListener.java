@@ -270,35 +270,63 @@ public interface MxGrammarListener extends ParseTreeListener {
 	 */
 	void exitBlock(MxGrammarParser.BlockContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MxGrammarParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterStatement(MxGrammarParser.StatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxGrammarParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitStatement(MxGrammarParser.StatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxGrammarParser#controlStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterControlStatement(MxGrammarParser.ControlStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxGrammarParser#controlStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitControlStatement(MxGrammarParser.ControlStatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxGrammarParser#conditionalStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxGrammarParser#conditionalStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx);
+     * Enter a parse tree produced by {@link MxGrammarParser#statement}.
+     * @param ctx the parse tree
+     */
+    void enterStatement(MxGrammarParser.StatementContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link MxGrammarParser#statement}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitStatement(MxGrammarParser.StatementContext ctx);
+
+    /**
+     * Enter a parse tree produced by the {@code forStatement}
+     * labeled alternative in {@link MxGrammarParser#controlStatement}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterForStatement(MxGrammarParser.ForStatementContext ctx);
+
+    /**
+     * Exit a parse tree produced by the {@code forStatement}
+     * labeled alternative in {@link MxGrammarParser#controlStatement}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitForStatement(MxGrammarParser.ForStatementContext ctx);
+
+    /**
+     * Enter a parse tree produced by the {@code whileStatement}
+     * labeled alternative in {@link MxGrammarParser#controlStatement}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterWhileStatement(MxGrammarParser.WhileStatementContext ctx);
+
+    /**
+     * Exit a parse tree produced by the {@code whileStatement}
+     * labeled alternative in {@link MxGrammarParser#controlStatement}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitWhileStatement(MxGrammarParser.WhileStatementContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link MxGrammarParser#conditionalStatement}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link MxGrammarParser#conditionalStatement}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxGrammarParser#jumpStatement}.
 	 * @param ctx the parse tree

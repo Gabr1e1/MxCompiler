@@ -1,13 +1,17 @@
 // Generated from MxGrammar.g4 by ANTLR 4.8
 package com.gabriel.compiler.parser;
-import org.antlr.v4.runtime.atn.*;
-import org.antlr.v4.runtime.dfa.DFA;
+
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.ParserATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.tree.ParseTreeListener;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class MxGrammarParser extends Parser {
@@ -1831,41 +1835,98 @@ public class MxGrammarParser extends Parser {
 			_localctx.exception = re;
 			_errHandler.reportError(this, re);
 			_errHandler.recover(this, re);
-		}
-		finally {
+		} finally {
 			exitRule();
 		}
 		return _localctx;
 	}
 
 	public static class ControlStatementContext extends ParserRuleContext {
-		public ExpressionContext init;
-		public ExpressionContext condition;
-		public ExpressionContext increment;
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class,0);
-		}
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
-		}
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class,i);
-		}
 		public ControlStatementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_controlStatement; }
+
+		@Override
+		public int getRuleIndex() {
+			return RULE_controlStatement;
+		}
+
+		public ControlStatementContext() {
+		}
+
+		public void copyFrom(ControlStatementContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+
+	public static class WhileStatementContext extends ControlStatementContext {
+		public ExpressionContext condition;
+
+		public StatementContext statement() {
+			return getRuleContext(StatementContext.class, 0);
+		}
+
+		public ExpressionContext expression() {
+			return getRuleContext(ExpressionContext.class, 0);
+		}
+
+		public WhileStatementContext(ControlStatementContext ctx) {
+			copyFrom(ctx);
+		}
+
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MxGrammarListener ) ((MxGrammarListener)listener).enterControlStatement(this);
+			if (listener instanceof MxGrammarListener) ((MxGrammarListener) listener).enterWhileStatement(this);
 		}
+
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MxGrammarListener ) ((MxGrammarListener)listener).exitControlStatement(this);
+			if (listener instanceof MxGrammarListener) ((MxGrammarListener) listener).exitWhileStatement(this);
 		}
+
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxGrammarVisitor ) return ((MxGrammarVisitor<? extends T>)visitor).visitControlStatement(this);
+			if (visitor instanceof MxGrammarVisitor)
+				return ((MxGrammarVisitor<? extends T>) visitor).visitWhileStatement(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public static class ForStatementContext extends ControlStatementContext {
+		public ExpressionContext init;
+		public ExpressionContext condition;
+		public ExpressionContext increment;
+
+		public StatementContext statement() {
+			return getRuleContext(StatementContext.class, 0);
+		}
+
+		public List<ExpressionContext> expression() {
+			return getRuleContexts(ExpressionContext.class);
+		}
+
+		public ExpressionContext expression(int i) {
+			return getRuleContext(ExpressionContext.class, i);
+		}
+
+		public ForStatementContext(ControlStatementContext ctx) {
+			copyFrom(ctx);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof MxGrammarListener) ((MxGrammarListener) listener).enterForStatement(this);
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof MxGrammarListener) ((MxGrammarListener) listener).exitForStatement(this);
+		}
+
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if (visitor instanceof MxGrammarVisitor)
+				return ((MxGrammarVisitor<? extends T>) visitor).visitForStatement(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1878,21 +1939,22 @@ public class MxGrammarParser extends Parser {
 			setState(256);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
-			case T__35:
-				enterOuterAlt(_localctx, 1);
+				case T__35:
+					_localctx = new ForStatementContext(_localctx);
+					enterOuterAlt(_localctx, 1);
 				{
-				setState(234);
-				match(T__35);
-				setState(235);
-				match(T__6);
-				setState(237);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__6) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__33) | (1L << Identifier) | (1L << NumLiteral) | (1L << StringLiteral) | (1L << BoolLiteral) | (1L << NullLiteral) | (1L << This))) != 0)) {
-					{
-					setState(236);
-					((ControlStatementContext)_localctx).init = expression(0);
-					}
+					setState(234);
+					match(T__35);
+					setState(235);
+					match(T__6);
+					setState(237);
+					_errHandler.sync(this);
+					_la = _input.LA(1);
+					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__6) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__33) | (1L << Identifier) | (1L << NumLiteral) | (1L << StringLiteral) | (1L << BoolLiteral) | (1L << NullLiteral) | (1L << This))) != 0)) {
+						{
+							setState(236);
+							((ForStatementContext) _localctx).init = expression(0);
+						}
 				}
 
 				setState(239);
@@ -1902,8 +1964,8 @@ public class MxGrammarParser extends Parser {
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__6) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__33) | (1L << Identifier) | (1L << NumLiteral) | (1L << StringLiteral) | (1L << BoolLiteral) | (1L << NullLiteral) | (1L << This))) != 0)) {
 					{
-					setState(240);
-					((ControlStatementContext)_localctx).condition = expression(0);
+						setState(240);
+						((ForStatementContext) _localctx).condition = expression(0);
 					}
 				}
 
@@ -1914,32 +1976,33 @@ public class MxGrammarParser extends Parser {
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__6) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__33) | (1L << Identifier) | (1L << NumLiteral) | (1L << StringLiteral) | (1L << BoolLiteral) | (1L << NullLiteral) | (1L << This))) != 0)) {
 					{
-					setState(244);
-					((ControlStatementContext)_localctx).increment = expression(0);
+						setState(244);
+						((ForStatementContext) _localctx).increment = expression(0);
 					}
 				}
 
-				setState(247);
-				match(T__7);
-				setState(248);
-				statement();
+					setState(247);
+					match(T__7);
+					setState(248);
+					statement();
 				}
 				break;
-			case T__36:
-				enterOuterAlt(_localctx, 2);
+				case T__36:
+					_localctx = new WhileStatementContext(_localctx);
+					enterOuterAlt(_localctx, 2);
 				{
-				setState(249);
-				match(T__36);
-				setState(250);
-				match(T__6);
-				setState(252);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__6) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__33) | (1L << Identifier) | (1L << NumLiteral) | (1L << StringLiteral) | (1L << BoolLiteral) | (1L << NullLiteral) | (1L << This))) != 0)) {
-					{
-					setState(251);
-					((ControlStatementContext)_localctx).condition = expression(0);
-					}
+					setState(249);
+					match(T__36);
+					setState(250);
+					match(T__6);
+					setState(252);
+					_errHandler.sync(this);
+					_la = _input.LA(1);
+					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__6) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__16) | (1L << T__33) | (1L << Identifier) | (1L << NumLiteral) | (1L << StringLiteral) | (1L << BoolLiteral) | (1L << NullLiteral) | (1L << This))) != 0)) {
+						{
+							setState(251);
+							((WhileStatementContext) _localctx).condition = expression(0);
+						}
 				}
 
 				setState(254);

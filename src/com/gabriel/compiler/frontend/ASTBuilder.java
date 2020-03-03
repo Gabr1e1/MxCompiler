@@ -55,7 +55,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         scopes.push(newScope);
         List<ASTNode.Variable> variables = new ArrayList<>();
         List<ASTNode.Function> functions = new ArrayList<>();
-        ASTNode.Class ret = new ASTNode.Class(newScope, variables, functions);
+        ASTNode.Class ret = new ASTNode.Class(className, newScope, variables, functions);
 
         ctx.variableDeclaration().forEach((var) -> {
             List<ASTNode.Variable> vars = (List<ASTNode.Variable>) visit(var);
@@ -79,13 +79,13 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         ASTNode.TypeNode type = (ASTNode.TypeNode) visit(ctx.typename());
         if (ctx.expression() != null) {
             ASTNode.Expression expr = (ASTNode.Expression) visit(ctx.expression());
-            ASTNode.Variable ret = new ASTNode.Variable(curScope, type.type, ctx.Identifier(0).getText(), expr);
+            ASTNode.Variable ret = new ASTNode.Variable(type.type, ctx.Identifier(0).getText(), expr);
             curScope.addSymbol(ctx.Identifier(0).getText(), type.type);
             return new ASTNode.VariableList(Arrays.asList(ret));
         } else { //multiple declarations
             List<ASTNode.Variable> variables = new ArrayList<>();
             ctx.Identifier().forEach((id) -> {
-                variables.add(new ASTNode.Variable(curScope, type.type, id.getText(), null));
+                variables.add(new ASTNode.Variable(type.type, id.getText(), null));
                 curScope.addSymbol(id.getText(), type.type);
             });
             return new ASTNode.VariableList(variables);
@@ -114,19 +114,30 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx) {
         Scope newScope = new Scope(ctx.functionIdentifier.getText(), scopes.peek());
         scopes.push(newScope);
-        //TODO
+        ASTNode.TypeNode type = (ASTNode.TypeNode) visit(ctx.returnType);
+        String id = ctx.functionIdentifier.getText();
+        ASTNode.ParamList paramList = (ASTNode.ParamList) visit(ctx.parameterList());
+        ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
-        return null;
+        return new ASTNode.Function(newScope, type.type, id, paramList, block);
     }
 
     @Override
     public Node visitParameter(MxGrammarParser.ParameterContext ctx) {
-        return null;
+        Scope curScope = scopes.peek();
+        String id = ctx.Identifier().getText();
+        Type type = ((ASTNode.TypeNode) visit(ctx.typename())).type;
+        curScope.addSymbol(id, type);
+        return new ASTNode.Param(id, type);
     }
 
     @Override
     public Node visitParameterList(MxGrammarParser.ParameterListContext ctx) {
-        return null;
+        List<ASTNode.Param> list = new ArrayList<>();
+        ctx.parameter().forEach((param) -> {
+            list.add((ASTNode.Param) visit(param));
+        });
+        return new ASTNode.ParamList(list);
     }
 
     @Override
@@ -146,13 +157,13 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitStatement(MxGrammarParser.StatementContext ctx) {
-        return null;
+    public Node visitForStatement(MxGrammarParser.ForStatementContext ctx) {
+        return super.visitForStatement(ctx);
     }
 
     @Override
-    public Node visitControlStatement(MxGrammarParser.ControlStatementContext ctx) {
-        return null;
+    public Node visitWhileStatement(MxGrammarParser.WhileStatementContext ctx) {
+        return super.visitWhileStatement(ctx);
     }
 
     @Override

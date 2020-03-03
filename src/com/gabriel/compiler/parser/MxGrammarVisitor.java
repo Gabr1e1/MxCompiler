@@ -165,20 +165,36 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBlock(MxGrammarParser.BlockContext ctx);
+
 	/**
 	 * Visit a parse tree produced by {@link MxGrammarParser#statement}.
+	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatement(MxGrammarParser.StatementContext ctx);
+
 	/**
-	 * Visit a parse tree produced by {@link MxGrammarParser#controlStatement}.
+	 * Visit a parse tree produced by the {@code forStatement}
+	 * labeled alternative in {@link MxGrammarParser#controlStatement}.
+	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitControlStatement(MxGrammarParser.ControlStatementContext ctx);
+	T visitForStatement(MxGrammarParser.ForStatementContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code whileStatement}
+	 * labeled alternative in {@link MxGrammarParser#controlStatement}.
+	 *
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhileStatement(MxGrammarParser.WhileStatementContext ctx);
+
 	/**
 	 * Visit a parse tree produced by {@link MxGrammarParser#conditionalStatement}.
+	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

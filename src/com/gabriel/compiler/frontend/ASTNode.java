@@ -29,6 +29,7 @@ abstract class Node {
 
 public class ASTNode {
     public static class Program extends Node {
+        //TODO: delete redundant lists, info already in List<Node> children
         List<Node> classes, functions, variables;
 
         Program(Scope globalScope, List<Node> classes, List<Node> functions, List<Node> variables) {
@@ -42,16 +43,47 @@ public class ASTNode {
     public static class Class extends Node {
         List<Variable> variables;
         List<Function> functions;
+        String className;
 
-        Class(Scope scope, List<Variable> variables, List<Function> functions) {
+        Class(String className, Scope scope, List<Variable> variables, List<Function> functions) {
             super(scope);
+            this.className = className;
             this.variables = variables;
             this.functions = functions;
         }
     }
 
-    public static class Function extends Node {
+    public static class Param extends Node {
+        Type type;
+        String id;
 
+        Param(String id, Type type) {
+            this.id = id;
+            this.type = type;
+        }
+    }
+
+    public static class ParamList extends Node {
+        List<Param> paramList;
+
+        ParamList(List<Param> paramList) {
+            this.paramList = paramList;
+        }
+    }
+
+    public static class Function extends Node {
+        Type returnType;
+        String funcName;
+        ParamList paramList;
+        Block block;
+
+        Function(Scope scope, Type returnType, String funcName, ParamList paramList, Block block) {
+            super(scope);
+            this.returnType = returnType;
+            this.funcName = funcName;
+            this.paramList = paramList;
+            this.block = block;
+        }
     }
 
     public static class Variable extends Node {
@@ -59,8 +91,7 @@ public class ASTNode {
         String id;
         Expression Initilization;
 
-        Variable(Scope scope, Type type, String id, Expression Initilization) {
-            super(scope);
+        Variable(Type type, String id, Expression Initilization) {
             this.type = type;
             this.id = id;
             this.Initilization = Initilization;
@@ -102,7 +133,24 @@ public class ASTNode {
     }
 
     public static class Statement extends Node {
+    }
 
+    public static class ForStatement extends Statement {
+        Expression init, cond, incr;
+
+        public ForStatement(Expression init, Expression cond, Expression incr) {
+            this.init = init;
+            this.cond = cond;
+            this.incr = incr;
+        }
+    }
+
+    public static class WhileStatement extends Statement {
+        Expression cond;
+
+        public WhileStatement(Expression cond) {
+            this.cond = cond;
+        }
     }
 }
 

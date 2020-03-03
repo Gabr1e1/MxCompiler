@@ -79,8 +79,8 @@ statement
     ;
 
 controlStatement
-    : 'for' '(' init = expression? ';' condition = expression? ';' increment = expression? ')' statement
-    | 'while' '(' condition = expression? ')' statement
+    : 'for' '(' init = expression? ';' condition = expression? ';' increment = expression? ')' statement    #forStatement
+    | 'while' '(' condition = expression? ')' statement    #whileStatement
     ;
 conditionalStatement : 'if' '(' expression ')' statement ('else' statement)?;
 jumpStatement

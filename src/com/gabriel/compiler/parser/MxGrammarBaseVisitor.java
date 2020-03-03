@@ -185,21 +185,44 @@ public class MxGrammarBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitStatement(MxGrammarParser.StatementContext ctx) { return visitChildren(ctx); }
+	@Override
+	public T visitStatement(MxGrammarParser.StatementContext ctx) {
+		return visitChildren(ctx);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitControlStatement(MxGrammarParser.ControlStatementContext ctx) { return visitChildren(ctx); }
+	@Override
+	public T visitForStatement(MxGrammarParser.ForStatementContext ctx) {
+		return visitChildren(ctx);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) { return visitChildren(ctx); }
+	@Override
+	public T visitWhileStatement(MxGrammarParser.WhileStatementContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override
+	public T visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
+		return visitChildren(ctx);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
