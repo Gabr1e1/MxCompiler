@@ -1,3 +1,5 @@
+int[][][] a;
+
 class A {
     int func1(int a, int b, int c)
     {
@@ -9,7 +11,7 @@ class A {
         {
             Println("2");
         }
-        a = new int[3][];
+        int[][] a = new int[3][];
         Println("Hello World");
         return 0;
     }

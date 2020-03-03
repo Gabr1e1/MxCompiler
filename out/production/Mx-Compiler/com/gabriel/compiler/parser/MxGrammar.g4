@@ -1,23 +1,23 @@
 grammar MxGrammar;
 
-program : (class_definition | function_definition | variable_definition)*;
+program : (classDeclaration | functionDeclaration | variableDeclaration)*;
 
-class_definition : 'class' name = Identifier '{' (variable_definition | function_definition)* '}';
+classDeclaration : 'class' name = Identifier '{' (variableDeclaration | functionDeclaration)* '}';
 
-variable_definition
+variableDeclaration
     : typename Identifier ('=' expression)? ';'
     | typename (Identifier ',')? Identifier ';'
     ;
 
-typename : Primitive_type | Array_type;
+typename : Identifier | arrayType;
 
 expression
-    : basic_expression
+    : basicExpression
     | expression '.' Identifier
-    | new_expression
+    | newExpression
     | expression '[' expression ']'
-    | expression '(' expression_list ')'
-    | unary_expression
+    | expression '(' expressionList ')'
+    | unaryExpression
     | '(' expression ')'
     | op = ('~' | '!') expression
     | expression op = ('*' | '/' | '%') expression
@@ -32,7 +32,7 @@ expression
     | expression '||' expression
     | <assoc=right> expression '=' expression
     ;
-expression_list : expression (',' expression)*;
+expressionList : expression (',' expression)*;
 
 literal
     : NumLiteral
@@ -41,55 +41,56 @@ literal
     | NullLiteral
     ;
 
-basic_expression
+basicExpression
     : literal
     | This
     | Identifier
     ;
 
-unary_expression
-    : basic_expression
-    | unary_expression op = ('++' | '--')   //invalidating (a + b)++
-    | op = ('++' | '--' | '+' | '-') unary_expression
+unaryExpression
+    : basicExpression
+    | unaryExpression op = ('++' | '--')   //invalidating (a + b)++
+    | op = ('++' | '--' | '+' | '-') unaryExpression
     ;
 
-new_expression
-    : 'new' typename ('[' expression ']')+ '[]'*
-    | 'new' typename
+newExpression
+    : 'new' type = Identifier ('[' expression ']')+ '[]'*
+    | 'new' type = Identifier
     ;
 
-function_definition
-    : return_type = typename function_definition_identifier = Identifier '(' parameter_list? ')'
+functionDeclaration
+    : returnType = typename functionIdentifier = Identifier '(' parameterList? ')'
         block
     ;
 
 parameter : typename Identifier;
-parameter_list : parameter (',' parameter)*;
+parameterList : parameter (',' parameter)*;
 
 block : '{' statement* '}';
 
 statement
     : block
-    | variable_definition
-    | control_statement
-    | conditional_statement
-    | jump_statement
+    | variableDeclaration
+    | controlStatement
+    | conditionalStatement
+    | jumpStatement
     | expression? ';'
     ;
 
-control_statement
+controlStatement
     : 'for' '(' init = expression? ';' condition = expression? ';' increment = expression? ')' statement
     | 'while' '(' condition = expression? ')' statement
     ;
-conditional_statement : 'if' '(' expression ')' statement ('else' statement)?;
-jump_statement
+conditionalStatement : 'if' '(' expression ')' statement ('else' statement)?;
+jumpStatement
     : 'return' expression? ';'
     | 'break;'
     | 'continue;'
     ;
 
-Primitive_type : 'bool' | 'int' | 'void' | 'string';
-Array_type : Primitive_type ('[]')+;
+Identifier : [a-zA-Z_][a-zA-Z_0-9]*;
+PrimitiveType : 'bool' | 'int' | 'void' | 'string';
+arrayType: Identifier ('[]')+;
 
 NumLiteral : ('-')? [0-9]+;
 fragment StringCharacter : (~["\\\r\n]) | '\\' | '\n' | '\\"';
@@ -97,8 +98,7 @@ StringLiteral : '"' StringCharacter* '"';
 BoolLiteral : 'true' | 'false';
 NullLiteral : 'null';
 This : 'this';
-Identifier : [a-zA-Z_][a-zA-Z_0-9]*;
 
 WS : [ \t\r\n]+ -> skip;
-Block_comment : '/*' .*? '*/' -> skip;
-Line_comment : '/*' .*? '*/' ~[^\r\n]* -> skip;
+BlockComment : '/*' .*? '*/' -> skip;
+LineComment : '/*' .*? '*/' ~[^\r\n]* -> skip;
