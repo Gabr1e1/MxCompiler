@@ -29,8 +29,8 @@ expression
     | expression op = '&' expression                              # binaryExpr
     | expression op = '^' expression                              # binaryExpr
     | expression op = '|' expression                              # binaryExpr
-    | expression '&&' expression                                  # binaryExpr
-    | expression '||' expression                                  # binaryExpr
+    | expression op = '&&' expression                                  # logicExpr
+    | expression op = '||' expression                                  # logicExpr
     | <assoc=right> expression '=' expression                     # assignmentExpr
     ;
 expressionList : expression (',' expression)*;
@@ -46,12 +46,6 @@ basicExpression
     : literal
     | This
     | Identifier
-    ;
-
-unaryExpression
-    : basicExpression
-    | unaryExpression op = ('++' | '--')   //invalidating (a + b)++
-    | op = ('++' | '--' | '+' | '-') unaryExpression
     ;
 
 newExpression
@@ -84,9 +78,9 @@ controlStatement
     ;
 conditionalStatement : 'if' '(' expression ')' statement ('else' statement)?;
 jumpStatement
-    : 'return' expression? ';'
-    | 'break;'
-    | 'continue;'
+    : 'return' expression? ';'   # returnStmt
+    | 'break;'                   # breakStmt
+    | 'continue;'                # continueStmt
     ;
 
 Identifier : [a-zA-Z_][a-zA-Z_0-9]*;

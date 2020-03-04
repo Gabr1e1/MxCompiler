@@ -4,7 +4,7 @@ import com.gabriel.compiler.parser.MxGrammarBaseVisitor;
 import com.gabriel.compiler.parser.MxGrammarParser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -81,7 +81,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
             ASTNode.Expression expr = (ASTNode.Expression) visit(ctx.expression());
             ASTNode.Variable ret = new ASTNode.Variable(type.type, ctx.Identifier(0).getText(), expr);
             curScope.addSymbol(ctx.Identifier(0).getText(), type.type);
-            return new ASTNode.VariableList(Arrays.asList(ret));
+            return new ASTNode.VariableList(Collections.singletonList(ret));
         } else { //multiple declarations
             List<ASTNode.Variable> variables = new ArrayList<>();
             ctx.Identifier().forEach((id) -> {
@@ -148,7 +148,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         ASTNode.Block ret = new ASTNode.Block(newScope, statements);
 
         ctx.statement().forEach((statement) -> {
-            Node n = (ASTNode.Statement) visit(statement);
+            Node n = visit(statement);
             ret.addChild(n);
             statements.add((ASTNode.Statement) n);
         });
@@ -158,101 +158,139 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitForStatement(MxGrammarParser.ForStatementContext ctx) {
-        return super.visitForStatement(ctx);
+        ASTNode.Expression init = (ASTNode.Expression) visit(ctx.init);
+        ASTNode.Expression cond = (ASTNode.Expression) visit(ctx.condition);
+        ASTNode.Expression incr = (ASTNode.Expression) visit(ctx.increment);
+        ASTNode.Statement statement = (ASTNode.Statement) visit(ctx.statement());
+        return new ASTNode.ForStatement(init, cond, incr, statement);
     }
 
     @Override
     public Node visitWhileStatement(MxGrammarParser.WhileStatementContext ctx) {
-        return super.visitWhileStatement(ctx);
+        ASTNode.Expression cond = (ASTNode.Expression) visit(ctx.condition);
+        ASTNode.Statement statement = (ASTNode.Statement) visit(ctx.statement());
+        return new ASTNode.WhileStatement(cond, statement);
     }
 
     @Override
     public Node visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
-        return null;
+        return new ASTNode.ConditionalStatement((ASTNode.Expression) visit(ctx.expression()),
+                (ASTNode.Statement) visit(ctx.statement(0)),
+                (ASTNode.Statement) visit(ctx.statement(1)));
     }
 
     @Override
-    public Node visitJumpStatement(MxGrammarParser.JumpStatementContext ctx) {
-        return null;
+    public Node visitReturnStmt(MxGrammarParser.ReturnStmtContext ctx) {
+        return new ASTNode.ReturnStatement((ASTNode.Expression) visit(ctx.expression()));
+    }
+
+    @Override
+    public Node visitBreakStmt(MxGrammarParser.BreakStmtContext ctx) {
+        return new ASTNode.BreakStatement();
+    }
+
+    @Override
+    public Node visitContinueStmt(MxGrammarParser.ContinueStmtContext ctx) {
+        return new ASTNode.ContinueStatement();
     }
 
     @Override
     public Node visitAssignmentExpr(MxGrammarParser.AssignmentExprContext ctx) {
-        return super.visitAssignmentExpr(ctx);
-    }
-
-    @Override
-    public Node visitBasicExpr(MxGrammarParser.BasicExprContext ctx) {
-        return super.visitBasicExpr(ctx);
+        return new ASTNode.AssignExpression(
+                (ASTNode.Expression) visit(ctx.expression(0)),
+                (ASTNode.Expression) visit(ctx.expression(1)));
     }
 
     @Override
     public Node visitUnaryExpr(MxGrammarParser.UnaryExprContext ctx) {
-        return super.visitUnaryExpr(ctx);
+        return new ASTNode.UnaryExpression((ASTNode.Expression) visit(ctx.expression()), ctx.op.getText());
     }
 
     @Override
     public Node visitFuncExpr(MxGrammarParser.FuncExprContext ctx) {
-        return super.visitFuncExpr(ctx);
+        return new ASTNode.FuncExpression((ASTNode.Expression) visit(ctx.expression()),
+                (ASTNode.ExpressionList) visit(ctx.expressionList()));
     }
 
     @Override
     public Node visitArrayExpr(MxGrammarParser.ArrayExprContext ctx) {
-        return super.visitArrayExpr(ctx);
+        return new ASTNode.ArrayExpression(
+                (ASTNode.Expression) visit(ctx.expression(0)),
+                (ASTNode.Expression) visit(ctx.expression(1)));
     }
 
     @Override
     public Node visitMemberExpr(MxGrammarParser.MemberExprContext ctx) {
-        return super.visitMemberExpr(ctx);
+        return new ASTNode.MemberExpression((ASTNode.Expression) visit(ctx.expression()), ctx.Identifier().getText());
     }
 
     @Override
     public Node visitSuffixExpr(MxGrammarParser.SuffixExprContext ctx) {
-        return super.visitSuffixExpr(ctx);
+        return new ASTNode.SuffixExpression((ASTNode.Expression) visit(ctx.expression()), ctx.op.getText());
     }
 
     @Override
     public Node visitBinaryExpr(MxGrammarParser.BinaryExprContext ctx) {
-        return super.visitBinaryExpr(ctx);
-    }
-
-    @Override
-    public Node visitParenthesesExpr(MxGrammarParser.ParenthesesExprContext ctx) {
-        return super.visitParenthesesExpr(ctx);
-    }
-
-    @Override
-    public Node visitCreatorExpr(MxGrammarParser.CreatorExprContext ctx) {
-        return super.visitCreatorExpr(ctx);
+        return new ASTNode.BinaryExpression(
+                (ASTNode.Expression) visit(ctx.expression(0)),
+                (ASTNode.Expression) visit(ctx.expression(1)),
+                ctx.op.getText());
     }
 
     @Override
     public Node visitCmpExpr(MxGrammarParser.CmpExprContext ctx) {
-        return super.visitCmpExpr(ctx);
+        return new ASTNode.BinaryExpression(
+                (ASTNode.Expression) visit(ctx.expression(0)),
+                (ASTNode.Expression) visit(ctx.expression(1)),
+                ctx.op.getText());
+    }
+
+    @Override
+    public Node visitLogicExpr(MxGrammarParser.LogicExprContext ctx) {
+        return new ASTNode.LogicExpression(
+                (ASTNode.Expression) visit(ctx.expression(0)),
+                (ASTNode.Expression) visit(ctx.expression(1)),
+                ctx.op.getText());
     }
 
     @Override
     public Node visitExpressionList(MxGrammarParser.ExpressionListContext ctx) {
-        return super.visitExpressionList(ctx);
+        List<ASTNode.Expression> list = new ArrayList<>();
+        ctx.expression().forEach((expr) -> {
+            list.add((ASTNode.Expression) visit(expr));
+        });
+        return new ASTNode.ExpressionList(list);
     }
 
     @Override
     public Node visitLiteral(MxGrammarParser.LiteralContext ctx) {
-        return super.visitLiteral(ctx);
+        if (ctx.NumLiteral() != null)
+            return new ASTNode.ConstantExpression(Integer.parseInt(ctx.NumLiteral().getText()));
+        else {
+            if (ctx.StringLiteral() != null)
+                return new ASTNode.ConstantExpression(ctx.StringLiteral().getText(), false);
+            else if (ctx.BoolLiteral() != null)
+                return new ASTNode.ConstantExpression(ctx.BoolLiteral().getText(), false);
+            else return new ASTNode.ConstantExpression(ctx.NullLiteral().getText(), false);
+        }
+
     }
 
     @Override
     public Node visitBasicExpression(MxGrammarParser.BasicExpressionContext ctx) {
-        return super.visitBasicExpression(ctx);
-    }
-
-    @Override
-    public Node visitUnaryExpression(MxGrammarParser.UnaryExpressionContext ctx) {
-        return super.visitUnaryExpression(ctx);
+        if (ctx.This() != null) return new ASTNode.ConstantExpression("null", false);
+        else if (ctx.Identifier() != null) return new ASTNode.ConstantExpression(ctx.Identifier().getText(), true);
+        else return visit(ctx.literal());
     }
 
     @Override
     public Node visitNewExpression(MxGrammarParser.NewExpressionContext ctx) {
-        return super.visitNewExpression(ctx);
+        List<ASTNode.Expression> expressions = new ArrayList<>();
+        int dimension_total = ctx.getChildCount() - 4;
+        ctx.expression().forEach((expr) -> {
+            expressions.add((ASTNode.Expression) visit(expr));
+        });
+        return new ASTNode.NewExpression(new Type(ctx.type.getText(), dimension_total),
+                expressions, dimension_total - expressions.size());
     }
 }

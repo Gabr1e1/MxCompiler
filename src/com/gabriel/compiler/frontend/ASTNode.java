@@ -20,6 +20,7 @@ abstract class Node {
         this.children = new ArrayList<>();
     }
 
+    //TODO: Doesn't seem necessary...
     public void addChild(Node child) {
         if (child == null) return;
         child.father = this;
@@ -115,12 +116,8 @@ public class ASTNode {
         }
     }
 
-    public static class Expression extends Node {
-
-    }
-
     public static class Block extends Node {
-        List<Statement> statements = new ArrayList<Statement>();
+        List<Statement> statements;
 
         Block(Scope scope, List<Statement> statements) {
             super(scope);
@@ -137,20 +134,197 @@ public class ASTNode {
 
     public static class ForStatement extends Statement {
         Expression init, cond, incr;
+        Statement statement;
 
-        public ForStatement(Expression init, Expression cond, Expression incr) {
+        ForStatement(Expression init, Expression cond, Expression incr, Statement statement) {
             this.init = init;
             this.cond = cond;
             this.incr = incr;
+            this.statement = statement;
         }
     }
 
     public static class WhileStatement extends Statement {
         Expression cond;
+        Statement statement;
 
-        public WhileStatement(Expression cond) {
+        WhileStatement(Expression cond, Statement statement) {
             this.cond = cond;
+            this.statement = statement;
         }
     }
+
+    public static class ConditionalStatement extends Statement {
+        Expression cond;
+        Statement if_statement, else_statement;
+
+        ConditionalStatement(Expression cond, Statement if_statement, Statement else_statement) {
+            this.cond = cond;
+            this.if_statement = if_statement;
+            this.else_statement = else_statement;
+        }
+    }
+
+    public static class ReturnStatement extends Statement {
+        Expression expr;
+
+        ReturnStatement(Expression expr) {
+            this.expr = expr;
+        }
+    }
+
+    public static class BreakStatement extends Statement {
+    }
+
+    public static class ContinueStatement extends Statement {
+    }
+
+    public static class Expression extends Node {
+    }
+
+    public static class ExpressionList extends Node {
+        List<Expression> exprList;
+
+        ExpressionList(List<Expression> exprList) {
+            this.exprList = exprList;
+        }
+    }
+
+    public static class ConstantExpression extends Expression {
+        int numConstant;
+        String strConstant = "";
+        boolean isBool = false, boolConstant;
+        boolean isNull = false, isThis = false;
+        String id = "";
+
+        ConstantExpression(int a) {
+            this.numConstant = a;
+        }
+
+        ConstantExpression(String a, boolean isId) {
+            switch (a) {
+                case "true":
+                case "false":
+                    this.isBool = true;
+                    this.boolConstant = a.equals("true");
+                    break;
+                case "null":
+                    this.isNull = true;
+                    break;
+                case "this":
+                    this.isThis = true;
+                    break;
+                default:
+                    if (isId) this.id = a;
+                    else this.strConstant = a;
+                    break;
+            }
+        }
+        //TODO: methods that return to which constant type the expression belongs
+    }
+
+    public static class SuffixExpression extends Expression {
+        Expression expr;
+        String op;
+
+        SuffixExpression(Expression expr, String op) {
+            this.expr = expr;
+            this.op = op;
+        }
+    }
+
+    public static class UnaryExpression extends Expression {
+        Expression expr;
+        String op;
+
+        UnaryExpression(Expression expr, String op) {
+            this.expr = expr;
+            this.op = op;
+        }
+    }
+
+    public static class BinaryExpression extends Expression {
+        Expression expr1, expr2;
+        String op;
+
+        BinaryExpression(Expression expr1, Expression expr2, String op) {
+            this.expr1 = expr1;
+            this.expr2 = expr2;
+            this.op = op;
+        }
+    }
+
+    public static class CmpExpression extends Expression {
+        Expression expr1, expr2;
+        String op;
+
+        CmpExpression(Expression expr1, Expression expr2, String op) {
+            this.expr1 = expr1;
+            this.expr2 = expr2;
+            this.op = op;
+        }
+    }
+
+    public static class LogicExpression extends Expression {
+        Expression expr1, expr2;
+        String op;
+
+        LogicExpression(Expression expr1, Expression expr2, String op) {
+            this.expr1 = expr1;
+            this.expr2 = expr2;
+            this.op = op;
+        }
+    }
+
+    public static class AssignExpression extends Expression {
+        Expression expr1, expr2;
+
+        AssignExpression(Expression expr1, Expression expr2) {
+            this.expr1 = expr1;
+            this.expr2 = expr2;
+        }
+    }
+
+    public static class MemberExpression extends Node {
+        Expression expr;
+        String id;
+
+        MemberExpression(Expression expr, String id) {
+            this.expr = expr;
+            this.id = id;
+        }
+    }
+
+    public static class FuncExpression extends Node {
+        Expression expr;
+        ExpressionList exprList;
+
+        FuncExpression(Expression expr, ExpressionList exprList) {
+            this.expr = expr;
+            this.exprList = exprList;
+        }
+    }
+
+    public static class ArrayExpression extends Node {
+        Expression expr1, expr2;
+
+        ArrayExpression(Expression expr1, Expression expr2) {
+            this.expr1 = expr1;
+            this.expr2 = expr2;
+        }
+    }
+
+    public static class NewExpression extends Expression {
+        Type type;
+        List<Expression> expressions;
+        int dimension_left;
+
+        NewExpression(Type type, List<Expression> expressions, int dimension_left) {
+            this.type = type;
+            this.expressions = expressions;
+            this.dimension_left = dimension_left;
+        }
+    }
+
 }
 

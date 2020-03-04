@@ -11,3 +11,5 @@ build AST
 4. how to represent a type
     1. string: straightforward
     2. type: base, array(type, size list(-1 for undetermined))
+
+Antlr用visitor访问的时候如果不重载的话返回最后一个儿子返回的值
