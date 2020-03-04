@@ -20,7 +20,7 @@ abstract class Node {
         this.children = new ArrayList<>();
     }
 
-    //TODO: Doesn't seem necessary...
+    //TODO: this method doesn't seem necessary...
     public void addChild(Node child) {
         if (child == null) return;
         child.father = this;
@@ -99,14 +99,6 @@ public class ASTNode {
         }
     }
 
-    public static class VariableList extends Node {
-        public List<Variable> variables;
-
-        VariableList(List<Variable> variables) {
-            this.variables = variables;
-        }
-    }
-
     public static class TypeNode extends Node {
         public Type type;
 
@@ -116,7 +108,16 @@ public class ASTNode {
         }
     }
 
-    public static class Block extends Node {
+    public static class Statement extends Node {
+        Statement() {
+        }
+
+        Statement(Scope scope) {
+            super(scope);
+        }
+    }
+
+    public static class Block extends Statement {
         List<Statement> statements;
 
         Block(Scope scope, List<Statement> statements) {
@@ -129,7 +130,12 @@ public class ASTNode {
         }
     }
 
-    public static class Statement extends Node {
+    public static class VariableList extends Statement {
+        List<Variable> variables;
+
+        VariableList(List<Variable> variables) {
+            this.variables = variables;
+        }
     }
 
     public static class ForStatement extends Statement {

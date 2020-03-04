@@ -39,8 +39,8 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         });
 
         ctx.variableDeclaration().forEach((var) -> {
-            List<ASTNode.Variable> vars = (List<ASTNode.Variable>) visit(var);
-            vars.forEach((n) -> {
+            ASTNode.VariableList vars = (ASTNode.VariableList) visit(var);
+            vars.variables.forEach((n) -> {
                 cur.addChild(n);
                 variables.add(n);
             });
