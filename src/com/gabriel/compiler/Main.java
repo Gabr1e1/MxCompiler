@@ -8,9 +8,11 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import static java.lang.System.exit;
+
 public class Main {
     public static void main(String[] args) throws Exception {
-        //Build Concrete Syntax Tree
+//        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName("./testcases/small_test.mx");
         MxGrammarLexer lexer = new MxGrammarLexer(code);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -24,7 +26,7 @@ public class Main {
             System.out.println("AST successfully created");
         } catch (Exception e) {
             System.out.println(e.toString());
-            return;
+            exit(1);
         }
     }
 }

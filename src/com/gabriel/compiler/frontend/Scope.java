@@ -1,8 +1,9 @@
 package com.gabriel.compiler.frontend;
 
-import java.util.*;
+import com.gabriel.compiler.error.SemanticError;
 
-import com.gabriel.compiler.error.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Scope {
     public Scope father;
@@ -16,7 +17,7 @@ public class Scope {
     }
 
     //TODO: check if not equal to any function or class name
-    public void addSymbol(String id, Type type) throws Exception {
+    public void addSymbol(String id, Type type) {
         if (!symbolTable.containsKey(id)) {
             symbolTable.put(id, type);
         } else {

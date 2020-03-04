@@ -1,16 +1,16 @@
 package com.gabriel.compiler.error;
 
-import com.gabriel.compiler.frontend.Type;
-
+//not recoverable
 public class SemanticError {
-    public static class TypeMismatch extends Exception {
+    public static class TypeMismatch extends Error {
         public TypeMismatch(String _msg) {
             super("Type Mismatch: " + _msg);
         }
     }
 
-    public static class Redeclare extends Exception {
+    public static class Redeclare extends Error {
         public Redeclare(String _msg, String scopeName) {
             super("Redeclare: " + _msg + "in" + scopeName);
         }
-    }}
+    }
+}
