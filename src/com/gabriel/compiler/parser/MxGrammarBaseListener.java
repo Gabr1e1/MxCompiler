@@ -88,18 +88,6 @@ public class MxGrammarBaseListener implements MxGrammarListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterFuncExpr(MxGrammarParser.FuncExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -112,46 +100,43 @@ public class MxGrammarBaseListener implements MxGrammarListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterArrayExpr(MxGrammarParser.ArrayExprContext ctx) {
-	}
-
+	@Override public void enterUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitArrayExpr(MxGrammarParser.ArrayExprContext ctx) {
-	}
-
+	@Override public void exitUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterLogicExpr(MxGrammarParser.LogicExprContext ctx) {
-	}
-
+	@Override public void enterArrayExpr(MxGrammarParser.ArrayExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitLogicExpr(MxGrammarParser.LogicExprContext ctx) {
-	}
-
+	@Override public void exitArrayExpr(MxGrammarParser.ArrayExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterMemberExpr(MxGrammarParser.MemberExprContext ctx) {
-	}
-
+	@Override public void enterLogicExpr(MxGrammarParser.LogicExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLogicExpr(MxGrammarParser.LogicExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMemberExpr(MxGrammarParser.MemberExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -307,151 +292,103 @@ public class MxGrammarBaseListener implements MxGrammarListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBlock(MxGrammarParser.BlockContext ctx) {
-	}
-
+	@Override public void enterBlock(MxGrammarParser.BlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitBlock(MxGrammarParser.BlockContext ctx) {
-	}
-
+	@Override public void exitBlock(MxGrammarParser.BlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterStatement(MxGrammarParser.StatementContext ctx) {
-	}
-
+	@Override public void enterStatement(MxGrammarParser.StatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitStatement(MxGrammarParser.StatementContext ctx) {
-	}
-
+	@Override public void exitStatement(MxGrammarParser.StatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterForStatement(MxGrammarParser.ForStatementContext ctx) {
-	}
-
+	@Override public void enterForStatement(MxGrammarParser.ForStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitForStatement(MxGrammarParser.ForStatementContext ctx) {
-	}
-
+	@Override public void exitForStatement(MxGrammarParser.ForStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterWhileStatement(MxGrammarParser.WhileStatementContext ctx) {
-	}
-
+	@Override public void enterWhileStatement(MxGrammarParser.WhileStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitWhileStatement(MxGrammarParser.WhileStatementContext ctx) {
-	}
-
+	@Override public void exitWhileStatement(MxGrammarParser.WhileStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
-	}
-
+	@Override public void enterConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
-	}
-
+	@Override public void exitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterReturnStmt(MxGrammarParser.ReturnStmtContext ctx) {
-	}
-
+	@Override public void enterReturnStmt(MxGrammarParser.ReturnStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitReturnStmt(MxGrammarParser.ReturnStmtContext ctx) {
-	}
-
+	@Override public void exitReturnStmt(MxGrammarParser.ReturnStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterBreakStmt(MxGrammarParser.BreakStmtContext ctx) {
-	}
-
+	@Override public void enterBreakStmt(MxGrammarParser.BreakStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitBreakStmt(MxGrammarParser.BreakStmtContext ctx) {
-	}
-
+	@Override public void exitBreakStmt(MxGrammarParser.BreakStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterContinueStmt(MxGrammarParser.ContinueStmtContext ctx) {
-	}
-
+	@Override public void enterContinueStmt(MxGrammarParser.ContinueStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void exitContinueStmt(MxGrammarParser.ContinueStmtContext ctx) {
-	}
-
+	@Override public void exitContinueStmt(MxGrammarParser.ContinueStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override
-	public void enterArrayType(MxGrammarParser.ArrayTypeContext ctx) { }
+	@Override public void enterArrayType(MxGrammarParser.ArrayTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

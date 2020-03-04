@@ -1,18 +1,11 @@
-int[][][] a;
+int[][][] a = 3 + 5 * 7;
+int b,c,d;
 
- class A {
-     int func1(int a, int b, int c)
-     {
-         if (a == 1)
-         {
-             Println("1");
-         }
-         else
-         {
-             Println("2");
-         }
-         int[][] a = new int[3][];
-         Println("Hello World");
-         return 0;
-     }
+class A {
+ int func1(int a, int b, int c)
+ {
+     int[][] a = new int[3][];
+     Println("Hello World");
+     return 0;
  }
+}

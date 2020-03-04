@@ -59,6 +59,13 @@ public class MxGrammarBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitFuncExpr(MxGrammarParser.FuncExprContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
@@ -66,44 +73,21 @@ public class MxGrammarBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitFuncExpr(MxGrammarParser.FuncExprContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitArrayExpr(MxGrammarParser.ArrayExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitArrayExpr(MxGrammarParser.ArrayExprContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitLogicExpr(MxGrammarParser.LogicExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitLogicExpr(MxGrammarParser.LogicExprContext ctx) {
-		return visitChildren(ctx);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override
-	public T visitMemberExpr(MxGrammarParser.MemberExprContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitMemberExpr(MxGrammarParser.MemberExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -187,103 +171,68 @@ public class MxGrammarBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitParameterList(MxGrammarParser.ParameterListContext ctx) { return visitChildren(ctx);
-	}
-
+	@Override public T visitParameterList(MxGrammarParser.ParameterListContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitBlock(MxGrammarParser.BlockContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitBlock(MxGrammarParser.BlockContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitStatement(MxGrammarParser.StatementContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitStatement(MxGrammarParser.StatementContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitForStatement(MxGrammarParser.ForStatementContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitForStatement(MxGrammarParser.ForStatementContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitWhileStatement(MxGrammarParser.WhileStatementContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitWhileStatement(MxGrammarParser.WhileStatementContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitReturnStmt(MxGrammarParser.ReturnStmtContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitReturnStmt(MxGrammarParser.ReturnStmtContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitBreakStmt(MxGrammarParser.BreakStmtContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitBreakStmt(MxGrammarParser.BreakStmtContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitContinueStmt(MxGrammarParser.ContinueStmtContext ctx) {
-		return visitChildren(ctx);
-	}
-
+	@Override public T visitContinueStmt(MxGrammarParser.ContinueStmtContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override
-	public T visitArrayType(MxGrammarParser.ArrayTypeContext ctx) { return visitChildren(ctx); }
+	@Override public T visitArrayType(MxGrammarParser.ArrayTypeContext ctx) { return visitChildren(ctx); }
 }

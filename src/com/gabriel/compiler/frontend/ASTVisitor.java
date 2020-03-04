@@ -19,6 +19,7 @@ public interface ASTVisitor {
     void visit(ASTNode.ReturnStatement node);
     void visit(ASTNode.BreakStatement node);
     void visit(ASTNode.ContinueStatement node);
+    void visit(ASTNode.ExprStatement node);
 
     void visit(ASTNode.Expression node);
     void visit(ASTNode.ExpressionList node);

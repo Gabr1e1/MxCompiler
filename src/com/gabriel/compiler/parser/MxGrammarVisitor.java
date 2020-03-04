@@ -49,6 +49,13 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBasicExpr(MxGrammarParser.BasicExprContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code funcExpr}
+	 * labeled alternative in {@link MxGrammarParser#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFuncExpr(MxGrammarParser.FuncExprContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code unaryExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
 	 * @param ctx the parse tree
@@ -56,40 +63,26 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitUnaryExpr(MxGrammarParser.UnaryExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code funcExpr}
-	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFuncExpr(MxGrammarParser.FuncExprContext ctx);
-
-	/**
 	 * Visit a parse tree produced by the {@code arrayExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitArrayExpr(MxGrammarParser.ArrayExprContext ctx);
-
 	/**
 	 * Visit a parse tree produced by the {@code logicExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitLogicExpr(MxGrammarParser.LogicExprContext ctx);
-
 	/**
 	 * Visit a parse tree produced by the {@code memberExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitMemberExpr(MxGrammarParser.MemberExprContext ctx);
-
 	/**
 	 * Visit a parse tree produced by the {@code suffixExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
@@ -199,34 +192,27 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx);
-
 	/**
 	 * Visit a parse tree produced by the {@code returnStmt}
 	 * labeled alternative in {@link MxGrammarParser#jumpStatement}.
-	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitReturnStmt(MxGrammarParser.ReturnStmtContext ctx);
-
 	/**
 	 * Visit a parse tree produced by the {@code breakStmt}
 	 * labeled alternative in {@link MxGrammarParser#jumpStatement}.
-	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitBreakStmt(MxGrammarParser.BreakStmtContext ctx);
-
 	/**
 	 * Visit a parse tree produced by the {@code continueStmt}
 	 * labeled alternative in {@link MxGrammarParser#jumpStatement}.
-	 *
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitContinueStmt(MxGrammarParser.ContinueStmtContext ctx);
-
 	/**
 	 * Visit a parse tree produced by {@link MxGrammarParser#arrayType}.
 	 * @param ctx the parse tree

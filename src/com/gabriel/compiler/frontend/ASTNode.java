@@ -31,13 +31,19 @@ abstract class Node {
 public class ASTNode {
     public static class Program extends Node {
         //TODO: delete redundant lists, info already in List<Node> children
-        List<Node> classes, functions, variables;
+        List<Class> classes;
+        List<Function> functions;
+        List<Variable> variables;
 
-        Program(Scope globalScope, List<Node> classes, List<Node> functions, List<Node> variables) {
+        Program(Scope globalScope, List<Class> classes, List<Function> functions, List<Variable> variables) {
             super(globalScope);
             this.classes = classes;
             this.functions = functions;
             this.variables = variables;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -52,6 +58,10 @@ public class ASTNode {
             this.variables = variables;
             this.functions = functions;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class Param extends Node {
@@ -62,6 +72,10 @@ public class ASTNode {
             this.id = id;
             this.type = type;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class ParamList extends Node {
@@ -69,6 +83,10 @@ public class ASTNode {
 
         ParamList(List<Param> paramList) {
             this.paramList = paramList;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -85,17 +103,37 @@ public class ASTNode {
             this.paramList = paramList;
             this.block = block;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class Variable extends Node {
         Type type;
         String id;
-        Expression Initilization;
+        Expression Initialization;
 
-        Variable(Type type, String id, Expression Initilization) {
+        Variable(Type type, String id, Expression Initialization) {
             this.type = type;
             this.id = id;
-            this.Initilization = Initilization;
+            this.Initialization = Initialization;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
+
+    public static class VariableList extends Statement {
+        List<Variable> variables;
+
+        VariableList(List<Variable> variables) {
+            this.variables = variables;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -106,6 +144,10 @@ public class ASTNode {
             super();
             this.type = type;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class Statement extends Node {
@@ -114,6 +156,10 @@ public class ASTNode {
 
         Statement(Scope scope) {
             super(scope);
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -128,13 +174,21 @@ public class ASTNode {
         void addStatement(Statement statement) {
             this.statements.add(statement);
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
-    public static class VariableList extends Statement {
-        List<Variable> variables;
+    public static class ExprStatement extends Statement {
+        Expression expr;
 
-        VariableList(List<Variable> variables) {
-            this.variables = variables;
+        ExprStatement(Expression expr) {
+            this.expr = expr;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -148,6 +202,10 @@ public class ASTNode {
             this.incr = incr;
             this.statement = statement;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class WhileStatement extends Statement {
@@ -157,6 +215,10 @@ public class ASTNode {
         WhileStatement(Expression cond, Statement statement) {
             this.cond = cond;
             this.statement = statement;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -169,6 +231,10 @@ public class ASTNode {
             this.if_statement = if_statement;
             this.else_statement = else_statement;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class ReturnStatement extends Statement {
@@ -177,15 +243,28 @@ public class ASTNode {
         ReturnStatement(Expression expr) {
             this.expr = expr;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class BreakStatement extends Statement {
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class ContinueStatement extends Statement {
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class Expression extends Node {
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class ExpressionList extends Node {
@@ -193,6 +272,10 @@ public class ASTNode {
 
         ExpressionList(List<Expression> exprList) {
             this.exprList = exprList;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -226,6 +309,10 @@ public class ASTNode {
                     break;
             }
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
         //TODO: methods that return to which constant type the expression belongs
     }
 
@@ -237,6 +324,10 @@ public class ASTNode {
             this.expr = expr;
             this.op = op;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class UnaryExpression extends Expression {
@@ -246,6 +337,10 @@ public class ASTNode {
         UnaryExpression(Expression expr, String op) {
             this.expr = expr;
             this.op = op;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -258,6 +353,10 @@ public class ASTNode {
             this.expr2 = expr2;
             this.op = op;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class CmpExpression extends Expression {
@@ -268,6 +367,10 @@ public class ASTNode {
             this.expr1 = expr1;
             this.expr2 = expr2;
             this.op = op;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -280,6 +383,10 @@ public class ASTNode {
             this.expr2 = expr2;
             this.op = op;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
     public static class AssignExpression extends Expression {
@@ -289,9 +396,13 @@ public class ASTNode {
             this.expr1 = expr1;
             this.expr2 = expr2;
         }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
     }
 
-    public static class MemberExpression extends Node {
+    public static class MemberExpression extends Expression {
         Expression expr;
         String id;
 
@@ -299,24 +410,36 @@ public class ASTNode {
             this.expr = expr;
             this.id = id;
         }
-    }
 
-    public static class FuncExpression extends Node {
-        Expression expr;
-        ExpressionList exprList;
-
-        FuncExpression(Expression expr, ExpressionList exprList) {
-            this.expr = expr;
-            this.exprList = exprList;
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
-    public static class ArrayExpression extends Node {
+    public static class FuncExpression extends Expression {
+        String funcName;
+        ExpressionList exprList;
+
+        FuncExpression(String funcName, ExpressionList exprList) {
+            this.funcName = funcName;
+            this.exprList = exprList;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
+
+    public static class ArrayExpression extends Expression {
         Expression expr1, expr2;
 
         ArrayExpression(Expression expr1, Expression expr2) {
             this.expr1 = expr1;
             this.expr2 = expr2;
+        }
+
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
         }
     }
 
@@ -330,7 +453,10 @@ public class ASTNode {
             this.expressions = expressions;
             this.dimension_left = dimension_left;
         }
-    }
 
+        void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
 }
 

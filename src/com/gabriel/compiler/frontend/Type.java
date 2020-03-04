@@ -27,7 +27,7 @@ public class Type {
 
     public String toString() {
         StringBuilder ret = new StringBuilder(baseType);
-        for (int i : array) ret.append("[").append(i).append("]");
+        for (int i : array) ret.append("[").append(i != -1 ? i : "").append("]");
         return ret.toString();
     }
 

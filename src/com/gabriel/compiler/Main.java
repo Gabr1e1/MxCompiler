@@ -1,6 +1,8 @@
 package com.gabriel.compiler;
 
 import com.gabriel.compiler.frontend.ASTBuilder;
+import com.gabriel.compiler.frontend.ASTNode;
+import com.gabriel.compiler.frontend.ASTPrinter;
 import com.gabriel.compiler.parser.MxGrammarLexer;
 import com.gabriel.compiler.parser.MxGrammarParser;
 import org.antlr.v4.runtime.CharStream;
@@ -20,13 +22,18 @@ public class Main {
         ParseTree CST = parser.program();
 
 //        Build AST from CST created above
+        ASTNode.Program root = null;
         try {
             ASTBuilder builder = new ASTBuilder();
-            builder.visit(CST);
+            root = (ASTNode.Program) builder.visit(CST);
             System.out.println("AST successfully created");
-        } catch (Exception e) {
-            System.out.println(e.toString());
+        } catch (Error err) {
+            System.out.println(err.toString());
             exit(1);
         }
+
+//        Print AST
+        ASTPrinter printer = new ASTPrinter();
+        printer.visit(root);
     }
 }

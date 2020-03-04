@@ -6,7 +6,7 @@ classDeclaration : 'class' name = Identifier '{' (variableDeclaration | function
 
 variableDeclaration
     : typename Identifier ('=' expression)? ';'
-    | typename (Identifier ',')? Identifier ';'
+    | typename (Identifier ',')* Identifier ';'
     ;
 
 typename : Identifier | arrayType;
@@ -17,7 +17,7 @@ expression
     | expression '.' Identifier                                   # memberExpr
     | newExpression                                               # creatorExpr
     | expression '[' expression ']'                               # arrayExpr
-    | expression '(' expressionList ')'                           # funcExpr
+    | Identifier '(' expressionList? ')'                          # funcExpr
     | expression op = ('++' | '--')                               # suffixExpr
     | op = ('++' | '--' | '+' | '-') expression                   # unaryExpr
     | op = ('~' | '!') expression                                 # unaryExpr
@@ -29,8 +29,8 @@ expression
     | expression op = '&' expression                              # binaryExpr
     | expression op = '^' expression                              # binaryExpr
     | expression op = '|' expression                              # binaryExpr
-    | expression op = '&&' expression                                  # logicExpr
-    | expression op = '||' expression                                  # logicExpr
+    | expression op = '&&' expression                             # logicExpr
+    | expression op = '||' expression                             # logicExpr
     | <assoc=right> expression '=' expression                     # assignmentExpr
     ;
 expressionList : expression (',' expression)*;
@@ -59,7 +59,7 @@ functionDeclaration
     ;
 
 parameter : typename Identifier;
-parameterList : parameter (',' parameter)*;
+parameterList : (parameter (',' parameter)*);
 
 block : '{' statement* '}';
 
