@@ -22,7 +22,7 @@ public class ASTPrinter implements ASTVisitor {
     public void visit(ASTNode.Function node) {
         System.out.printf("Visiting function %s with return type %s", node.funcName, node.returnType);
         if (node.paramList != null) {
-            System.out.print("and parameters: ");
+            System.out.print(" and parameters: ");
             node.paramList.accept(this);
         }
         System.out.println("");
@@ -63,7 +63,6 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.Statement node) {
-        System.out.println("123");
         node.accept(this);
     }
 
@@ -74,32 +73,49 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.ForStatement node) {
-
+        System.out.println("Visiting For loop with init: ");
+        node.init.accept(this);
+        System.out.println("\ncond: ");
+        node.cond.accept(this);
+        System.out.println("\nincr: ");
+        node.incr.accept(this);
+        System.out.println("");
+        node.statement.accept(this);
     }
 
     @Override
     public void visit(ASTNode.WhileStatement node) {
-
+        System.out.println("Visiting While loop with ");
+        System.out.println("cond: ");
+        node.cond.accept(this);
+        node.statement.accept(this);
     }
 
     @Override
     public void visit(ASTNode.ConditionalStatement node) {
-
+        System.out.print("Visiting If: ");
+        node.cond.accept(this);
+        System.out.println("\nIF true:");
+        node.if_statement.accept(this);
+        System.out.println("IF false:");
+        node.else_statement.accept(this);
     }
 
     @Override
     public void visit(ASTNode.ReturnStatement node) {
-
+        System.out.print("Visiting Return ");
+        node.expr.accept(this);
+        System.out.println("");
     }
 
     @Override
     public void visit(ASTNode.BreakStatement node) {
-
+        System.out.println("Visiting Break");
     }
 
     @Override
     public void visit(ASTNode.ContinueStatement node) {
-
+        System.out.println("Visiting Continue");
     }
 
     @Override
@@ -110,52 +126,69 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.Expression node) {
-
+        node.accept(this);
     }
 
     @Override
     public void visit(ASTNode.ExpressionList node) {
-
+        node.exprList.forEach((expr) -> expr.accept(this));
     }
 
     @Override
-    public void visit(ASTNode.ConstantExpression node) {
-
+    public void visit(ASTNode.LiteralExpression node) {
+        System.out.print("");
+        if (!node.strConstant.equals("")) System.out.print("constant \"" + node.strConstant + "\"");
+        else if (node.isBool) System.out.print("constant " + (node.boolConstant ? "true" : "false"));
+        else if (node.isNull) System.out.print("constant null");
+        else if (node.isThis) System.out.print("constant this");
+        else if (!node.id.equals("")) System.out.print("variable " + node.id);
+        else System.out.printf("constant number %d", node.numConstant);
     }
 
     @Override
     public void visit(ASTNode.SuffixExpression node) {
-
+        node.expr.accept(this);
+        System.out.print(" " + node.op + " ");
     }
 
     @Override
     public void visit(ASTNode.UnaryExpression node) {
-
+        node.expr.accept(this);
+        System.out.print(" " + node.op + " ");
     }
 
     @Override
     public void visit(ASTNode.BinaryExpression node) {
-
+        node.expr1.accept(this);
+        System.out.print(" " + node.op + " ");
+        node.expr2.accept(this);
     }
 
     @Override
     public void visit(ASTNode.CmpExpression node) {
-
+        node.expr1.accept(this);
+        System.out.print(" " + node.op + " ");
+        node.expr2.accept(this);
     }
 
     @Override
     public void visit(ASTNode.LogicExpression node) {
-
+        node.expr1.accept(this);
+        System.out.print(" " + node.op + " ");
+        node.expr2.accept(this);
     }
 
     @Override
     public void visit(ASTNode.AssignExpression node) {
-
+        node.expr1.accept(this);
+        System.out.print(" = ");
+        node.expr2.accept(this);
     }
 
     @Override
     public void visit(ASTNode.MemberExpression node) {
-
+        node.expr.accept(this);
+        System.out.printf(".%s", node.id);
     }
 
     @Override
@@ -170,11 +203,20 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.ArrayExpression node) {
-
+        node.expr1.accept(this);
+        System.out.print(" ( ");
+        node.expr2.accept(this);
+        System.out.print(" ) ");
     }
 
     @Override
     public void visit(ASTNode.NewExpression node) {
-
+        System.out.print("new ");
+        if (node.expressions.size() != 0) {
+            System.out.print("[ ");
+            node.expressions.forEach((expr) -> expr.accept(this));
+            System.out.print(" ]");
+        }
+        for (int i = 0; i < node.dimension_left; i++) System.out.print("[]");
     }
 }

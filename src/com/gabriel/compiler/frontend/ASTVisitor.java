@@ -23,7 +23,7 @@ public interface ASTVisitor {
 
     void visit(ASTNode.Expression node);
     void visit(ASTNode.ExpressionList node);
-    void visit(ASTNode.ConstantExpression node);
+    void visit(ASTNode.LiteralExpression node);
     void visit(ASTNode.SuffixExpression node);
     void visit(ASTNode.UnaryExpression node);
     void visit(ASTNode.BinaryExpression node);

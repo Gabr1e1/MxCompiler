@@ -278,21 +278,21 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     @Override
     public Node visitLiteral(MxGrammarParser.LiteralContext ctx) {
         if (ctx.NumLiteral() != null)
-            return new ASTNode.ConstantExpression(Integer.parseInt(ctx.NumLiteral().getText()));
+            return new ASTNode.LiteralExpression(Integer.parseInt(ctx.NumLiteral().getText()));
         else {
             if (ctx.StringLiteral() != null)
-                return new ASTNode.ConstantExpression(ctx.StringLiteral().getText(), false);
+                return new ASTNode.LiteralExpression(ctx.StringLiteral().getText(), false);
             else if (ctx.BoolLiteral() != null)
-                return new ASTNode.ConstantExpression(ctx.BoolLiteral().getText(), false);
-            else return new ASTNode.ConstantExpression(ctx.NullLiteral().getText(), false);
+                return new ASTNode.LiteralExpression(ctx.BoolLiteral().getText(), false);
+            else return new ASTNode.LiteralExpression(ctx.NullLiteral().getText(), false);
         }
 
     }
 
     @Override
     public Node visitBasicExpression(MxGrammarParser.BasicExpressionContext ctx) {
-        if (ctx.This() != null) return new ASTNode.ConstantExpression("null", false);
-        else if (ctx.Identifier() != null) return new ASTNode.ConstantExpression(ctx.Identifier().getText(), true);
+        if (ctx.This() != null) return new ASTNode.LiteralExpression("null", false);
+        else if (ctx.Identifier() != null) return new ASTNode.LiteralExpression(ctx.Identifier().getText(), true);
         else return visit(ctx.literal());
     }
 

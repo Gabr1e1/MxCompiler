@@ -279,18 +279,18 @@ public class ASTNode {
         }
     }
 
-    public static class ConstantExpression extends Expression {
+    public static class LiteralExpression extends Expression {
         int numConstant;
         String strConstant = "";
         boolean isBool = false, boolConstant;
         boolean isNull = false, isThis = false;
         String id = "";
 
-        ConstantExpression(int a) {
+        LiteralExpression(int a) {
             this.numConstant = a;
         }
 
-        ConstantExpression(String a, boolean isId) {
+        LiteralExpression(String a, boolean isId) {
             switch (a) {
                 case "true":
                 case "false":
@@ -305,7 +305,7 @@ public class ASTNode {
                     break;
                 default:
                     if (isId) this.id = a;
-                    else this.strConstant = a;
+                    else this.strConstant = a.substring(1, a.length() - 1);
                     break;
             }
         }
