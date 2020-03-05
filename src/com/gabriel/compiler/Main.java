@@ -1,10 +1,12 @@
 package com.gabriel.compiler;
 
+import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
 import com.gabriel.compiler.frontend.ASTPrinter;
 import com.gabriel.compiler.parser.MxGrammarLexer;
 import com.gabriel.compiler.parser.MxGrammarParser;
+import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -19,11 +21,14 @@ public class Main {
         MxGrammarLexer lexer = new MxGrammarLexer(code);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MxGrammarParser parser = new MxGrammarParser(tokens);
-        ParseTree CST = parser.program();
+        ANTLRErrorListener errorListener = new SyntaxErrorListener();
+        parser.addErrorListener(errorListener);
 
+//        syntax check and build CST
 //        Build AST from CST created above
         ASTNode.Program root = null;
         try {
+            ParseTree CST = parser.program();
             ASTBuilder builder = new ASTBuilder();
             root = (ASTNode.Program) builder.visit(CST);
             System.out.println("AST successfully created");

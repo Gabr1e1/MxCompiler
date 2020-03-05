@@ -13,4 +13,10 @@ public class SemanticError {
             super("Redeclare: " + _msg + " in " + scopeName + " scope");
         }
     }
+
+    public static class NotDeclared extends Error {
+        public NotDeclared(String _msg, String scopeName) {
+            super("NotDeclared: " + _msg + " in " + scopeName + " scope");
+        }
+    }
 }

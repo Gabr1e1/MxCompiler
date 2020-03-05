@@ -1,4 +1,4 @@
-int[][][] a = 3 + 5 * 7;
+int[][][] a = 3 + 5 * 7
 int b,c,d;
 
 class A {
