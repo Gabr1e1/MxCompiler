@@ -19,4 +19,10 @@ public class SemanticError {
             super("NotDeclared: " + _msg + " in " + scopeName + " scope");
         }
     }
+
+    public static class InvalidType extends Error {
+        public InvalidType(String _msg, String scopeName) {
+            super("Invalid Type: " + _msg + " in " + scopeName + " scope");
+        }
+    }
 }

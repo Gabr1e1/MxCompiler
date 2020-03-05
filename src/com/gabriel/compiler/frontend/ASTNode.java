@@ -1,5 +1,7 @@
 package com.gabriel.compiler.frontend;
 
+import com.gabriel.compiler.error.SemanticError;
+
 import java.util.List;
 
 abstract class Node {
@@ -133,9 +135,12 @@ public class ASTNode {
     public static class TypeNode extends Node {
         public Type type;
 
-        TypeNode(Type type) {
-            super();
+        TypeNode(Scope scope, Type type) {
+            super(scope);
             this.type = type;
+            if (!scope.isValidType(type)) {
+                throw new SemanticError.InvalidType(type.toString(), scope.name);
+            }
         }
 
         void accept(ASTVisitor visitor) {

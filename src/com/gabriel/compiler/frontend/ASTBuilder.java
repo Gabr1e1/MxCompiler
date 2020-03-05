@@ -1,5 +1,6 @@
 package com.gabriel.compiler.frontend;
 
+import com.gabriel.compiler.error.SemanticError;
 import com.gabriel.compiler.parser.MxGrammarBaseVisitor;
 import com.gabriel.compiler.parser.MxGrammarParser;
 
@@ -45,7 +46,10 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitClassDeclaration(MxGrammarParser.ClassDeclarationContext ctx) {
+        Scope curScope = scopes.peek();
         String className = ctx.name.getText();
+        curScope.addSymbol(className, new Type(TypeKind.CLASS));
+
         Scope newScope = new Scope(className, scopes.peek());
         scopes.push(newScope);
         List<ASTNode.Variable> variables = new ArrayList<>();
@@ -66,16 +70,19 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx) {
+        Scope curScope = scopes.peek();
+        String funcName = ctx.functionIdentifier.getText();
+        curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION));
+
         Scope newScope = new Scope(ctx.functionIdentifier.getText(), scopes.peek());
         scopes.push(newScope);
         ASTNode.TypeNode type = (ASTNode.TypeNode) visit(ctx.returnType);
-        String id = ctx.functionIdentifier.getText();
         ASTNode.ParamList paramList = null;
         if (ctx.parameterList() != null)
             paramList = (ASTNode.ParamList) visit(ctx.parameterList());
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
-        return new ASTNode.Function(newScope, type.type, id, paramList, block);
+        return new ASTNode.Function(newScope, type.type, funcName, paramList, block);
     }
 
     @Override
@@ -102,7 +109,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         Type type;
         if (ctx.Identifier() != null) {
             type = new Type(ctx.Identifier().getText());
-            return new ASTNode.TypeNode(type);
+            return new ASTNode.TypeNode(scopes.peek(), type);
         } else {
             return visit(ctx.arrayType());
         }
@@ -112,7 +119,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitArrayType(MxGrammarParser.ArrayTypeContext ctx) {
         int dimension = ctx.getChildCount() - 1;
         Type type = new Type(ctx.Identifier().getText(), dimension);
-        return new ASTNode.TypeNode(type);
+        return new ASTNode.TypeNode(scopes.peek(), type);
     }
 
     @Override
@@ -212,6 +219,9 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         ASTNode.ExpressionList expressionList = null;
         if (ctx.expressionList() != null)
             expressionList = (ASTNode.ExpressionList) visit(ctx.expressionList());
+        if (!scopes.peek().containsFunc(ctx.Identifier().getText())) {
+            throw new SemanticError.InvalidType(ctx.Identifier().getText(), scopes.peek().name);
+        }
         return new ASTNode.FuncExpression(scopes.peek(), ctx.Identifier().getText(), expressionList);
     }
 
@@ -282,9 +292,12 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     @Override
     public Node visitBasicExpression(MxGrammarParser.BasicExpressionContext ctx) {
         if (ctx.This() != null) return new ASTNode.LiteralExpression(scopes.peek(), "null", false);
-        else if (ctx.Identifier() != null)
+        else if (ctx.Identifier() != null) {
+            if (!scopes.peek().containsVar(ctx.Identifier().getText())) {
+                throw new SemanticError.InvalidType(ctx.Identifier().getText(), scopes.peek().name);
+            }
             return new ASTNode.LiteralExpression(scopes.peek(), ctx.Identifier().getText(), true);
-        else return visit(ctx.literal());
+        } else return visit(ctx.literal());
     }
 
     @Override
