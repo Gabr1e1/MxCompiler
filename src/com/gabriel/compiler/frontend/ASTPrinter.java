@@ -97,8 +97,10 @@ public class ASTPrinter implements ASTVisitor {
         node.cond.accept(this);
         System.out.println("\nIF true:");
         node.if_statement.accept(this);
-        System.out.println("IF false:");
-        node.else_statement.accept(this);
+        if (node.else_statement != null) {
+            System.out.println("IF false:");
+            node.else_statement.accept(this);
+        }
     }
 
     @Override
@@ -136,12 +138,11 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.LiteralExpression node) {
-        System.out.print("");
-        if (!node.strConstant.equals("")) System.out.print("constant \"" + node.strConstant + "\"");
+        if (node.strConstant != null) System.out.print("constant \"" + node.strConstant + "\"");
         else if (node.isBool) System.out.print("constant " + (node.boolConstant ? "true" : "false"));
         else if (node.isNull) System.out.print("constant null");
         else if (node.isThis) System.out.print("constant this");
-        else if (!node.id.equals("")) System.out.print("variable " + node.id);
+        else if (node.id != null) System.out.print("variable " + node.id);
         else System.out.printf("constant number %d", node.numConstant);
     }
 

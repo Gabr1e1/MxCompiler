@@ -72,10 +72,11 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitClassDeclaration(MxGrammarParser.ClassDeclarationContext ctx) {
         Scope curScope = scopes.peek();
         String className = ctx.name.getText();
-        curScope.addSymbol(className, new Type(TypeKind.CLASS, null));
 
         Scope newScope = new Scope(className, scopes.peek());
         scopes.push(newScope);
+        newScope.addSymbol(className, new Type(TypeKind.CLASS, null));
+
         List<ASTNode.Variable> variables = new ArrayList<>();
         List<ASTNode.Function> functions = new ArrayList<>();
         ASTNode.Class ret = new ASTNode.Class(newScope, className, variables, functions);
@@ -89,7 +90,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
             functions.add((ASTNode.Function) n);
         });
         scopes.pop();
-        curScope.modify(className, new Type(TypeKind.CLASS, ret));
+        newScope.modify(className, new Type(TypeKind.CLASS, ret));
         return ret;
     }
 
@@ -97,10 +98,11 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx) {
         Scope curScope = scopes.peek();
         String funcName = ctx.functionIdentifier.getText();
-        curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
 
         Scope newScope = new Scope(ctx.functionIdentifier.getText(), scopes.peek());
         scopes.push(newScope);
+        newScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
+
         ASTNode.TypeNode type = (ASTNode.TypeNode) visit(ctx.returnType);
         ASTNode.ParamList paramList = null;
         if (ctx.parameterList() != null)
@@ -108,7 +110,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
         ASTNode.Function ret = new ASTNode.Function(newScope, type.type, funcName, paramList, block);
-        curScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
+        newScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
         return ret;
     }
 
@@ -211,7 +213,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
         return new ASTNode.ConditionalStatement(scopes.peek(), (ASTNode.Expression) visit(ctx.expression()),
                 (ASTNode.Statement) visit(ctx.statement(0)),
-                (ASTNode.Statement) visit(ctx.statement(1)));
+                ctx.statement().size() == 1 ? null : (ASTNode.Statement) visit(ctx.statement(1)));
     }
 
     @Override

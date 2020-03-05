@@ -4,6 +4,7 @@ import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
 import com.gabriel.compiler.frontend.ASTPrinter;
+import com.gabriel.compiler.frontend.TypeChecker;
 import com.gabriel.compiler.parser.MxGrammarLexer;
 import com.gabriel.compiler.parser.MxGrammarParser;
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -35,16 +36,18 @@ public class Main {
             root = (ASTNode.Program) builder.visit(CST);
             System.out.println("AST successfully created");
 
+            //Print AST
+            ASTPrinter printer = new ASTPrinter();
+            printer.visit(root);
+
             //Check Type
-//            TypeChecker checker = new TypeChecker();
-//            checker.visit(root);
+            TypeChecker checker = new TypeChecker();
+            checker.visit(root);
         } catch (Error err) {
             System.out.println(err.toString());
             exit(1);
         }
 
-//        Print AST
-        ASTPrinter printer = new ASTPrinter();
-        printer.visit(root);
+
     }
 }

@@ -25,4 +25,16 @@ public class SemanticError {
             super("Invalid Type: " + _msg + " in " + scopeName + " scope");
         }
     }
+
+    public static class VoidType extends Error {
+        public VoidType(String _msg, String scopeName) {
+            super("Type cannot be void: " + _msg + " in " + scopeName + " scope");
+        }
+    }
+
+    public static class GeneralError extends Error {
+        public GeneralError(String _msg, String scopeName) {
+            super(_msg + " in " + scopeName + " scope");
+        }
+    }
 }

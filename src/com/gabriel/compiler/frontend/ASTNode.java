@@ -291,10 +291,10 @@ public class ASTNode {
 
     public static class LiteralExpression extends Expression {
         int numConstant;
-        String strConstant = "";
+        String strConstant = null;
         boolean isBool = false, boolConstant;
         boolean isNull = false, isThis = false;
-        String id = "";
+        String id = null;
 
         LiteralExpression(Scope scope, int a) {
             super(scope);

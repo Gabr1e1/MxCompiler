@@ -48,6 +48,35 @@ public class Type {
     }
 
     public boolean isArray() {
-        return array != null;
+        return array != null && array.size() > 0;
+    }
+
+    public boolean isBool() {
+        return baseType.equals("bool");
+    }
+
+    public boolean isInt() {
+        return baseType.equals("int");
+    }
+
+    public boolean isString() {
+        return baseType.equals("string");
+    }
+
+    public boolean isVoid() {
+        return baseType.equals("void");
+    }
+
+    public static boolean isSameType(Type type1, Type type2) {
+        if (!type1.baseType.equals(type2.baseType)) return false;
+        if (type1.typeKind != type2.typeKind) return false;
+        if (type1.array.size() != type2.array.size()) return false;
+        if (type1.array.size() != 0) {
+            for (int i = 0; i < type1.array.size(); i++) {
+                if (type1.array.get(i) == -1 || type2.array.get(i) == -1) continue;
+                if (type1.array.get(i) != type2.array.get(i)) return false;
+            }
+        }
+        return true;
     }
 }
