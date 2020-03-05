@@ -1,30 +1,19 @@
 package com.gabriel.compiler.frontend;
 
-import java.util.ArrayList;
 import java.util.List;
 
 abstract class Node {
     public Scope scope;
     public Node father;
-    public List<Node> children;
 
     Node() {
         this.scope = null;
         this.father = null;
-        this.children = null;
     }
 
     Node(Scope scope) {
         this.scope = scope;
         this.father = null;
-        this.children = new ArrayList<>();
-    }
-
-    //TODO: this method doesn't seem necessary...
-    public void addChild(Node child) {
-        if (child == null) return;
-        child.father = this;
-        this.children.add(child);
     }
 }
 
@@ -52,7 +41,7 @@ public class ASTNode {
         List<Function> functions;
         String className;
 
-        Class(String className, Scope scope, List<Variable> variables, List<Function> functions) {
+        Class(Scope scope, String className, List<Variable> variables, List<Function> functions) {
             super(scope);
             this.className = className;
             this.variables = variables;
@@ -68,7 +57,8 @@ public class ASTNode {
         Type type;
         String id;
 
-        Param(String id, Type type) {
+        Param(Scope scope, String id, Type type) {
+            super(scope);
             this.id = id;
             this.type = type;
         }
@@ -81,7 +71,8 @@ public class ASTNode {
     public static class ParamList extends Node {
         List<Param> paramList;
 
-        ParamList(List<Param> paramList) {
+        ParamList(Scope scope, List<Param> paramList) {
+            super(scope);
             this.paramList = paramList;
         }
 
@@ -114,7 +105,8 @@ public class ASTNode {
         String id;
         Expression Initialization;
 
-        Variable(Type type, String id, Expression Initialization) {
+        Variable(Scope scope, Type type, String id, Expression Initialization) {
+            super(scope);
             this.type = type;
             this.id = id;
             this.Initialization = Initialization;
@@ -128,7 +120,8 @@ public class ASTNode {
     public static class VariableList extends Statement {
         List<Variable> variables;
 
-        VariableList(List<Variable> variables) {
+        VariableList(Scope scope, List<Variable> variables) {
+            super(scope);
             this.variables = variables;
         }
 
@@ -183,7 +176,8 @@ public class ASTNode {
     public static class ExprStatement extends Statement {
         Expression expr;
 
-        ExprStatement(Expression expr) {
+        ExprStatement(Scope scope, Expression expr) {
+            super(scope);
             this.expr = expr;
         }
 
@@ -196,7 +190,8 @@ public class ASTNode {
         Expression init, cond, incr;
         Statement statement;
 
-        ForStatement(Expression init, Expression cond, Expression incr, Statement statement) {
+        ForStatement(Scope scope, Expression init, Expression cond, Expression incr, Statement statement) {
+            super(scope);
             this.init = init;
             this.cond = cond;
             this.incr = incr;
@@ -212,7 +207,8 @@ public class ASTNode {
         Expression cond;
         Statement statement;
 
-        WhileStatement(Expression cond, Statement statement) {
+        WhileStatement(Scope scope, Expression cond, Statement statement) {
+            super(scope);
             this.cond = cond;
             this.statement = statement;
         }
@@ -226,7 +222,8 @@ public class ASTNode {
         Expression cond;
         Statement if_statement, else_statement;
 
-        ConditionalStatement(Expression cond, Statement if_statement, Statement else_statement) {
+        ConditionalStatement(Scope scope, Expression cond, Statement if_statement, Statement else_statement) {
+            super(scope);
             this.cond = cond;
             this.if_statement = if_statement;
             this.else_statement = else_statement;
@@ -240,7 +237,8 @@ public class ASTNode {
     public static class ReturnStatement extends Statement {
         Expression expr;
 
-        ReturnStatement(Expression expr) {
+        ReturnStatement(Scope scope, Expression expr) {
+            super(scope);
             this.expr = expr;
         }
 
@@ -262,6 +260,13 @@ public class ASTNode {
     }
 
     public static class Expression extends Node {
+        Expression() {
+        }
+
+        Expression(Scope scope) {
+            super(scope);
+        }
+
         void accept(ASTVisitor visitor) {
             visitor.visit(this);
         }
@@ -270,7 +275,8 @@ public class ASTNode {
     public static class ExpressionList extends Node {
         List<Expression> exprList;
 
-        ExpressionList(List<Expression> exprList) {
+        ExpressionList(Scope scope, List<Expression> exprList) {
+            super(scope);
             this.exprList = exprList;
         }
 
@@ -286,11 +292,13 @@ public class ASTNode {
         boolean isNull = false, isThis = false;
         String id = "";
 
-        LiteralExpression(int a) {
+        LiteralExpression(Scope scope, int a) {
+            super(scope);
             this.numConstant = a;
         }
 
-        LiteralExpression(String a, boolean isId) {
+        LiteralExpression(Scope scope, String a, boolean isId) {
+            super(scope);
             switch (a) {
                 case "true":
                 case "false":
@@ -320,7 +328,8 @@ public class ASTNode {
         Expression expr;
         String op;
 
-        SuffixExpression(Expression expr, String op) {
+        SuffixExpression(Scope scope, Expression expr, String op) {
+            super(scope);
             this.expr = expr;
             this.op = op;
         }
@@ -334,7 +343,8 @@ public class ASTNode {
         Expression expr;
         String op;
 
-        UnaryExpression(Expression expr, String op) {
+        UnaryExpression(Scope scope, Expression expr, String op) {
+            super(scope);
             this.expr = expr;
             this.op = op;
         }
@@ -348,7 +358,8 @@ public class ASTNode {
         Expression expr1, expr2;
         String op;
 
-        BinaryExpression(Expression expr1, Expression expr2, String op) {
+        BinaryExpression(Scope scope, Expression expr1, Expression expr2, String op) {
+            super(scope);
             this.expr1 = expr1;
             this.expr2 = expr2;
             this.op = op;
@@ -363,7 +374,8 @@ public class ASTNode {
         Expression expr1, expr2;
         String op;
 
-        CmpExpression(Expression expr1, Expression expr2, String op) {
+        CmpExpression(Scope scope, Expression expr1, Expression expr2, String op) {
+            super(scope);
             this.expr1 = expr1;
             this.expr2 = expr2;
             this.op = op;
@@ -378,7 +390,8 @@ public class ASTNode {
         Expression expr1, expr2;
         String op;
 
-        LogicExpression(Expression expr1, Expression expr2, String op) {
+        LogicExpression(Scope scope, Expression expr1, Expression expr2, String op) {
+            super(scope);
             this.expr1 = expr1;
             this.expr2 = expr2;
             this.op = op;
@@ -392,7 +405,8 @@ public class ASTNode {
     public static class AssignExpression extends Expression {
         Expression expr1, expr2;
 
-        AssignExpression(Expression expr1, Expression expr2) {
+        AssignExpression(Scope scope, Expression expr1, Expression expr2) {
+            super(scope);
             this.expr1 = expr1;
             this.expr2 = expr2;
         }
@@ -406,7 +420,8 @@ public class ASTNode {
         Expression expr;
         String id;
 
-        MemberExpression(Expression expr, String id) {
+        MemberExpression(Scope scope, Expression expr, String id) {
+            super(scope);
             this.expr = expr;
             this.id = id;
         }
@@ -420,7 +435,8 @@ public class ASTNode {
         String funcName;
         ExpressionList exprList;
 
-        FuncExpression(String funcName, ExpressionList exprList) {
+        FuncExpression(Scope scope, String funcName, ExpressionList exprList) {
+            super(scope);
             this.funcName = funcName;
             this.exprList = exprList;
         }
@@ -433,7 +449,8 @@ public class ASTNode {
     public static class ArrayExpression extends Expression {
         Expression expr1, expr2;
 
-        ArrayExpression(Expression expr1, Expression expr2) {
+        ArrayExpression(Scope scope, Expression expr1, Expression expr2) {
+            super(scope);
             this.expr1 = expr1;
             this.expr2 = expr2;
         }
@@ -448,7 +465,8 @@ public class ASTNode {
         List<Expression> expressions;
         int dimension_left;
 
-        NewExpression(Type type, List<Expression> expressions, int dimension_left) {
+        NewExpression(Scope scope, Type type, List<Expression> expressions, int dimension_left) {
+            super(scope);
             this.type = type;
             this.expressions = expressions;
             this.dimension_left = dimension_left;
