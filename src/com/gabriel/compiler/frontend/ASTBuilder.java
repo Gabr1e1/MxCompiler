@@ -19,12 +19,36 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         scopes.push(GlobalScope);
     }
 
+    private ASTNode.Function add(Scope scope, String str1, String str2, String str3, String str4) {
+        ASTNode.ParamList param;
+        if (str3.equals("")) {
+            param = new ASTNode.ParamList(scope, Collections.singletonList(new ASTNode.Param(scope, str4, new Type(str3))));
+        } else {
+            param = new ASTNode.ParamList(scope, null);
+        }
+        ASTNode.Function ret = new ASTNode.Function(scope, new Type(str1), str2, param, null);
+        scope.addSymbol(str2, new Type(TypeKind.FUNCTION, null));
+        return ret;
+    }
+
+    private void addPrimitiveFunction(Scope scope, List<ASTNode.Function> builtins) {
+        builtins.add(add(scope, "void", "print", "string", "str"));
+        builtins.add(add(scope, "void", "println", "string", "str"));
+        builtins.add(add(scope, "void", "printInt", "int", "n"));
+        builtins.add(add(scope, "string", "getString", "", ""));
+        builtins.add(add(scope, "int", "getInt", "", ""));
+        builtins.add(add(scope, "string", "toString", "int", "i"));
+
+    }
+
     @Override
     public Node visitProgram(MxGrammarParser.ProgramContext ctx) {
         Scope curScope = scopes.peek();
         List<ASTNode.Class> classes = new ArrayList<>();
-        List<ASTNode.Function> functions = new ArrayList<>();
+        List<ASTNode.Function> functions = new ArrayList<>(), builtins = new ArrayList<>();
         List<ASTNode.Variable> variables = new ArrayList<>();
+        addPrimitiveFunction(curScope, builtins);
+
         ASTNode.Program cur = new ASTNode.Program(curScope, classes, functions, variables);
 
         ctx.classDeclaration().forEach((c) -> {
@@ -48,7 +72,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitClassDeclaration(MxGrammarParser.ClassDeclarationContext ctx) {
         Scope curScope = scopes.peek();
         String className = ctx.name.getText();
-        curScope.addSymbol(className, new Type(TypeKind.CLASS));
+        curScope.addSymbol(className, new Type(TypeKind.CLASS, null));
 
         Scope newScope = new Scope(className, scopes.peek());
         scopes.push(newScope);
@@ -65,6 +89,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
             functions.add((ASTNode.Function) n);
         });
         scopes.pop();
+        curScope.modify(className, new Type(TypeKind.CLASS, ret));
         return ret;
     }
 
@@ -72,7 +97,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx) {
         Scope curScope = scopes.peek();
         String funcName = ctx.functionIdentifier.getText();
-        curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION));
+        curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
 
         Scope newScope = new Scope(ctx.functionIdentifier.getText(), scopes.peek());
         scopes.push(newScope);
@@ -82,7 +107,9 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
             paramList = (ASTNode.ParamList) visit(ctx.parameterList());
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
-        return new ASTNode.Function(newScope, type.type, funcName, paramList, block);
+        ASTNode.Function ret = new ASTNode.Function(newScope, type.type, funcName, paramList, block);
+        curScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
+        return ret;
     }
 
     @Override
@@ -294,7 +321,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         if (ctx.This() != null) return new ASTNode.LiteralExpression(scopes.peek(), "null", false);
         else if (ctx.Identifier() != null) {
             if (!scopes.peek().containsVar(ctx.Identifier().getText())) {
-                throw new SemanticError.InvalidType(ctx.Identifier().getText(), scopes.peek().name);
+                throw new SemanticError.NotDeclared(ctx.Identifier().getText(), scopes.peek().name);
             }
             return new ASTNode.LiteralExpression(scopes.peek(), ctx.Identifier().getText(), true);
         } else return visit(ctx.literal());

@@ -18,16 +18,13 @@ public class SyntaxErrorListener implements ANTLRErrorListener {
 
     @Override
     public void reportAmbiguity(Parser parser, DFA dfa, int i, int i1, boolean b, BitSet bitSet, ATNConfigSet atnConfigSet) {
-        throw new SyntaxError(i, i1, "ambiguous");
     }
 
     @Override
     public void reportAttemptingFullContext(Parser parser, DFA dfa, int i, int i1, BitSet bitSet, ATNConfigSet atnConfigSet) {
-        throw new SyntaxError(i, i1, "");
     }
 
     @Override
     public void reportContextSensitivity(Parser parser, DFA dfa, int i, int i1, int i2, ATNConfigSet atnConfigSet) {
-        throw new SyntaxError(i, i1, "");
     }
 }

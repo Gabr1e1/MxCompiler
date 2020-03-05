@@ -265,8 +265,7 @@ public class ASTNode {
     }
 
     public static class Expression extends Node {
-        Expression() {
-        }
+        Type type;
 
         Expression(Scope scope) {
             super(scope);

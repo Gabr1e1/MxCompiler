@@ -33,6 +33,10 @@ public class Scope {
         }
     }
 
+    public void modify(String id, Type type) {
+        symbolTable.put(id, type);
+    }
+
     public boolean isValidType(Type type) {
         //Ignore check if type represents a class / function
         if (type.typeKind == TypeKind.CLASS || type.typeKind == TypeKind.FUNCTION) return true;

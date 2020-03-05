@@ -13,6 +13,9 @@ public class Type {
     public List<Integer> array = new ArrayList<>();
     public TypeKind typeKind;
 
+    //for class & function
+    public Node node;
+
     public Type(String baseType) {
         this.baseType = baseType;
         this.typeKind = TypeKind.VARIABLE;
@@ -24,8 +27,9 @@ public class Type {
         for (int i = 0; i < dimension; i++) array.add(-1);
     }
 
-    public Type(TypeKind kind) {
+    public Type(TypeKind kind, Node node) {
         this.typeKind = kind;
+        this.node = node;
     }
 
     public void appendDimension(int x) {

@@ -1,21 +1,27 @@
-int[][][] a = 3 + 5 * 7
+int[][][] a = 3 + 5 * 7;
 int b,c,d;
 
 class A {
  int func1(int a, int b, int c)
  {
      int[][] a = new int[3][];
-     Println("Hello World");
+     println("Hello World");
+     string str = "";
      if (str == "FUCK") {
-        Println("YEAH");
+        println("YEAH");
      } else if (str == "SHIT") {
         str = str + "A";
      } else {
         return 123;
      }
+     int i = 0;
      for (i = 0; i < str.A; i++) {
-        Println(i + 1);
+        println(i + 1);
      }
      return 0;
+ }
+
+ int func2()
+ {
  }
 }

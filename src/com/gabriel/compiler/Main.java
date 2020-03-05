@@ -24,14 +24,20 @@ public class Main {
         ANTLRErrorListener errorListener = new SyntaxErrorListener();
         parser.addErrorListener(errorListener);
 
-//        syntax check and build CST
-//        Build AST from CST created above
+
         ASTNode.Program root = null;
         try {
+            // syntax check and build CST
             ParseTree CST = parser.program();
+
+            // Build AST from CST created above
             ASTBuilder builder = new ASTBuilder();
             root = (ASTNode.Program) builder.visit(CST);
             System.out.println("AST successfully created");
+
+            //Check Type
+//            TypeChecker checker = new TypeChecker();
+//            checker.visit(root);
         } catch (Error err) {
             System.out.println(err.toString());
             exit(1);
