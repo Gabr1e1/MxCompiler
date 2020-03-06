@@ -8,6 +8,9 @@ public class TypeChecker implements ASTVisitor {
         node.classes.forEach((n) -> n.accept(this));
         node.functions.forEach((n) -> n.accept(this));
         node.variables.forEach((n) -> n.accept(this));
+        Type t = node.scope.find("main");
+        if (t == null || t.typeKind != TypeKind.FUNCTION)
+            throw new SemanticError.NoMainFunction();
     }
 
     @Override
@@ -91,8 +94,13 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.ReturnStatement node) {
-        node.expr.accept(this);
-        if (!Type.isSameType(node.scope.belongFunction().returnType, node.expr.type)) {
+        Type t;
+        if (node.expr != null) {
+            node.expr.accept(this);
+            t = node.expr.type;
+        } else
+            t = new Type("void");
+        if (!Type.isSameType(node.scope.belongFunction().returnType, t)) {
             throw new SemanticError.InvalidType("Wrong return type", node.scope.name);
         }
     }

@@ -5,6 +5,5 @@
 
 set -e
 cd "$(dirname "$0")"
-export CCHK="java -classpath ./lib/antlr-4.8-complete.jar"
 cat > code.mx
-$CCHK
+java -cp ./lib/antlr-4.8-complete.jar:./bin com.gabriel.compiler.Main code.mx

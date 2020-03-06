@@ -91,6 +91,8 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         });
         scopes.pop();
         curScope.modify(className, new Type(TypeKind.CLASS, ret));
+        //TODO: remove shit code
+        newScope.addSymbol(className, new Type(TypeKind.CLASS, ret));
         return ret;
     }
 
@@ -111,6 +113,8 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         scopes.pop();
         ASTNode.Function ret = new ASTNode.Function(newScope, type.type, funcName, paramList, block);
         curScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
+        //TODO: remove shit code
+        newScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, ret));
         return ret;
     }
 
@@ -218,7 +222,10 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitReturnStmt(MxGrammarParser.ReturnStmtContext ctx) {
-        return new ASTNode.ReturnStatement(scopes.peek(), (ASTNode.Expression) visit(ctx.expression()));
+        if (ctx.expression() != null)
+            return new ASTNode.ReturnStatement(scopes.peek(), (ASTNode.Expression) visit(ctx.expression()));
+        else
+            return new ASTNode.ReturnStatement(scopes.peek(), null);
     }
 
     @Override

@@ -43,4 +43,10 @@ public class SemanticError {
             super(_msg + " in " + scopeName + " scope");
         }
     }
+
+    public static class NoMainFunction extends Error {
+        public NoMainFunction() {
+            super("No main function found");
+        }
+    }
 }

@@ -47,7 +47,5 @@ public class Main {
             System.out.println(err.toString());
             exit(1);
         }
-
-
     }
 }

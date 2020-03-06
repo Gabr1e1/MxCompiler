@@ -106,7 +106,8 @@ public class ASTPrinter implements ASTVisitor {
     @Override
     public void visit(ASTNode.ReturnStatement node) {
         System.out.print("Visiting Return ");
-        node.expr.accept(this);
+        if (node.expr != null)
+            node.expr.accept(this);
         System.out.println("");
     }
 
