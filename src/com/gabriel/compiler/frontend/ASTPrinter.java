@@ -204,10 +204,12 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.ArrayExpression node) {
-        node.expr1.accept(this);
-        System.out.print(" ( ");
-        node.expr2.accept(this);
-        System.out.print(" ) ");
+        node.expr.accept(this);
+        node.index.forEach( (index) -> {
+            System.out.print(" [ ");
+            index.accept(this);
+            System.out.print(" ] ");
+        });
     }
 
     @Override
@@ -218,6 +220,5 @@ public class ASTPrinter implements ASTVisitor {
             node.expressions.forEach((expr) -> expr.accept(this));
             System.out.print(" ]");
         }
-        for (int i = 0; i < node.dimension_left; i++) System.out.print("[]");
     }
 }

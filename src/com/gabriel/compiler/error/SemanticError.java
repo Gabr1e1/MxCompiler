@@ -8,6 +8,12 @@ public class SemanticError {
         }
     }
 
+    public static class InvalidOperation extends Error {
+        public InvalidOperation(String _msg) {
+            super("Type Mismatch: " + _msg);
+        }
+    }
+
     public static class Redeclare extends Error {
         public Redeclare(String _msg, String scopeName) {
             super("Redeclare: " + _msg + " in " + scopeName + " scope");

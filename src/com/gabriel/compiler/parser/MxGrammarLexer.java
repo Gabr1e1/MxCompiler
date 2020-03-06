@@ -1,13 +1,12 @@
 // Generated from MxGrammar.g4 by ANTLR 4.8
 package com.gabriel.compiler.parser;
-import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.TokenStream;
+
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.*;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.LexerATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class MxGrammarLexer extends Lexer {
@@ -49,7 +48,7 @@ public class MxGrammarLexer extends Lexer {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'class'", "'{'", "'}'", "'='", "';'", "','", "'('", "')'", "'.'", 
+			null, "'class'", "'{'", "'}'", "';'", "'='", "','", "'('", "')'", "'.'", 
 			"'['", "']'", "'++'", "'--'", "'+'", "'-'", "'~'", "'!'", "'*'", "'/'", 
 			"'%'", "'<<'", "'>>'", "'<'", "'>'", "'>='", "'<='", "'=='", "'!='", 
 			"'&'", "'^'", "'|'", "'&&'", "'||'", "'new'", "'[]'", "'for'", "'while'", 
@@ -176,7 +175,7 @@ public class MxGrammarLexer extends Lexer {
 		"\3\2\2\2[\u0109\3\2\2\2]\u0114\3\2\2\2_\u0116\3\2\2\2a\u0128\3\2\2\2c"+
 		"\u012a\3\2\2\2e\u012f\3\2\2\2g\u0135\3\2\2\2i\u013b\3\2\2\2k\u0149\3\2"+
 		"\2\2mn\7e\2\2no\7n\2\2op\7c\2\2pq\7u\2\2qr\7u\2\2r\4\3\2\2\2st\7}\2\2"+
-		"t\6\3\2\2\2uv\7\177\2\2v\b\3\2\2\2wx\7?\2\2x\n\3\2\2\2yz\7=\2\2z\f\3\2"+
+		"t\6\3\2\2\2uv\7\177\2\2v\b\3\2\2\2wx\7=\2\2x\n\3\2\2\2yz\7?\2\2z\f\3\2"+
 		"\2\2{|\7.\2\2|\16\3\2\2\2}~\7*\2\2~\20\3\2\2\2\177\u0080\7+\2\2\u0080"+
 		"\22\3\2\2\2\u0081\u0082\7\60\2\2\u0082\24\3\2\2\2\u0083\u0084\7]\2\2\u0084"+
 		"\26\3\2\2\2\u0085\u0086\7_\2\2\u0086\30\3\2\2\2\u0087\u0088\7-\2\2\u0088"+

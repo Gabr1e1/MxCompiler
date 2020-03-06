@@ -6,7 +6,7 @@ import java.util.List;
 
 enum TypeKind {CLASS, FUNCTION, VARIABLE}
 
-public class Type {
+public class Type implements Cloneable {
     private static final String[] PRIMITIVE = {"bool", "int", "void", "string"};
 
     public String baseType = "";
@@ -33,7 +33,6 @@ public class Type {
     }
 
     public void appendDimension(int x) {
-        array = (array == null) ? (new ArrayList<>()) : array;
         array.add(x);
     }
 
@@ -48,7 +47,11 @@ public class Type {
     }
 
     public boolean isArray() {
-        return array != null && array.size() > 0;
+        return array.size() > 0;
+    }
+
+    public int getDimension() {
+        return array.size();
     }
 
     public boolean isBool() {
@@ -74,7 +77,7 @@ public class Type {
         if (type1.array.size() != 0) {
             for (int i = 0; i < type1.array.size(); i++) {
                 if (type1.array.get(i) == -1 || type2.array.get(i) == -1) continue;
-                if (type1.array.get(i) != type2.array.get(i)) return false;
+                if (!type1.array.get(i).equals(type2.array.get(i))) return false;
             }
         }
         return true;

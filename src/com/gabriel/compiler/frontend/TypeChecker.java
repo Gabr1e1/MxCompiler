@@ -99,10 +99,12 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.BreakStatement node) {
+        /* Empty */
     }
 
     @Override
     public void visit(ASTNode.ContinueStatement node) {
+        /* Empty */
     }
 
     @Override
@@ -148,12 +150,29 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.BinaryExpression node) {
-
+        node.expr1.accept(this);
+        node.expr2.accept(this);
+        if (!Type.isSameType(node.expr1.type, node.expr2.type))
+            throw new SemanticError.InvalidOperation("different type");
+        if (node.op.equals("+")) {
+            if (!node.expr1.type.isString() && !node.expr1.type.isInt())
+                throw new SemanticError.InvalidOperation("operator " + node.op + " invalid");
+        } else {
+            if (!node.expr1.type.isInt())
+                throw new SemanticError.InvalidOperation("operator " + node.op + " invalid");
+        }
+        node.type = node.expr1.type;
     }
 
     @Override
     public void visit(ASTNode.CmpExpression node) {
-
+        node.expr1.accept(this);
+        node.expr2.accept(this);
+        if (!Type.isSameType(node.expr1.type, node.expr2.type))
+            throw new SemanticError.InvalidOperation("different type");
+        if (!node.expr1.type.isString() && !node.expr1.type.isBool() && !node.expr1.type.isInt())
+            throw new SemanticError.InvalidOperation("operator " + node.op + " invalid");
+        node.type = new Type("bool");
     }
 
     @Override
@@ -183,21 +202,48 @@ public class TypeChecker implements ASTVisitor {
         node.type = t;
     }
 
+    boolean compatibleCheck(ASTNode.ExpressionList exprList, ASTNode.ParamList paramList) {
+        if (exprList.size() != paramList.size()) return false;
+        for (int i = 0; i < exprList.size(); i++) {
+            if (!Type.isSameType(exprList.exprList.get(i).type, paramList.paramList.get(i).type))
+                return false;
+        }
+        return true;
+    }
+
     @Override
     public void visit(ASTNode.FuncExpression node) {
-
+        node.exprList.accept(this);
+        Type t = node.scope.find(node.funcName);
+        if (t == null || !compatibleCheck(node.exprList, ((ASTNode.Function) t.node).paramList)) {
+            throw new SemanticError.TypeMismatch("Not a valid function call " + node.funcName);
+        }
     }
 
     @Override
     public void visit(ASTNode.ArrayExpression node) {
-
+        node.expr.accept(this);
+        node.index.forEach((index) -> {
+            index.accept(this);
+            if (!index.type.isInt()) {
+                throw new SemanticError.InvalidType("Invalid index type", node.scope.name);
+            }
+        });
+        if (!node.expr.type.isArray()) {
+            throw new SemanticError.InvalidType("Not an array", node.scope.name);
+        }
+        if (node.expr.type.getDimension() > node.index.size()) {
+            throw new SemanticError.TypeMismatch("Too many indices");
+        }
+        node.type = new Type(node.expr.type.baseType, node.expr.type.getDimension() - node.index.size());
     }
 
     @Override
     public void visit(ASTNode.NewExpression node) {
         node.expressions.forEach((expr) -> {
-            expr.accept(this)
+            expr.accept(this);
+            if (!expr.type.isInt())
+                throw new SemanticError.InvalidType("Invalid index type", node.scope.name);
         });
-        node.type = 
     }
 }

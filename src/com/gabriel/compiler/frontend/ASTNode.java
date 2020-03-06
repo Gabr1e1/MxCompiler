@@ -2,6 +2,7 @@ package com.gabriel.compiler.frontend;
 
 import com.gabriel.compiler.error.SemanticError;
 
+import java.util.ArrayList;
 import java.util.List;
 
 abstract class Node {
@@ -73,9 +74,18 @@ public class ASTNode {
     public static class ParamList extends Node {
         List<Param> paramList;
 
+        ParamList(Scope scope) {
+            super(scope);
+            this.paramList = new ArrayList<>();
+        }
+
         ParamList(Scope scope, List<Param> paramList) {
             super(scope);
             this.paramList = paramList;
+        }
+
+        int size() {
+            return paramList.size();
         }
 
         void accept(ASTVisitor visitor) {
@@ -125,6 +135,10 @@ public class ASTNode {
         VariableList(Scope scope, List<Variable> variables) {
             super(scope);
             this.variables = variables;
+        }
+
+        int size() {
+            return variables.size();
         }
 
         void accept(ASTVisitor visitor) {
@@ -279,9 +293,18 @@ public class ASTNode {
     public static class ExpressionList extends Node {
         List<Expression> exprList;
 
+        ExpressionList(Scope scope) {
+            super(scope);
+            exprList = new ArrayList<>();
+        }
+
         ExpressionList(Scope scope, List<Expression> exprList) {
             super(scope);
             this.exprList = exprList;
+        }
+
+        int size() {
+            return exprList.size();
         }
 
         void accept(ASTVisitor visitor) {
@@ -451,12 +474,13 @@ public class ASTNode {
     }
 
     public static class ArrayExpression extends Expression {
-        Expression expr1, expr2;
+        Expression expr;
+        List<Expression> index;
 
-        ArrayExpression(Scope scope, Expression expr1, Expression expr2) {
+        ArrayExpression(Scope scope, Expression expr, List<Expression> index) {
             super(scope);
-            this.expr1 = expr1;
-            this.expr2 = expr2;
+            this.expr = expr;
+            this.index = index;
         }
 
         void accept(ASTVisitor visitor) {
@@ -473,7 +497,6 @@ public class ASTNode {
             super(scope);
             this.type = type;
             this.expressions = expressions;
-            this.dimension_left = dimension_left;
         }
 
         void accept(ASTVisitor visitor) {

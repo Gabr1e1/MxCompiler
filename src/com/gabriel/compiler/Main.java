@@ -26,7 +26,7 @@ public class Main {
         parser.addErrorListener(errorListener);
 
 
-        ASTNode.Program root = null;
+        ASTNode.Program root;
         try {
             // syntax check and build CST
             ParseTree CST = parser.program();

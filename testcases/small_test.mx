@@ -1,6 +1,10 @@
-int[][][] a = 3 + 5 * 7;
-int b,c,d;
-void e;
+
+int foo() {
+}
+
+string bar() {
+
+}
 
 class A {
  int func1(int a, int b, int c)
@@ -15,16 +19,26 @@ class A {
      } else {
         return 123;
      }
-     if (a == 0)
+
+     if (a[1][2] == 0)
         return 12;
      int i = 0;
-     for (i = 0; i < str.A; i++) {
-        println(i + 1);
-     }
+
+    /* B b = new B(); */
+    for (i = 0; i < b.A; i++) {
+       println(i + 1);
+    }
      return 0;
  }
 
  int func2()
  {
+    int[][] a = new int[3][4];
+    a[2][4] = 5;
+    return 234;
  }
-}
+};
+
+class B {
+    int A;
+};

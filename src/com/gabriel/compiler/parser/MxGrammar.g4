@@ -2,10 +2,10 @@ grammar MxGrammar;
 
 program : (classDeclaration | functionDeclaration | variableDeclaration)*;
 
-classDeclaration : 'class' name = Identifier '{' (variableDeclaration | functionDeclaration)* '}';
+classDeclaration : 'class' name = Identifier '{' (variableDeclaration | functionDeclaration)* '}' ';';
 
 variableDeclaration
-    : typename Identifier ('=' expression)? ';'
+    : typename Identifier ('=' expression) ';'
     | typename (Identifier ',')* Identifier ';'
     ;
 

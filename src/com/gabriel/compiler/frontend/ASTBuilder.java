@@ -21,13 +21,13 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     private ASTNode.Function add(Scope scope, String str1, String str2, String str3, String str4) {
         ASTNode.ParamList param;
-        if (str3.equals("")) {
+        if (!str3.equals("")) {
             param = new ASTNode.ParamList(scope, Collections.singletonList(new ASTNode.Param(scope, str4, new Type(str3))));
         } else {
-            param = new ASTNode.ParamList(scope, null);
+            param = new ASTNode.ParamList(scope);
         }
         ASTNode.Function ret = new ASTNode.Function(scope, new Type(str1), str2, param, null);
-        scope.addSymbol(str2, new Type(TypeKind.FUNCTION, null));
+        scope.addSymbol(str2, new Type(TypeKind.FUNCTION, ret));
         return ret;
     }
 
@@ -104,7 +104,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         newScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
 
         ASTNode.TypeNode type = (ASTNode.TypeNode) visit(ctx.returnType);
-        ASTNode.ParamList paramList = null;
+        ASTNode.ParamList paramList = new ASTNode.ParamList(newScope);
         if (ctx.parameterList() != null)
             paramList = (ASTNode.ParamList) visit(ctx.parameterList());
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
@@ -245,7 +245,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitFuncExpr(MxGrammarParser.FuncExprContext ctx) {
-        ASTNode.ExpressionList expressionList = null;
+        ASTNode.ExpressionList expressionList = new ASTNode.ExpressionList(scopes.peek());
         if (ctx.expressionList() != null)
             expressionList = (ASTNode.ExpressionList) visit(ctx.expressionList());
         if (!scopes.peek().containsFunc(ctx.Identifier().getText())) {
@@ -256,9 +256,16 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitArrayExpr(MxGrammarParser.ArrayExprContext ctx) {
-        return new ASTNode.ArrayExpression(scopes.peek(),
-                (ASTNode.Expression) visit(ctx.expression(0)),
-                (ASTNode.Expression) visit(ctx.expression(1)));
+        ASTNode.Expression expr1 = (ASTNode.Expression) visit(ctx.expression(0));
+        ASTNode.Expression expr2 = (ASTNode.Expression) visit(ctx.expression(1));
+
+        if (expr1 instanceof ASTNode.ArrayExpression) {
+            ASTNode.ArrayExpression arrayExpr = (ASTNode.ArrayExpression) expr1;
+            List<ASTNode.Expression> newIndex = new ArrayList<>(arrayExpr.index);
+            newIndex.add(expr2);
+            return new ASTNode.ArrayExpression(scopes.peek(), arrayExpr.expr, newIndex);
+        } else
+            return new ASTNode.ArrayExpression(scopes.peek(), expr1, Collections.singletonList(expr2));
     }
 
     @Override
@@ -281,7 +288,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitCmpExpr(MxGrammarParser.CmpExprContext ctx) {
-        return new ASTNode.BinaryExpression(scopes.peek(),
+        return new ASTNode.CmpExpression(scopes.peek(),
                 (ASTNode.Expression) visit(ctx.expression(0)),
                 (ASTNode.Expression) visit(ctx.expression(1)),
                 ctx.op.getText());
@@ -308,14 +315,11 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitLiteral(MxGrammarParser.LiteralContext ctx) {
         if (ctx.NumLiteral() != null)
             return new ASTNode.LiteralExpression(scopes.peek(), Integer.parseInt(ctx.NumLiteral().getText()));
-        else {
-            if (ctx.StringLiteral() != null)
-                return new ASTNode.LiteralExpression(scopes.peek(), ctx.StringLiteral().getText(), false);
-            else if (ctx.BoolLiteral() != null)
-                return new ASTNode.LiteralExpression(scopes.peek(), ctx.BoolLiteral().getText(), false);
-            else return new ASTNode.LiteralExpression(scopes.peek(), ctx.NullLiteral().getText(), false);
-        }
-
+        else if (ctx.StringLiteral() != null)
+            return new ASTNode.LiteralExpression(scopes.peek(), ctx.StringLiteral().getText(), false);
+        else if (ctx.BoolLiteral() != null)
+            return new ASTNode.LiteralExpression(scopes.peek(), ctx.BoolLiteral().getText(), false);
+        else return new ASTNode.LiteralExpression(scopes.peek(), ctx.NullLiteral().getText(), false);
     }
 
     @Override
