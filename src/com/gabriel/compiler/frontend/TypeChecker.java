@@ -135,7 +135,7 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.SuffixExpression node) {
         node.expr.accept(this);
-        if (node.expr.type.toString().equals("int"))
+        if (!node.expr.type.toString().equals("int"))
             throw new SemanticError.InvalidType("Integer is needed", node.scope.name);
         node.type = node.expr.type;
     }
@@ -143,7 +143,7 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.UnaryExpression node) {
         node.expr.accept(this);
-        if (node.expr.type.toString().equals("int"))
+        if (!node.expr.type.toString().equals("int"))
             throw new SemanticError.InvalidType("Integer is needed", node.scope.name);
         node.type = node.expr.type;
     }
@@ -196,10 +196,26 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.MemberExpression node) {
         node.expr.accept(this);
-        Type t = node.scope.find(node.id);
-        if (!Type.isSameType(node.expr.type, t))
-            throw new SemanticError.TypeMismatch("Invalid member type");
-        node.type = t;
+        Type t = node.scope.find(node.expr.type.toString());
+        boolean flg = false;
+        if (t.typeKind == TypeKind.CLASS) {
+            ASTNode.Class c = (ASTNode.Class) t.node;
+            //member variable
+            for (ASTNode.Variable var : c.variables) {
+                if (node.id.equals(var.id)) {
+                    flg = true;
+                    node.type = var.type;
+                }
+            }
+            //member method
+            for (ASTNode.Function func : c.functions) {
+                if (node.id.equals(func.funcName)) {
+                    flg = true;
+                    node.type = c.scope.find(func.funcName);
+                }
+            }
+        }
+        if (!flg) throw new SemanticError.TypeMismatch("Invalid member type");
     }
 
     boolean compatibleCheck(ASTNode.ExpressionList exprList, ASTNode.ParamList paramList) {
@@ -213,11 +229,16 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.FuncExpression node) {
+        node.expr.accept(this);
         node.exprList.accept(this);
-        Type t = node.scope.find(node.funcName);
-        if (t == null || !compatibleCheck(node.exprList, ((ASTNode.Function) t.node).paramList)) {
-            throw new SemanticError.TypeMismatch("Not a valid function call " + node.funcName);
+        if (!node.expr.type.isFunction())
+            throw new SemanticError.TypeMismatch("Not even a function");
+
+        ASTNode.Function func = (ASTNode.Function) node.expr.type.node;
+        if (!compatibleCheck(node.exprList, func.paramList)) {
+            throw new SemanticError.TypeMismatch("Not a valid function call " + node.expr.type.baseType);
         }
+        node.type = func.returnType;
     }
 
     @Override

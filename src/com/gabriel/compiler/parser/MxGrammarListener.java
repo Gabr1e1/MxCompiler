@@ -72,18 +72,6 @@ public interface MxGrammarListener extends ParseTreeListener {
 	 */
 	void exitBasicExpr(MxGrammarParser.BasicExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code funcExpr}
-	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 * @param ctx the parse tree
-	 */
-	void enterFuncExpr(MxGrammarParser.FuncExprContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code funcExpr}
-	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 * @param ctx the parse tree
-	 */
-	void exitFuncExpr(MxGrammarParser.FuncExprContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code unaryExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
 	 * @param ctx the parse tree
@@ -95,6 +83,18 @@ public interface MxGrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitUnaryExpr(MxGrammarParser.UnaryExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code funcExpr}
+	 * labeled alternative in {@link MxGrammarParser#expression}.
+	 * @param ctx the parse tree
+	 */
+	void enterFuncExpr(MxGrammarParser.FuncExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code funcExpr}
+	 * labeled alternative in {@link MxGrammarParser#expression}.
+	 * @param ctx the parse tree
+	 */
+	void exitFuncExpr(MxGrammarParser.FuncExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code arrayExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.

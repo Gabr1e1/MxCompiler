@@ -59,14 +59,14 @@ public class MxGrammarBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFuncExpr(MxGrammarParser.FuncExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitUnaryExpr(MxGrammarParser.UnaryExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFuncExpr(MxGrammarParser.FuncExprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

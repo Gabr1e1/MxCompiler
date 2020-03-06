@@ -17,7 +17,7 @@ expression
     | expression '.' Identifier                                   # memberExpr
     | newExpression                                               # creatorExpr
     | expression '[' expression ']'                               # arrayExpr
-    | Identifier '(' expressionList? ')'                          # funcExpr
+    | expression '(' expressionList? ')'                          # funcExpr
     | expression op = ('++' | '--')                               # suffixExpr
     | op = ('++' | '--' | '+' | '-') expression                   # unaryExpr
     | op = ('~' | '!') expression                                 # unaryExpr

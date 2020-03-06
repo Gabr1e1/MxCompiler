@@ -49,19 +49,19 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBasicExpr(MxGrammarParser.BasicExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code funcExpr}
-	 * labeled alternative in {@link MxGrammarParser#expression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFuncExpr(MxGrammarParser.FuncExprContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code unaryExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitUnaryExpr(MxGrammarParser.UnaryExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code funcExpr}
+	 * labeled alternative in {@link MxGrammarParser#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFuncExpr(MxGrammarParser.FuncExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code arrayExpr}
 	 * labeled alternative in {@link MxGrammarParser#expression}.

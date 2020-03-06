@@ -194,7 +194,8 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.FuncExpression node) {
-        System.out.printf("Calling %s", node.funcName);
+        System.out.print("Calling ");
+        node.expr.accept(this);
         if (node.exprList != null) {
             System.out.print("(");
             node.exprList.accept(this);
@@ -205,7 +206,7 @@ public class ASTPrinter implements ASTVisitor {
     @Override
     public void visit(ASTNode.ArrayExpression node) {
         node.expr.accept(this);
-        node.index.forEach( (index) -> {
+        node.index.forEach((index) -> {
             System.out.print(" [ ");
             index.accept(this);
             System.out.print(" ] ");

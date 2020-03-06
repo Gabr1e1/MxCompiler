@@ -70,6 +70,10 @@ public class Type implements Cloneable {
         return baseType.equals("void");
     }
 
+    public boolean isFunction() {
+        return typeKind == TypeKind.FUNCTION;
+    }
+
     public static boolean isSameType(Type type1, Type type2) {
         if (!type1.baseType.equals(type2.baseType)) return false;
         if (type1.typeKind != type2.typeKind) return false;

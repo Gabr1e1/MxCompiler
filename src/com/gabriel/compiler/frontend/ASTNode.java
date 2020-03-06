@@ -1,7 +1,5 @@
 package com.gabriel.compiler.frontend;
 
-import com.gabriel.compiler.error.SemanticError;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,9 +150,6 @@ public class ASTNode {
         TypeNode(Scope scope, Type type) {
             super(scope);
             this.type = type;
-            if (!scope.isValidType(type)) {
-                throw new SemanticError.InvalidType(type.toString(), scope.name);
-            }
         }
 
         void accept(ASTVisitor visitor) {
@@ -459,12 +454,13 @@ public class ASTNode {
     }
 
     public static class FuncExpression extends Expression {
-        String funcName;
+        Expression expr;
         ExpressionList exprList;
 
-        FuncExpression(Scope scope, String funcName, ExpressionList exprList) {
+        //b.fun(123) / fun(123)
+        FuncExpression(Scope scope, Expression expr, ExpressionList exprList) {
             super(scope);
-            this.funcName = funcName;
+            this.expr = expr;
             this.exprList = exprList;
         }
 
