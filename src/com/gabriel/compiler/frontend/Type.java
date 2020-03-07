@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-enum TypeKind {CLASS, FUNCTION, VARIABLE}
+enum TypeKind {CLASS, FUNCTION, VARIABLE, LOOP}
 
 public class Type implements Cloneable {
     private static final String[] PRIMITIVE = {"bool", "int", "void", "string"};
@@ -12,20 +12,32 @@ public class Type implements Cloneable {
     public String baseType = "";
     public List<Integer> array = new ArrayList<>();
     public TypeKind typeKind;
+    public boolean lvalue;
 
     //for class & function
     public Node node;
 
+    public Type(Type other) {
+        this.baseType = other.baseType;
+        this.array = new ArrayList<>(other.array);
+        this.typeKind = other.typeKind;
+        this.lvalue = other.lvalue;
+        this.node = other.node;
+    }
+
     public Type(String baseType) {
         this.baseType = baseType;
         this.typeKind = TypeKind.VARIABLE;
+        this.lvalue = false;
     }
 
-    public Type(String baseType, boolean leftValue) {
+    public Type(String baseType, boolean lvalue) {
         this.baseType = baseType;
-        if (leftValue) {
+        if (lvalue) {
             this.typeKind = TypeKind.VARIABLE;
         }
+        this.lvalue = lvalue;
+
     }
 
     public Type(String baseType, int dimension) {
@@ -35,12 +47,17 @@ public class Type implements Cloneable {
     }
 
     public Type(TypeKind kind, Node node) {
+        if (node instanceof ASTNode.Function)
+            this.baseType = ((ASTNode.Function) node).funcName;
+        else if (node instanceof ASTNode.Class)
+            this.baseType = ((ASTNode.Class) node).className;
         this.typeKind = kind;
         this.node = node;
     }
 
-    public void appendDimension(int x) {
-        array.add(x);
+    public void setDimension(int x) {
+        array = new ArrayList<>();
+        for (int i = 0; i < x; i++) array.add(-1);
     }
 
     public String toString() {
@@ -51,6 +68,14 @@ public class Type implements Cloneable {
 
     public boolean isPrimitiveType() {
         return Arrays.asList(PRIMITIVE).contains(baseType);
+    }
+
+    public static boolean isPrimitiveType(String id) {
+        return Arrays.asList(PRIMITIVE).contains(id);
+    }
+
+    public boolean isPrimitiveNonArrayType() {
+        return Arrays.asList(PRIMITIVE).contains(baseType) && !isArray();
     }
 
     public boolean isArray() {
@@ -77,6 +102,14 @@ public class Type implements Cloneable {
         return baseType.equals("void");
     }
 
+    public boolean isNull() {
+        return baseType.equals("null");
+    }
+
+    public boolean isVariable() {
+        return typeKind == TypeKind.VARIABLE;
+    }
+
     public boolean isFunction() {
         return typeKind == TypeKind.FUNCTION;
     }
@@ -84,11 +117,22 @@ public class Type implements Cloneable {
     public boolean isClass() {
         return typeKind == TypeKind.CLASS;
     }
+
     public boolean isLeftValue() {
-        return this.typeKind == TypeKind.VARIABLE;
+        return this.lvalue;
+    }
+
+    public void setRightValue() {
+        this.lvalue = false;
+    }
+
+    public void setLeftValue() {
+        this.lvalue = true;
     }
 
     public static boolean isSameType(Type type1, Type type2) {
+        if ((type1.isNull() && !type2.isPrimitiveNonArrayType())
+                || (type2.isNull() && !type1.isPrimitiveNonArrayType())) return true;
         if (!type1.baseType.equals(type2.baseType)) return false;
 //        if (type1.typeKind != type2.typeKind) return false;
         if (type1.array.size() != type2.array.size()) return false;

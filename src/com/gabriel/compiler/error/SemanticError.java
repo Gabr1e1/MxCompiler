@@ -38,6 +38,12 @@ public class SemanticError {
         }
     }
 
+    public static class InvalidJump extends Error {
+        public InvalidJump(String _msg) {
+            super("Invalid Jump: " + _msg);
+        }
+    }
+
     public static class VoidType extends Error {
         public VoidType(String _msg, String scopeName) {
             super("Type cannot be void: " + _msg + " in " + scopeName + " scope");
@@ -52,7 +58,13 @@ public class SemanticError {
 
     public static class NoMainFunction extends Error {
         public NoMainFunction() {
-            super("No main function found");
+            super("No correct main function found");
+        }
+    }
+
+    public static class LvalueRequired extends Error {
+        public LvalueRequired() {
+            super("Should be left value");
         }
     }
 }

@@ -13,7 +13,7 @@ public class Scope {
     public Scope(String name, Scope father) {
         this.name = name;
         this.father = father;
-        symbolTable = new HashMap<String, Type>();
+        symbolTable = new HashMap<>();
     }
 
     public void addSymbol(String id, Type type) {
@@ -29,6 +29,15 @@ public class Scope {
             return symbolTable.get(id);
         } else {
             if (father != null) return father.find(id);
+            else return null;
+        }
+    }
+
+    public Scope findScope(String id) {
+        if (symbolTable.containsKey(id)) {
+            return this;
+        } else {
+            if (father != null) return father.findScope(id);
             else return null;
         }
     }
@@ -69,5 +78,12 @@ public class Scope {
             return (ASTNode.Class) t.node;
         if (father != null) return father.belongClass();
         else return null;
+    }
+
+    public boolean withinLoop() {
+        if (name.equals("for") || name.equals("while"))
+            return true;
+        else if (father != null) return father.withinLoop();
+        else return false;
     }
 }

@@ -1,6 +1,8 @@
 grammar MxGrammar;
 
-program : (classDeclaration | functionDeclaration | variableDeclaration)*;
+program : declaration*;
+
+declaration : classDeclaration | functionDeclaration | variableDeclaration;
 
 classDeclaration : 'class' name = Identifier '{' (variableDeclaration | functionDeclaration)* '}' ';';
 
@@ -18,10 +20,10 @@ typename : Identifier | arrayType;
 expression
     : basicExpression                                             # basicExpr
     | '(' expression ')'                                          # parenthesesExpr
+    | expression '(' expressionList? ')'                          # funcExpr
+    | expression '[' expression ']'                               # arrayExpr
     | expression '.' Identifier                                   # memberExpr
     | newExpression                                               # creatorExpr
-    | expression '[' expression ']'                               # arrayExpr
-    | expression '(' expressionList? ')'                          # funcExpr
     | expression op = ('++' | '--')                               # suffixExpr
     | op = ('++' | '--' | '+' | '-') expression                   # unaryExpr
     | op = ('~' | '!') expression                                 # unaryExpr
@@ -53,7 +55,8 @@ basicExpression
     ;
 
 newExpression
-    : 'new' type = Identifier ('[' expression ']')+ '[]'*
+    : 'new' error = Identifier ('[' expression ']')* ('[' ']')+ ('[' expression ']')+
+    | 'new' type = Identifier ('[' expression ']')+ ('[' ']')*
     | 'new' type = Identifier
     ;
 
@@ -82,9 +85,7 @@ jumpStatement
     | 'continue;'                # continueStmt
     ;
 
-Identifier : [a-zA-Z_][a-zA-Z_0-9]*;
-PrimitiveType : 'bool' | 'int' | 'void' | 'string';
-arrayType: Identifier ('[]')+;
+
 
 NumLiteral : ('-')? [0-9]+;
 fragment StringCharacter : (~["\\\r\n]) | '\\' | '\n' | '\\"';
@@ -92,7 +93,10 @@ StringLiteral : '"' StringCharacter* '"';
 BoolLiteral : 'true' | 'false';
 NullLiteral : 'null';
 This : 'this';
+Identifier : [a-zA-Z_][a-zA-Z_0-9]*;
+PrimitiveType : 'bool' | 'int' | 'void' | 'string';
+arrayType: Identifier ('[' ']')+;
 
 WS : [ \t\r\n]+ -> skip;
 BlockComment : '/*' .*? '*/' -> skip;
-LineComment : '/*' .*? '*/' ~[^\r\n]* -> skip;
+LineComment : '//' ~[\r\n]* -> skip;

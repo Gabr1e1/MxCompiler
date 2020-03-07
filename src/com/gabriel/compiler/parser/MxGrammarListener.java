@@ -18,6 +18,16 @@ public interface MxGrammarListener extends ParseTreeListener {
 	 */
 	void exitProgram(MxGrammarParser.ProgramContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MxGrammarParser#declaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterDeclaration(MxGrammarParser.DeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxGrammarParser#declaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitDeclaration(MxGrammarParser.DeclarationContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MxGrammarParser#classDeclaration}.
 	 * @param ctx the parse tree
 	 */
@@ -37,6 +47,16 @@ public interface MxGrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitVariableDeclaration(MxGrammarParser.VariableDeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxGrammarParser#functionDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxGrammarParser#functionDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxGrammarParser#typename}.
 	 * @param ctx the parse tree
@@ -231,16 +251,6 @@ public interface MxGrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitNewExpression(MxGrammarParser.NewExpressionContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxGrammarParser#functionDeclaration}.
-	 * @param ctx the parse tree
-	 */
-	void enterFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxGrammarParser#functionDeclaration}.
-	 * @param ctx the parse tree
-	 */
-	void exitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MxGrammarParser#parameter}.
 	 * @param ctx the parse tree

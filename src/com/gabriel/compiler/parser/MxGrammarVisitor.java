@@ -17,6 +17,12 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitProgram(MxGrammarParser.ProgramContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MxGrammarParser#declaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeclaration(MxGrammarParser.DeclarationContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MxGrammarParser#classDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -28,6 +34,12 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariableDeclaration(MxGrammarParser.VariableDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MxGrammarParser#functionDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxGrammarParser#typename}.
 	 * @param ctx the parse tree
@@ -142,12 +154,6 @@ public interface MxGrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitNewExpression(MxGrammarParser.NewExpressionContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxGrammarParser#functionDeclaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxGrammarParser#parameter}.
 	 * @param ctx the parse tree

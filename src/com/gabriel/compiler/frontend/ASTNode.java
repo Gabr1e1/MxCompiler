@@ -268,12 +268,20 @@ public class ASTNode {
     }
 
     public static class BreakStatement extends Statement {
+        public BreakStatement(Scope scope) {
+            super(scope);
+        }
+
         void accept(ASTVisitor visitor) {
             visitor.visit(this);
         }
     }
 
     public static class ContinueStatement extends Statement {
+        public ContinueStatement(Scope scope) {
+            super(scope);
+        }
+
         void accept(ASTVisitor visitor) {
             visitor.visit(this);
         }
@@ -319,6 +327,7 @@ public class ASTNode {
         boolean isBool = false, boolConstant;
         boolean isNull = false, isThis = false;
         String id = null;
+        boolean isFunc = false;
 
         LiteralExpression(Scope scope, int a) {
             super(scope);
@@ -340,10 +349,17 @@ public class ASTNode {
                     this.isThis = true;
                     break;
                 default:
-                    if (isId) this.id = a;
-                    else this.strConstant = a.substring(1, a.length() - 1);
+                    if (isId)
+                        this.id = a;
+                    else
+                        this.strConstant = a.substring(1, a.length() - 1);
                     break;
             }
+        }
+
+        LiteralExpression(Scope scope, String a, boolean isId, boolean isFunc) {
+            this(scope, a, isId);
+            this.isFunc = isFunc;
         }
 
         void accept(ASTVisitor visitor) {
@@ -499,6 +515,7 @@ public class ASTNode {
             super(scope);
             this.id = id;
             this.expressions = expressions;
+            this.dimension_left = dimension_left;
         }
 
         void accept(ASTVisitor visitor) {
