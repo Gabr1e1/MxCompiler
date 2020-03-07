@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class Node {
-    public Scope scope;
+    public Scope scope;  //the scope node ** belongs **
     public Node father;
 
     Node() {
@@ -40,13 +40,15 @@ public class ASTNode {
     public static class Class extends Node {
         List<Variable> variables;
         List<Function> functions;
+        List<Function> constructors;
         String className;
 
-        Class(Scope scope, String className, List<Variable> variables, List<Function> functions) {
+        Class(Scope scope, String className, List<Variable> variables, List<Function> functions, List<Function> constructors) {
             super(scope);
             this.className = className;
             this.variables = variables;
             this.functions = functions;
+            this.constructors = constructors;
         }
 
         void accept(ASTVisitor visitor) {
@@ -103,6 +105,10 @@ public class ASTNode {
             this.funcName = funcName;
             this.paramList = paramList;
             this.block = block;
+        }
+
+        boolean isConstructor() {
+            return returnType == null;
         }
 
         void accept(ASTVisitor visitor) {
@@ -485,13 +491,13 @@ public class ASTNode {
     }
 
     public static class NewExpression extends Expression {
-        Type type;
+        String id;
         List<Expression> expressions;
         int dimension_left;
 
-        NewExpression(Scope scope, Type type, List<Expression> expressions, int dimension_left) {
+        NewExpression(Scope scope, String id, List<Expression> expressions, int dimension_left) {
             super(scope);
-            this.type = type;
+            this.id = id;
             this.expressions = expressions;
         }
 

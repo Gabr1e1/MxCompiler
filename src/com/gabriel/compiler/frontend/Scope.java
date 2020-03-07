@@ -55,18 +55,18 @@ public class Scope {
         return t != null && t.typeKind == TypeKind.FUNCTION;
     }
 
-    public ASTNode.Function belongFunction() {
-        for (Map.Entry<String, Type> entry : symbolTable.entrySet()) {
-            if (entry.getValue().typeKind == TypeKind.FUNCTION) return (ASTNode.Function) entry.getValue().node;
-        }
-        if (father != null) return father.belongFunction();
+    public ASTNode.Function belongFunction(String name) {
+        Type t = find(name.equals("") ? this.name : name);
+        if (t != null && t.typeKind == TypeKind.FUNCTION)
+            return (ASTNode.Function) t.node;
+        if (father != null) return father.belongFunction(this.name);
         else return null;
     }
 
     public ASTNode.Class belongClass() {
-        for (Map.Entry<String, Type> entry : symbolTable.entrySet()) {
-            if (entry.getValue().typeKind == TypeKind.CLASS) return (ASTNode.Class) entry.getValue().node;
-        }
+        Type t = find(this.name);
+        if (t != null && t.typeKind == TypeKind.CLASS)
+            return (ASTNode.Class) t.node;
         if (father != null) return father.belongClass();
         else return null;
     }

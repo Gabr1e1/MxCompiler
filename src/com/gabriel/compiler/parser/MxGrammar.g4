@@ -8,6 +8,10 @@ variableDeclaration
     : typename Identifier ('=' expression) ';'
     | typename (Identifier ',')* Identifier ';'
     ;
+functionDeclaration
+    : returnType = typename? functionIdentifier = Identifier '(' parameterList? ')'
+        block
+    ;
 
 typename : Identifier | arrayType;
 
@@ -51,11 +55,6 @@ basicExpression
 newExpression
     : 'new' type = Identifier ('[' expression ']')+ '[]'*
     | 'new' type = Identifier
-    ;
-
-functionDeclaration
-    : returnType = typename functionIdentifier = Identifier '(' parameterList? ')'
-        block
     ;
 
 parameter : typename Identifier;

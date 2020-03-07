@@ -21,6 +21,13 @@ public class Type implements Cloneable {
         this.typeKind = TypeKind.VARIABLE;
     }
 
+    public Type(String baseType, boolean leftValue) {
+        this.baseType = baseType;
+        if (leftValue) {
+            this.typeKind = TypeKind.VARIABLE;
+        }
+    }
+
     public Type(String baseType, int dimension) {
         this.baseType = baseType;
         this.typeKind = TypeKind.VARIABLE;
@@ -74,9 +81,16 @@ public class Type implements Cloneable {
         return typeKind == TypeKind.FUNCTION;
     }
 
+    public boolean isClass() {
+        return typeKind == TypeKind.CLASS;
+    }
+    public boolean isLeftValue() {
+        return this.typeKind == TypeKind.VARIABLE;
+    }
+
     public static boolean isSameType(Type type1, Type type2) {
         if (!type1.baseType.equals(type2.baseType)) return false;
-        if (type1.typeKind != type2.typeKind) return false;
+//        if (type1.typeKind != type2.typeKind) return false;
         if (type1.array.size() != type2.array.size()) return false;
         if (type1.array.size() != 0) {
             for (int i = 0; i < type1.array.size(); i++) {

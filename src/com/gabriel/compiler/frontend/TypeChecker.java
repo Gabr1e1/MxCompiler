@@ -30,8 +30,16 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.Variable node) {
         //TODO: not void
+        if (node.Initialization != null) {
+            node.Initialization.accept(this);
+        }
         if (node.type.isVoid())
             throw new SemanticError.VoidType(node.id, node.scope.name);
+        if (!node.type.isPrimitiveType()) {
+            Type t = node.scope.find(node.type.baseType);
+            if (t == null || t.typeKind != TypeKind.CLASS)
+                throw new SemanticError.NotDeclared(node.id, node.scope.name);
+        }
     }
 
     @Override
@@ -66,11 +74,14 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.ForStatement node) {
-        node.init.accept(this);
-        node.cond.accept(this);
-        if (!node.cond.type.isBool())
+        if (node.init != null)
+            node.init.accept(this);
+        if (node.cond != null)
+            node.cond.accept(this);
+        if (node.cond != null && !node.cond.type.isBool())
             throw new SemanticError.GeneralError("Condition in for loop must be boolean type", node.scope.name);
-        node.incr.accept(this);
+        if (node.incr != null)
+            node.incr.accept(this);
         node.statement.accept(this);
     }
 
@@ -100,7 +111,10 @@ public class TypeChecker implements ASTVisitor {
             t = node.expr.type;
         } else
             t = new Type("void");
-        if (!Type.isSameType(node.scope.belongFunction().returnType, t)) {
+        ASTNode.Function func = node.scope.belongFunction("");
+        if (func == null)
+            throw new SemanticError.InvalidStatement("Cannot return here");
+        if (!Type.isSameType(func.returnType, t)) {
             throw new SemanticError.InvalidType("Wrong return type", node.scope.name);
         }
     }
@@ -132,12 +146,15 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.LiteralExpression node) {
-        if (node.strConstant != null) node.type = new Type("string");
-        else if (node.isBool) node.type = new Type("bool");
-        else if (node.isNull) node.type = new Type("null");
+        if (node.strConstant != null) node.type = new Type("string", false);
+        else if (node.isBool) node.type = new Type("bool", false);
+        else if (node.isNull) node.type = new Type("null", false);
         else if (node.isThis) node.type = new Type(TypeKind.CLASS, node.scope.belongClass());
-        else if (node.id != null) node.type = node.scope.find(node.id);
-        else node.type = new Type("int");
+        else if (node.id != null) {
+            node.type = node.scope.find(node.id);
+            if (node.type == null)
+                throw new SemanticError.NotDeclared(node.id, node.scope.name);
+        } else node.type = new Type("int", false);
     }
 
     @Override
@@ -151,8 +168,13 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.UnaryExpression node) {
         node.expr.accept(this);
-        if (!node.expr.type.toString().equals("int"))
-            throw new SemanticError.InvalidType("Integer is needed", node.scope.name);
+        if (node.op.equals("~") || node.op.equals("!")) {
+            if (!node.expr.type.toString().equals("bool"))
+                throw new SemanticError.InvalidType("Boolean is needed", node.scope.name);
+        } else {
+            if (!node.expr.type.toString().equals("int"))
+                throw new SemanticError.InvalidType("Integer is needed", node.scope.name);
+        }
         node.type = node.expr.type;
     }
 
@@ -195,6 +217,9 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.AssignExpression node) {
         node.expr1.accept(this);
+        if (!node.expr1.type.isLeftValue()) {
+            throw new SemanticError.TypeMismatch("Cannot assign to right value");
+        }
         node.expr2.accept(this);
         if (!Type.isSameType(node.expr1.type, node.expr2.type))
             throw new SemanticError.TypeMismatch("Cannot assign");
@@ -222,6 +247,8 @@ public class TypeChecker implements ASTVisitor {
                     node.type = c.scope.find(func.funcName);
                 }
             }
+        } else if (t.isString()) {
+
         }
         if (!flg) throw new SemanticError.TypeMismatch("Invalid member type");
     }
@@ -239,14 +266,25 @@ public class TypeChecker implements ASTVisitor {
     public void visit(ASTNode.FuncExpression node) {
         node.expr.accept(this);
         node.exprList.accept(this);
-        if (!node.expr.type.isFunction())
-            throw new SemanticError.TypeMismatch("Not even a function");
+        if (!node.expr.type.isFunction() && !node.expr.type.isClass())
+            throw new SemanticError.TypeMismatch("Not a valid expression");
 
-        ASTNode.Function func = (ASTNode.Function) node.expr.type.node;
-        if (!compatibleCheck(node.exprList, func.paramList)) {
-            throw new SemanticError.TypeMismatch("Not a valid function call " + node.expr.type.baseType);
+        if (node.expr.type.isClass()) { //class constructor
+            ASTNode.Class c = (ASTNode.Class) node.expr.type.node;
+            for (ASTNode.Function func : c.constructors) {
+                if (compatibleCheck(node.exprList, func.paramList)) {
+                    node.type = new Type(c.className);
+                    return;
+                }
+            }
+            throw new SemanticError.NotDeclared("Such a constructor is not found!", node.scope.name);
+        } else {
+            ASTNode.Function func = (ASTNode.Function) node.expr.type.node;
+            if (!compatibleCheck(node.exprList, func.paramList)) {
+                throw new SemanticError.TypeMismatch("Not a valid function call " + node.expr.type.baseType);
+            }
+            node.type = func.returnType;
         }
-        node.type = func.returnType;
     }
 
     @Override
@@ -274,5 +312,9 @@ public class TypeChecker implements ASTVisitor {
             if (!expr.type.isInt())
                 throw new SemanticError.InvalidType("Invalid index type", node.scope.name);
         });
+        Type t = node.scope.find(node.id);
+        node.type = t != null ? t : new Type(node.id, node.dimension_left + node.expressions.size());
+        if (t == null && (!node.type.isPrimitiveType() || node.type.baseType.equals("void")))
+            throw new SemanticError.InvalidType("Invalid Type in new expression", node.scope.name);
     }
 }

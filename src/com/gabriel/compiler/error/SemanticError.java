@@ -10,7 +10,13 @@ public class SemanticError {
 
     public static class InvalidOperation extends Error {
         public InvalidOperation(String _msg) {
-            super("Type Mismatch: " + _msg);
+            super("Invalid Operation: " + _msg);
+        }
+    }
+
+    public static class InvalidStatement extends Error {
+        public InvalidStatement(String _msg) {
+            super("Invalid Statement: " + _msg);
         }
     }
 

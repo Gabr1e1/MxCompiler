@@ -18,7 +18,8 @@ import static java.lang.System.exit;
 public class Main {
     public static void main(String[] args) throws Exception {
 //        Build Concrete Syntax Tree
-        CharStream code = CharStreams.fromFileName(args[0]);
+        String path = "./testcases/sema/basic-package/basic-71.mx";
+        CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);
         MxGrammarLexer lexer = new MxGrammarLexer(code);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MxGrammarParser parser = new MxGrammarParser(tokens);

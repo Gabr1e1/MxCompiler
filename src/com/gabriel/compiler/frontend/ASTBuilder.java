@@ -1,6 +1,5 @@
 package com.gabriel.compiler.frontend;
 
-import com.gabriel.compiler.error.SemanticError;
 import com.gabriel.compiler.parser.MxGrammarBaseVisitor;
 import com.gabriel.compiler.parser.MxGrammarParser;
 
@@ -19,7 +18,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         scopes.push(GlobalScope);
     }
 
-    private ASTNode.Function add(Scope scope, String str1, String str2, String str3, String str4) {
+    private ASTNode.Function gen(Scope scope, String str1, String str2, String str3, String str4) {
         ASTNode.ParamList param;
         if (!str3.equals("")) {
             param = new ASTNode.ParamList(scope, Collections.singletonList(new ASTNode.Param(scope, str4, new Type(str3))));
@@ -31,14 +30,22 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         return ret;
     }
 
-    private void addPrimitiveFunction(Scope scope, List<ASTNode.Function> builtins) {
-        builtins.add(add(scope, "void", "print", "string", "str"));
-        builtins.add(add(scope, "void", "println", "string", "str"));
-        builtins.add(add(scope, "void", "printInt", "int", "n"));
-        builtins.add(add(scope, "string", "getString", "", ""));
-        builtins.add(add(scope, "int", "getInt", "", ""));
-        builtins.add(add(scope, "string", "toString", "int", "i"));
+    private void addBuiltin(Scope scope, List<ASTNode.Function> builtins) {
+        List<ASTNode.Function> strFunc = new ArrayList<>();
+        Scope newScope = new Scope("string", scope);
+        strFunc.add(gen(newScope, "int", "length", "", ""));
+        strFunc.add(gen(newScope, "string", "substring", "int", "int"));
+        strFunc.add(gen(newScope, "int", "parseInt", "", ""));
+        strFunc.add(gen(newScope, "int", "ord", "int", ""));
+        ASTNode.Class strClass = new ASTNode.Class(scope, "string", new ArrayList<>(), strFunc, null);
+        scope.addSymbol("string", new Type(TypeKind.CLASS, strClass));
 
+        builtins.add(gen(scope, "void", "print", "string", "str"));
+        builtins.add(gen(scope, "void", "println", "string", "str"));
+        builtins.add(gen(scope, "void", "printInt", "int", "n"));
+        builtins.add(gen(scope, "string", "getString", "", ""));
+        builtins.add(gen(scope, "int", "getInt", "", ""));
+        builtins.add(gen(scope, "string", "toString", "int", "i"));
     }
 
     @Override
@@ -47,7 +54,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         List<ASTNode.Class> classes = new ArrayList<>();
         List<ASTNode.Function> functions = new ArrayList<>(), builtins = new ArrayList<>();
         List<ASTNode.Variable> variables = new ArrayList<>();
-        addPrimitiveFunction(curScope, builtins);
+        addBuiltin(curScope, builtins);
 
         ASTNode.Program cur = new ASTNode.Program(curScope, classes, functions, variables);
 
@@ -78,21 +85,26 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         curScope.addSymbol(className, new Type(TypeKind.CLASS, null));
 
         List<ASTNode.Variable> variables = new ArrayList<>();
-        List<ASTNode.Function> functions = new ArrayList<>();
-        ASTNode.Class ret = new ASTNode.Class(newScope, className, variables, functions);
+        List<ASTNode.Function> functions = new ArrayList<>(), constructors = new ArrayList<>();
+
+        ASTNode.Class ret = new ASTNode.Class(curScope, className, variables, functions, constructors);
 
         ctx.variableDeclaration().forEach((var) -> {
             ASTNode.VariableList vars = (ASTNode.VariableList) visit(var);
             variables.addAll(vars.variables);
         });
-        ctx.functionDeclaration().forEach((func) -> {
-            Node n = visit(func);
-            functions.add((ASTNode.Function) n);
-        });
+        boolean hasExplicitConstructor = false;
+        for (MxGrammarParser.FunctionDeclarationContext func : ctx.functionDeclaration()) {
+            ASTNode.Function n = (ASTNode.Function) visit(func);
+            if (n.isConstructor()) {
+                constructors.add(n);
+                hasExplicitConstructor = true;
+            } else functions.add(n);
+        }
+        if (!hasExplicitConstructor)
+            constructors.add(new ASTNode.Function(newScope, null, className, new ASTNode.ParamList(newScope), null));
         scopes.pop();
         curScope.modify(className, new Type(TypeKind.CLASS, ret));
-        //TODO: remove shit code
-        newScope.addSymbol(className, new Type(TypeKind.CLASS, ret));
         return ret;
     }
 
@@ -103,18 +115,17 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
         Scope newScope = new Scope(ctx.functionIdentifier.getText(), scopes.peek());
         scopes.push(newScope);
+
         curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
 
-        ASTNode.TypeNode type = (ASTNode.TypeNode) visit(ctx.returnType);
+        ASTNode.TypeNode type = (ctx.returnType != null) ? (ASTNode.TypeNode) visit(ctx.returnType) : null;
         ASTNode.ParamList paramList = new ASTNode.ParamList(newScope);
         if (ctx.parameterList() != null)
             paramList = (ASTNode.ParamList) visit(ctx.parameterList());
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
-        ASTNode.Function ret = new ASTNode.Function(newScope, type.type, funcName, paramList, block);
+        ASTNode.Function ret = new ASTNode.Function(curScope, type != null ? type.type : null, funcName, paramList, block);
         curScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
-        //TODO: remove shit code
-        newScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, ret));
         return ret;
     }
 
@@ -187,7 +198,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         Scope newScope = new Scope("", scopes.peek());
         scopes.push(newScope);
         List<ASTNode.Statement> statements = new ArrayList<>();
-        ASTNode.Block ret = new ASTNode.Block(newScope, statements);
+        ASTNode.Block ret = new ASTNode.Block(scope.peek(), statements);
 
         ctx.statement().forEach((statement) -> {
             Node n = visit(statement);
@@ -199,9 +210,9 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitForStatement(MxGrammarParser.ForStatementContext ctx) {
-        ASTNode.Expression init = (ASTNode.Expression) visit(ctx.init);
-        ASTNode.Expression cond = (ASTNode.Expression) visit(ctx.condition);
-        ASTNode.Expression incr = (ASTNode.Expression) visit(ctx.increment);
+        ASTNode.Expression init = ctx.init == null ? null : (ASTNode.Expression) visit(ctx.init);
+        ASTNode.Expression cond = ctx.condition == null ? null : (ASTNode.Expression) visit(ctx.condition);
+        ASTNode.Expression incr = ctx.increment == null ? null : (ASTNode.Expression) visit(ctx.increment);
         ASTNode.Statement statement = (ASTNode.Statement) visit(ctx.statement());
         return new ASTNode.ForStatement(scopes.peek(), init, cond, incr, statement);
     }
@@ -236,6 +247,11 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     @Override
     public Node visitContinueStmt(MxGrammarParser.ContinueStmtContext ctx) {
         return new ASTNode.ContinueStatement();
+    }
+
+    @Override
+    public Node visitParenthesesExpr(MxGrammarParser.ParenthesesExprContext ctx) {
+        return visit(ctx.expression());
     }
 
     @Override
@@ -331,10 +347,6 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitBasicExpression(MxGrammarParser.BasicExpressionContext ctx) {
         if (ctx.This() != null) return new ASTNode.LiteralExpression(scopes.peek(), "null", false);
         else if (ctx.Identifier() != null) {
-            if (!scopes.peek().containsVar(ctx.Identifier().getText())
-                    && !scopes.peek().containsFunc(ctx.Identifier().getText())) {
-                throw new SemanticError.NotDeclared(ctx.Identifier().getText(), scopes.peek().name);
-            }
             return new ASTNode.LiteralExpression(scopes.peek(), ctx.Identifier().getText(), true);
         } else return visit(ctx.literal());
     }
@@ -346,7 +358,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         ctx.expression().forEach((expr) -> {
             expressions.add((ASTNode.Expression) visit(expr));
         });
-        return new ASTNode.NewExpression(scopes.peek(), new Type(ctx.type.getText(), dimension_total),
+        return new ASTNode.NewExpression(scopes.peek(), ctx.type.getText(),
                 expressions, dimension_total - expressions.size());
     }
 }

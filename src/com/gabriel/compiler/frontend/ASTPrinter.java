@@ -14,6 +14,8 @@ public class ASTPrinter implements ASTVisitor {
     @Override
     public void visit(ASTNode.Class node) {
         System.out.println("Visiting class: " + node.className);
+        System.out.println("Constructors:");
+        node.constructors.forEach((n) -> n.accept(this));
         node.variables.forEach((n) -> n.accept(this));
         node.functions.forEach((n) -> n.accept(this));
     }
@@ -26,7 +28,7 @@ public class ASTPrinter implements ASTVisitor {
             node.paramList.accept(this);
         }
         System.out.println("");
-        node.block.accept(this);
+        if (node.block != null) node.block.accept(this);
     }
 
     @Override
@@ -74,11 +76,11 @@ public class ASTPrinter implements ASTVisitor {
     @Override
     public void visit(ASTNode.ForStatement node) {
         System.out.println("Visiting For loop with init: ");
-        node.init.accept(this);
+        if (node.init != null) node.init.accept(this);
         System.out.println("\ncond: ");
-        node.cond.accept(this);
+        if (node.cond != null) node.cond.accept(this);
         System.out.println("\nincr: ");
-        node.incr.accept(this);
+        if (node.incr != null) node.incr.accept(this);
         System.out.println("");
         node.statement.accept(this);
     }
@@ -143,7 +145,7 @@ public class ASTPrinter implements ASTVisitor {
         else if (node.isBool) System.out.print("constant " + (node.boolConstant ? "true" : "false"));
         else if (node.isNull) System.out.print("constant null");
         else if (node.isThis) System.out.print("constant this");
-        else if (node.id != null) System.out.print("variable " + node.id);
+        else if (node.id != null) System.out.print("var/func " + node.id);
         else System.out.printf("constant number %d", node.numConstant);
     }
 
@@ -190,7 +192,7 @@ public class ASTPrinter implements ASTVisitor {
     @Override
     public void visit(ASTNode.MemberExpression node) {
         node.expr.accept(this);
-        System.out.printf(".%s", node.id);
+        System.out.printf(".(member)%s", node.id);
     }
 
     @Override
@@ -216,7 +218,7 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.NewExpression node) {
-        System.out.print("new ");
+        System.out.print("new " + node.id);
         if (node.expressions.size() != 0) {
             System.out.print("[ ");
             node.expressions.forEach((expr) -> expr.accept(this));
