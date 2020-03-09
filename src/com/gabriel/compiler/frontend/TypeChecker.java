@@ -19,6 +19,7 @@ public class TypeChecker implements ASTVisitor {
     public void visit(ASTNode.Class node) {
         node.variables.forEach((n) -> n.accept(this));
         node.functions.forEach((n) -> n.accept(this));
+        node.constructors.forEach((n) -> n.accept(this));
     }
 
     @Override
@@ -26,7 +27,9 @@ public class TypeChecker implements ASTVisitor {
         if (node.paramList != null) {
             node.paramList.accept(this);
         }
-        node.block.accept(this);
+        if (node.block != null) node.block.accept(this);
+        if (!node.hasReturn && !node.returnType.toString().equals("void") && !node.funcName.equals("main"))
+            throw new SemanticError.NoReturnStatement(node.funcName);
     }
 
     @Override
@@ -37,9 +40,9 @@ public class TypeChecker implements ASTVisitor {
         if (node.type.isVoid())
             throw new SemanticError.VoidType(node.id, node.scope.name);
         if (!node.type.isPrimitiveType()) {
-            Type t = node.scope.find(node.type.baseType);
+            Type t = node.scope.findClass(node.type.baseType);
             if (t == null || t.typeKind != TypeKind.CLASS)
-                throw new SemanticError.NotDeclared(node.id, node.scope.name);
+                throw new SemanticError.NotDeclared(node.type.baseType, node.scope.name);
         }
         if (node.Initialization != null && !Type.isSameType(node.type, node.Initialization.type))
             throw new SemanticError.TypeMismatch(node.id);
@@ -73,7 +76,10 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.Block node) {
-        node.statements.forEach((stmt) -> stmt.accept(this));
+        if (node.statements != null)
+            node.statements.forEach((stmt) -> {
+                if (stmt != null) stmt.accept(this);
+            });
     }
 
     @Override
@@ -86,7 +92,8 @@ public class TypeChecker implements ASTVisitor {
             throw new SemanticError.GeneralError("Condition in for loop must be boolean type", node.scope.name);
         if (node.incr != null)
             node.incr.accept(this);
-        node.statement.accept(this);
+        if (node.statement != null)
+            node.statement.accept(this);
     }
 
     @Override
@@ -94,7 +101,8 @@ public class TypeChecker implements ASTVisitor {
         node.cond.accept(this);
         if (!node.cond.type.isBool())
             throw new SemanticError.GeneralError("Condition in for loop must be boolean type", node.scope.name);
-        node.statement.accept(this);
+        if (node.statement != null)
+            node.statement.accept(this);
     }
 
     @Override
@@ -102,7 +110,8 @@ public class TypeChecker implements ASTVisitor {
         node.cond.accept(this);
         if (!node.cond.type.isBool())
             throw new SemanticError.InvalidType("Condition in for loop must be boolean type", node.scope.name);
-        node.if_statement.accept(this);
+        if (node.if_statement != null)
+            node.if_statement.accept(this);
         if (node.else_statement != null)
             node.else_statement.accept(this);
     }
@@ -121,6 +130,7 @@ public class TypeChecker implements ASTVisitor {
         if (!Type.isSameType(func.returnType, t)) {
             throw new SemanticError.InvalidType("Wrong return type", node.scope.name);
         }
+        func.hasReturn = true;
     }
 
     @Override
@@ -156,9 +166,11 @@ public class TypeChecker implements ASTVisitor {
         else if (node.isBool) node.type = new Type("bool", false);
         else if (node.isNull) node.type = new Type("null", false);
         else if (node.isThis) {
-            node.type = new Type(TypeKind.CLASS, node.scope.belongClass());
+            node.type = new Type(node.scope.belongClass().className);
         } else if (node.id != null) {
             node.type = node.scope.find(node.id);
+            if (node.type == null)
+                throw new SemanticError.NotDeclared(node.id, node.scope.name);
             if (node.type.typeKind == TypeKind.VARIABLE) node.type.setLeftValue();
             if (node.type.typeKind == TypeKind.VARIABLE && node.isFunc)
                 throw new SemanticError.NotDeclared(node.id, node.scope.name);
@@ -180,7 +192,7 @@ public class TypeChecker implements ASTVisitor {
     public void visit(ASTNode.UnaryExpression node) {
         node.expr.accept(this);
         if (node.op.equals("~") || node.op.equals("!")) {
-            if (!node.expr.type.toString().equals("bool"))
+            if (!node.expr.type.toString().equals("bool") && !node.expr.type.toString().equals("int"))
                 throw new SemanticError.InvalidType("Boolean is needed", node.scope.name);
             node.type = new Type(node.expr.type);
             node.type.setRightValue();
@@ -252,7 +264,7 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(ASTNode.MemberExpression node) {
         node.expr.accept(this);
-        Type t = node.scope.find(node.expr.type.toString());
+        Type t = node.scope.findClass(node.expr.type.toString());
         boolean flg = false;
         if (t != null && t.typeKind == TypeKind.CLASS) {
             ASTNode.Class c = (ASTNode.Class) t.node;
@@ -279,7 +291,7 @@ public class TypeChecker implements ASTVisitor {
                         new ASTNode.Function(node.scope,
                                 new Type("int"), "size",
                                 new ASTNode.ParamList(node.scope),
-                                null));
+                                null, false));
             }
         }
 
@@ -300,7 +312,7 @@ public class TypeChecker implements ASTVisitor {
         node.expr.accept(this);
         node.exprList.accept(this);
         if (!node.expr.type.isFunction() && !node.expr.type.isClass())
-            throw new SemanticError.TypeMismatch("Not a valid expression");
+            throw new SemanticError.TypeMismatch("Not a valid func expression");
 
         if (node.expr.type.isClass()) { //class constructor
             ASTNode.Class c = (ASTNode.Class) node.expr.type.node;

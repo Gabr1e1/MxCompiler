@@ -33,6 +33,13 @@ public class Scope {
         }
     }
 
+    public Type findClass(String id) {
+        if (father != null) return father.findClass(id);
+        else //in global scope
+            return find(id);
+    }
+
+
     public Scope findScope(String id) {
         if (symbolTable.containsKey(id)) {
             return this;
@@ -73,7 +80,7 @@ public class Scope {
     }
 
     public ASTNode.Class belongClass() {
-        Type t = find(this.name);
+        Type t = findClass(this.name);
         if (t != null && t.typeKind == TypeKind.CLASS)
             return (ASTNode.Class) t.node;
         if (father != null) return father.belongClass();

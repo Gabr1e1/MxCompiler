@@ -67,4 +67,10 @@ public class SemanticError {
             super("Should be left value");
         }
     }
+
+    public static class NoReturnStatement extends Error {
+        public NoReturnStatement(String _msg) {
+            super("No Return statement in " + _msg);
+        }
+    }
 }

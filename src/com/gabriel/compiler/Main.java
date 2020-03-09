@@ -19,14 +19,14 @@ public class Main {
     public static void main(String[] args) throws Exception {
 //        Build Concrete Syntax Tree
 //        String path = "code.mx";
-//        String path = "./testcases/sema/breakcontinue-package/breakcontinue-2.mx";
-        String path = "./testcases/sema/array-package/array-4.mx";
+        String path = "./testcases/sema/codeforces-package/231A.mx";
 
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);
         MxGrammarLexer lexer = new MxGrammarLexer(code);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MxGrammarParser parser = new MxGrammarParser(tokens);
         ANTLRErrorListener errorListener = new SyntaxErrorListener();
+        lexer.addErrorListener(errorListener);
         parser.addErrorListener(errorListener);
 
 

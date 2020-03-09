@@ -87,13 +87,13 @@ jumpStatement
 
 
 
-NumLiteral : ('-')? [0-9]+;
-fragment StringCharacter : (~["\\\r\n]) | '\\' | '\n' | '\\"';
+NumLiteral : [0-9]+;
+fragment StringCharacter : (~["\\\r\n]) | '\\' ["n\\];
 StringLiteral : '"' StringCharacter* '"';
 BoolLiteral : 'true' | 'false';
 NullLiteral : 'null';
 This : 'this';
-Identifier : [a-zA-Z_][a-zA-Z_0-9]*;
+Identifier : [a-zA-Z][a-zA-Z_0-9]*;
 PrimitiveType : 'bool' | 'int' | 'void' | 'string';
 arrayType: Identifier ('[' ']')+;
 

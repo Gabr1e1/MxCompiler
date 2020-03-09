@@ -8,6 +8,8 @@ import java.util.*;
 
 public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
+    private static final String[] KEYWORDS = {"int", "bool", "null", "void", "true", "false", "if", "else", "for", "while", "break", "continue", "return", "new", "class", "this"};
+
     Stack<Scope> scopes = new Stack<>();
     Scope GlobalScope;
 
@@ -27,7 +29,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         } else {
             param = new ASTNode.ParamList(scope);
         }
-        ASTNode.Function ret = new ASTNode.Function(scope, new Type(str1), str2, param, null);
+        ASTNode.Function ret = new ASTNode.Function(scope, new Type(str1), str2, param, null, false);
         scope.addSymbol(str2, new Type(TypeKind.FUNCTION, ret));
         return ret;
     }
@@ -45,6 +47,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         builtins.add(gen(scope, "void", "print", "string", "str", "", ""));
         builtins.add(gen(scope, "void", "println", "string", "str", "", ""));
         builtins.add(gen(scope, "void", "printInt", "int", "n", "", ""));
+        builtins.add(gen(scope, "void", "printlnInt", "int", "n", "", ""));
         builtins.add(gen(scope, "string", "getString", "", "", "", ""));
         builtins.add(gen(scope, "int", "getInt", "", "", "", ""));
         builtins.add(gen(scope, "string", "toString", "int", "i", "", ""));
@@ -53,6 +56,8 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     @Override
     public Node visitProgram(MxGrammarParser.ProgramContext ctx) {
         Scope curScope = scopes.peek();
+        for (String key : KEYWORDS) curScope.addSymbol(key, null);
+
         List<ASTNode.Class> classes = new ArrayList<>();
         List<ASTNode.Function> functions = new ArrayList<>(), builtins = new ArrayList<>();
         List<ASTNode.Variable> variables = new ArrayList<>();
@@ -105,12 +110,14 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         for (MxGrammarParser.FunctionDeclarationContext func : ctx.functionDeclaration()) {
             ASTNode.Function n = (ASTNode.Function) visit(func);
             if (n.isConstructor()) {
+                if (!n.funcName.equals(className))
+                    throw new SemanticError.GeneralError("Constructor and class name mismatch", curScope.name);
                 constructors.add(n);
                 hasExplicitConstructor = true;
             } else functions.add(n);
         }
         if (!hasExplicitConstructor)
-            constructors.add(new ASTNode.Function(newScope, null, className, new ASTNode.ParamList(newScope), null));
+            constructors.add(new ASTNode.Function(newScope, new Type("void"), className, new ASTNode.ParamList(newScope), null, true));
         scopes.pop();
         curScope.modify(className, new Type(TypeKind.CLASS, ret));
         return ret;
@@ -132,7 +139,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
             paramList = (ASTNode.ParamList) visit(ctx.parameterList());
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
-        ASTNode.Function ret = new ASTNode.Function(curScope, type != null ? type.type : null, funcName, paramList, block);
+        ASTNode.Function ret = new ASTNode.Function(curScope, type != null ? type.type : new Type("void"), funcName, paramList, block, type == null);
         curScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
         return ret;
     }
@@ -246,9 +253,19 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitConditionalStatement(MxGrammarParser.ConditionalStatementContext ctx) {
-        return new ASTNode.ConditionalStatement(scopes.peek(), (ASTNode.Expression) visit(ctx.expression()),
-                (ASTNode.Statement) visit(ctx.statement(0)),
-                ctx.statement().size() == 1 ? null : (ASTNode.Statement) visit(ctx.statement(1)));
+        Scope newScope = new Scope("If", scopes.peek());
+        scopes.push(newScope);
+        ASTNode.Statement taken = (ASTNode.Statement) visit(ctx.statement(0));
+        scopes.pop();
+
+        ASTNode.Statement notTaken = null;
+        if (ctx.statement().size() != 1) {
+            newScope = new Scope("If", scopes.peek());
+            scopes.push(newScope);
+            notTaken = (ASTNode.Statement) visit(ctx.statement(1));
+            scopes.pop();
+        }
+        return new ASTNode.ConditionalStatement(scopes.peek(), (ASTNode.Expression) visit(ctx.expression()), taken, notTaken);
     }
 
     @Override
@@ -291,8 +308,15 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
         ASTNode.ExpressionList expressionList = new ASTNode.ExpressionList(scopes.peek());
         if (ctx.expressionList() != null)
             expressionList = (ASTNode.ExpressionList) visit(ctx.expressionList());
-        return new ASTNode.FuncExpression(scopes.peek(),
-                (ASTNode.Expression) visit(ctx.expression()), expressionList);
+
+        ASTNode.Expression expr = (ASTNode.Expression) visit(ctx.expression());
+        if (expr instanceof ASTNode.LiteralExpression) {
+            ASTNode.LiteralExpression _expr = (ASTNode.LiteralExpression) expr;
+            return new ASTNode.FuncExpression(scopes.peek(),
+                    new ASTNode.LiteralExpression(scopes.peek(), _expr.id, true, true), expressionList);
+
+        } else
+            return new ASTNode.FuncExpression(scopes.peek(), expr, expressionList);
     }
 
     @Override
@@ -367,14 +391,14 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitBasicExpression(MxGrammarParser.BasicExpressionContext ctx) {
         if (ctx.This() != null) return new ASTNode.LiteralExpression(scopes.peek(), "this", false);
         else if (ctx.Identifier() != null) {
+//            if (Arrays.asList(KEYWORDS).contains(ctx.Identifier().getText()))
+//                throw new SemanticError.InvalidStatement(ctx.Identifier().getText());
             Scope belongScope = scopes.peek().findScope(ctx.Identifier().getText());
             boolean isFunc = false;
             if (belongScope == null) {
                 belongScope = scopes.peek();
                 isFunc = true;
             }
-//            if (belongScope == null)
-//                throw new SemanticError.NotDeclared(ctx.Identifier().getText(), "");
             return new ASTNode.LiteralExpression(belongScope, ctx.Identifier().getText(), true, isFunc);
         } else return visit(ctx.literal());
     }

@@ -98,17 +98,20 @@ public class ASTNode {
         String funcName;
         ParamList paramList;
         Block block;
+        boolean hasReturn = false;
+        boolean construct;
 
-        Function(Scope scope, Type returnType, String funcName, ParamList paramList, Block block) {
+        Function(Scope scope, Type returnType, String funcName, ParamList paramList, Block block, boolean construct) {
             super(scope);
             this.returnType = returnType;
             this.funcName = funcName;
             this.paramList = paramList;
             this.block = block;
+            this.construct = construct;
         }
 
         boolean isConstructor() {
-            return returnType == null;
+            return construct;
         }
 
         void accept(ASTVisitor visitor) {
@@ -479,7 +482,6 @@ public class ASTNode {
         Expression expr;
         ExpressionList exprList;
 
-        //b.fun(123) / fun(123)
         FuncExpression(Scope scope, Expression expr, ExpressionList exprList) {
             super(scope);
             this.expr = expr;

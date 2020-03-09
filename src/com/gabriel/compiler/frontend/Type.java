@@ -131,6 +131,7 @@ public class Type implements Cloneable {
     }
 
     public static boolean isSameType(Type type1, Type type2) {
+        if (type1 == null || type2 == null) return false;
         if ((type1.isNull() && !type2.isPrimitiveNonArrayType())
                 || (type2.isNull() && !type1.isPrimitiveNonArrayType())) return true;
         if (!type1.baseType.equals(type2.baseType)) return false;

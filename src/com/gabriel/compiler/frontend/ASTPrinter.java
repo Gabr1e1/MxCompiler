@@ -70,7 +70,10 @@ public class ASTPrinter implements ASTVisitor {
 
     @Override
     public void visit(ASTNode.Block node) {
-        node.statements.forEach((stmt) -> stmt.accept(this));
+        if (node.statements != null)
+            node.statements.forEach((stmt) -> {
+                if (stmt != null) stmt.accept(this);
+            });
     }
 
     @Override
@@ -82,7 +85,8 @@ public class ASTPrinter implements ASTVisitor {
         System.out.println("\nincr: ");
         if (node.incr != null) node.incr.accept(this);
         System.out.println("");
-        node.statement.accept(this);
+        if (node.statement != null)
+            node.statement.accept(this);
     }
 
     @Override
@@ -90,15 +94,18 @@ public class ASTPrinter implements ASTVisitor {
         System.out.println("Visiting While loop with ");
         System.out.println("cond: ");
         node.cond.accept(this);
-        node.statement.accept(this);
+        if (node.statement != null)
+            node.statement.accept(this);
     }
 
     @Override
     public void visit(ASTNode.ConditionalStatement node) {
         System.out.print("Visiting If: ");
         node.cond.accept(this);
-        System.out.println("\nIF true:");
-        node.if_statement.accept(this);
+        if (node.if_statement != null) {
+            System.out.println("\nIF true:");
+            node.if_statement.accept(this);
+        }
         if (node.else_statement != null) {
             System.out.println("IF false:");
             node.else_statement.accept(this);
