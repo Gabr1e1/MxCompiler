@@ -15,7 +15,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     public ASTBuilder() {
         super();
-        GlobalScope = new Scope("Global", null);
+        GlobalScope = new Scope("__Global", null);
         scopes.push(GlobalScope);
     }
 
@@ -79,12 +79,9 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitDeclaration(MxGrammarParser.DeclarationContext ctx) {
-        if (ctx.classDeclaration() != null)
-            return visit(ctx.classDeclaration());
-        else if (ctx.functionDeclaration() != null)
-            return visit(ctx.functionDeclaration());
-        else
-            return visit(ctx.variableDeclaration());
+        if (ctx.classDeclaration() != null) return visit(ctx.classDeclaration());
+        else if (ctx.functionDeclaration() != null) return visit(ctx.functionDeclaration());
+        else return visit(ctx.variableDeclaration());
     }
 
 
@@ -92,14 +89,13 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitClassDeclaration(MxGrammarParser.ClassDeclarationContext ctx) {
         Scope curScope = scopes.peek();
         String className = ctx.name.getText();
+        curScope.addSymbol(className, new Type(TypeKind.CLASS, null));
 
         Scope newScope = new Scope(className, scopes.peek());
         scopes.push(newScope);
-        curScope.addSymbol(className, new Type(TypeKind.CLASS, null));
 
         List<ASTNode.Variable> variables = new ArrayList<>();
         List<ASTNode.Function> functions = new ArrayList<>(), constructors = new ArrayList<>();
-
         ASTNode.Class ret = new ASTNode.Class(curScope, className, variables, functions, constructors);
 
         ctx.variableDeclaration().forEach((var) -> {
@@ -127,11 +123,10 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitFunctionDeclaration(MxGrammarParser.FunctionDeclarationContext ctx) {
         Scope curScope = scopes.peek();
         String funcName = ctx.functionIdentifier.getText();
+        curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
 
         Scope newScope = new Scope(ctx.functionIdentifier.getText(), scopes.peek());
         scopes.push(newScope);
-
-        curScope.addSymbol(funcName, new Type(TypeKind.FUNCTION, null));
 
         ASTNode.TypeNode type = (ctx.returnType != null) ? (ASTNode.TypeNode) visit(ctx.returnType) : null;
         ASTNode.ParamList paramList = new ASTNode.ParamList(newScope);
@@ -139,6 +134,7 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
             paramList = (ASTNode.ParamList) visit(ctx.parameterList());
         ASTNode.Block block = (ASTNode.Block) visit(ctx.block());
         scopes.pop();
+
         ASTNode.Function ret = new ASTNode.Function(curScope, type != null ? type.type : new Type("void"), funcName, paramList, block, type == null);
         curScope.modify(funcName, new Type(TypeKind.FUNCTION, ret));
         return ret;
@@ -165,10 +161,8 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
 
     @Override
     public Node visitTypename(MxGrammarParser.TypenameContext ctx) {
-        Type type;
         if (ctx.Identifier() != null) {
-            type = new Type(ctx.Identifier().getText());
-            return new ASTNode.TypeNode(scopes.peek(), type);
+            return new ASTNode.TypeNode(scopes.peek(), new Type(ctx.Identifier().getText()));
         } else {
             return visit(ctx.arrayType());
         }
@@ -391,8 +385,6 @@ public class ASTBuilder extends MxGrammarBaseVisitor<Node> {
     public Node visitBasicExpression(MxGrammarParser.BasicExpressionContext ctx) {
         if (ctx.This() != null) return new ASTNode.LiteralExpression(scopes.peek(), "this", false);
         else if (ctx.Identifier() != null) {
-//            if (Arrays.asList(KEYWORDS).contains(ctx.Identifier().getText()))
-//                throw new SemanticError.InvalidStatement(ctx.Identifier().getText());
             Scope belongScope = scopes.peek().findScope(ctx.Identifier().getText());
             boolean isFunc = false;
             if (belongScope == null) {

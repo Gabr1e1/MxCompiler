@@ -20,7 +20,6 @@ abstract class Node {
 
 public class ASTNode {
     public static class Program extends Node {
-        //TODO: delete redundant lists, info already in List<Node> children
         List<Class> classes;
         List<Function> functions;
         List<Variable> variables;
