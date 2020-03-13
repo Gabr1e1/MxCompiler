@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class Node {
-    public Scope scope;  //the scope node ** belongs **
+    public Scope scope;  //the most recent scope node ** belongs **
     public Node father;
 
     Node() {
