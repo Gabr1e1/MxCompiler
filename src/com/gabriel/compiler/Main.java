@@ -44,7 +44,7 @@ public class Main {
             ASTPrinter printer = new ASTPrinter();
             printer.visit(root);
 
-            //Check Type
+            //Check IRType
             TypeChecker checker = new TypeChecker();
             checker.visit(root);
         } catch (Error err) {

@@ -18,11 +18,11 @@ abstract class Node {
     }
 }
 
-public class ASTNode {
+public class ASTNode<T> {
     public static class Program extends Node {
-        List<Class> classes;
-        List<Function> functions;
-        List<Variable> variables;
+        public List<Class> classes;
+        public List<Function> functions;
+        public List<Variable> variables;
 
         Program(Scope globalScope, List<Class> classes, List<Function> functions, List<Variable> variables) {
             super(globalScope);
@@ -31,16 +31,16 @@ public class ASTNode {
             this.variables = variables;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
     public static class Class extends Node {
-        List<Variable> variables;
-        List<Function> functions;
-        List<Function> constructors;
-        String className;
+        public List<Variable> variables;
+        public List<Function> functions;
+        public List<Function> constructors;
+        public String className;
 
         Class(Scope scope, String className, List<Variable> variables, List<Function> functions, List<Function> constructors) {
             super(scope);
@@ -50,14 +50,14 @@ public class ASTNode {
             this.constructors = constructors;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
     public static class Param extends Node {
-        Type type;
-        String id;
+        public Type type;
+        public String id;
 
         Param(Scope scope, String id, Type type) {
             super(scope);
@@ -65,13 +65,13 @@ public class ASTNode {
             this.type = type;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
     public static class ParamList extends Node {
-        List<Param> paramList;
+        public List<Param> paramList;
 
         ParamList(Scope scope) {
             super(scope);
@@ -87,18 +87,18 @@ public class ASTNode {
             return paramList.size();
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
     public static class Function extends Node {
-        Type returnType;
-        String funcName;
-        ParamList paramList;
-        Block block;
-        boolean hasReturn = false;
-        boolean construct;
+        public Type returnType;
+        public String funcName;
+        public ParamList paramList;
+        public Block block;
+        public boolean hasReturn = false;
+        public boolean construct;
 
         Function(Scope scope, Type returnType, String funcName, ParamList paramList, Block block, boolean construct) {
             super(scope);
@@ -113,15 +113,15 @@ public class ASTNode {
             return construct;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
     public static class Variable extends Node {
-        Type type;
-        String id;
-        Expression Initialization;
+        public Type type;
+        public String id;
+        public Expression Initialization;
 
         Variable(Scope scope, Type type, String id, Expression Initialization) {
             super(scope);
@@ -130,8 +130,8 @@ public class ASTNode {
             this.Initialization = Initialization;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -147,8 +147,8 @@ public class ASTNode {
             return variables.size();
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -160,8 +160,8 @@ public class ASTNode {
             this.type = type;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -173,8 +173,8 @@ public class ASTNode {
             super(scope);
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -190,8 +190,8 @@ public class ASTNode {
             this.statements.add(statement);
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -203,8 +203,8 @@ public class ASTNode {
             this.expr = expr;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -220,8 +220,8 @@ public class ASTNode {
             this.statement = statement;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -235,8 +235,8 @@ public class ASTNode {
             this.statement = statement;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -251,8 +251,8 @@ public class ASTNode {
             this.else_statement = else_statement;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -264,8 +264,8 @@ public class ASTNode {
             this.expr = expr;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -274,8 +274,8 @@ public class ASTNode {
             super(scope);
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -284,8 +284,8 @@ public class ASTNode {
             super(scope);
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -296,8 +296,8 @@ public class ASTNode {
             super(scope);
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -318,8 +318,8 @@ public class ASTNode {
             return exprList.size();
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -364,8 +364,8 @@ public class ASTNode {
             this.isFunc = isFunc;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
         //TODO: methods that return to which constant type the expression belongs
     }
@@ -380,8 +380,8 @@ public class ASTNode {
             this.op = op;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -395,8 +395,8 @@ public class ASTNode {
             this.op = op;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -411,8 +411,8 @@ public class ASTNode {
             this.op = op;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -427,8 +427,8 @@ public class ASTNode {
             this.op = op;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -443,8 +443,8 @@ public class ASTNode {
             this.op = op;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -457,8 +457,8 @@ public class ASTNode {
             this.expr2 = expr2;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -472,8 +472,8 @@ public class ASTNode {
             this.id = id;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -487,8 +487,8 @@ public class ASTNode {
             this.exprList = exprList;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -502,8 +502,8 @@ public class ASTNode {
             this.index = index;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -519,8 +519,8 @@ public class ASTNode {
             this.dimension_left = dimension_left;
         }
 
-        void accept(ASTVisitor visitor) {
-            visitor.visit(this);
+        public Object accept(ASTVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 }

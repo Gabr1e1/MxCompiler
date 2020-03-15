@@ -1,38 +1,38 @@
 package com.gabriel.compiler.frontend;
 
 public interface ASTVisitor {
-    void visit(ASTNode.Program node);
-    void visit(ASTNode.Class node);
-    void visit(ASTNode.Function node);
-    void visit(ASTNode.Variable node);
-    void visit(ASTNode.VariableList node);
+    Object visit(ASTNode.Program node);
+    Object visit(ASTNode.Class node);
+    Object visit(ASTNode.Function node);
+    Object visit(ASTNode.Variable node);
+    Object visit(ASTNode.VariableList node);
 
-    void visit(ASTNode.TypeNode node);
-    void visit(ASTNode.Param node);
-    void visit(ASTNode.ParamList node);
+    Object visit(ASTNode.TypeNode node);
+    Object visit(ASTNode.Param node);
+    Object visit(ASTNode.ParamList node);
 
-    void visit(ASTNode.Statement node);
-    void visit(ASTNode.Block node);
-    void visit(ASTNode.ForStatement node);
-    void visit(ASTNode.WhileStatement node);
-    void visit(ASTNode.ConditionalStatement node);
-    void visit(ASTNode.ReturnStatement node);
-    void visit(ASTNode.BreakStatement node);
-    void visit(ASTNode.ContinueStatement node);
-    void visit(ASTNode.ExprStatement node);
+    Object visit(ASTNode.Statement node);
+    Object visit(ASTNode.Block node);
+    Object visit(ASTNode.ForStatement node);
+    Object visit(ASTNode.WhileStatement node);
+    Object visit(ASTNode.ConditionalStatement node);
+    Object visit(ASTNode.ReturnStatement node);
+    Object visit(ASTNode.BreakStatement node);
+    Object visit(ASTNode.ContinueStatement node);
+    Object visit(ASTNode.ExprStatement node);
 
-    void visit(ASTNode.Expression node);
-    void visit(ASTNode.ExpressionList node);
-    void visit(ASTNode.LiteralExpression node);
-    void visit(ASTNode.SuffixExpression node);
-    void visit(ASTNode.UnaryExpression node);
-    void visit(ASTNode.BinaryExpression node);
-    void visit(ASTNode.CmpExpression node);
-    void visit(ASTNode.LogicExpression node);
-    void visit(ASTNode.AssignExpression node);
-    void visit(ASTNode.MemberExpression node);
-    void visit(ASTNode.FuncExpression node);
-    void visit(ASTNode.ArrayExpression node);
-    void visit(ASTNode.NewExpression node);
+    Object visit(ASTNode.Expression node);
+    Object visit(ASTNode.ExpressionList node);
+    Object visit(ASTNode.LiteralExpression node);
+    Object visit(ASTNode.SuffixExpression node);
+    Object visit(ASTNode.UnaryExpression node);
+    Object visit(ASTNode.BinaryExpression node);
+    Object visit(ASTNode.CmpExpression node);
+    Object visit(ASTNode.LogicExpression node);
+    Object visit(ASTNode.AssignExpression node);
+    Object visit(ASTNode.MemberExpression node);
+    Object visit(ASTNode.FuncExpression node);
+    Object visit(ASTNode.ArrayExpression node);
+    Object visit(ASTNode.NewExpression node);
 }
 

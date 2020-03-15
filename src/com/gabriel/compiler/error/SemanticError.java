@@ -4,7 +4,7 @@ package com.gabriel.compiler.error;
 public class SemanticError {
     public static class TypeMismatch extends Error {
         public TypeMismatch(String _msg) {
-            super("Type Mismatch: " + _msg);
+            super("IRType Mismatch: " + _msg);
         }
     }
 
@@ -34,7 +34,7 @@ public class SemanticError {
 
     public static class InvalidType extends Error {
         public InvalidType(String _msg, String scopeName) {
-            super("Invalid Type: " + _msg + " in " + scopeName + " scope");
+            super("Invalid IRType: " + _msg + " in " + scopeName + " scope");
         }
     }
 
@@ -46,7 +46,7 @@ public class SemanticError {
 
     public static class VoidType extends Error {
         public VoidType(String _msg, String scopeName) {
-            super("Type cannot be void: " + _msg + " in " + scopeName + " scope");
+            super("IRType cannot be void: " + _msg + " in " + scopeName + " scope");
         }
     }
 

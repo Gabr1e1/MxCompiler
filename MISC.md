@@ -20,8 +20,8 @@ LLVM IR is quite complicated. I think I will take these 3 steps:
 3. ref manual
 
 *Adapted* LLVM IR:
-SSA: entry allocation:
-handling class: 
+SSA: entry allocation: %inst.toString() + scope + num(in case of conflict)
+handling class: struct + function
 Functions & BasicBlocks & Instructions are supposed to be doubly-linked
 1. Module
 2. Function
@@ -37,3 +37,7 @@ Functions & BasicBlocks & Instructions are supposed to be doubly-linked
    2. label
    3. aggregate: array, structure
    4. constant: int, string
+
+User-Use-Usee Design Pattern:
+1. Value -> User -> Instruction
+2. Value keeps track of user using this value, instruction is a type of user
