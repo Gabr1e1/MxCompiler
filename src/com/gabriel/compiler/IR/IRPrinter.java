@@ -54,6 +54,8 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.AllocaInst inst) {
+        var str = String.format("%%%s = alloca %s, align %d", inst.name, inst.type.accept(this), inst.type.getByteNum());
+        genCode(str);
         return null;
     }
 
@@ -129,7 +131,7 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(Type type) {
-        return null;
+        return type.visit(this);
     }
 
     @Override
