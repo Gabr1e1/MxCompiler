@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-enum TypeKind {CLASS, FUNCTION, VARIABLE, LOOP}
+enum TypeKind {CLASS, FUNCTION, VARIABLE}
 
 public class Type implements Cloneable {
     private static final String[] PRIMITIVE = {"bool", "int", "void", "string"};

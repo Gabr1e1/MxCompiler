@@ -1,5 +1,7 @@
 package com.gabriel.compiler.frontend;
 
+import com.gabriel.compiler.IR.Value;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -136,7 +138,7 @@ public class ASTNode<T> {
     }
 
     public static class VariableList extends Statement {
-        List<Variable> variables;
+        public List<Variable> variables;
 
         VariableList(Scope scope, List<Variable> variables) {
             super(scope);
@@ -179,7 +181,7 @@ public class ASTNode<T> {
     }
 
     public static class Block extends Statement {
-        List<Statement> statements;
+        public List<Statement> statements;
 
         Block(Scope scope, List<Statement> statements) {
             super(scope);
@@ -196,7 +198,7 @@ public class ASTNode<T> {
     }
 
     public static class ExprStatement extends Statement {
-        Expression expr;
+        public Expression expr;
 
         ExprStatement(Scope scope, Expression expr) {
             super(scope);
@@ -209,8 +211,8 @@ public class ASTNode<T> {
     }
 
     public static class ForStatement extends Statement {
-        Expression init, cond, incr;
-        Statement statement;
+        public Expression init, cond, incr;
+        public Statement statement;
 
         ForStatement(Scope scope, Expression init, Expression cond, Expression incr, Statement statement) {
             super(scope);
@@ -226,8 +228,8 @@ public class ASTNode<T> {
     }
 
     public static class WhileStatement extends Statement {
-        Expression cond;
-        Statement statement;
+        public Expression cond;
+        public Statement statement;
 
         WhileStatement(Scope scope, Expression cond, Statement statement) {
             super(scope);
@@ -241,8 +243,8 @@ public class ASTNode<T> {
     }
 
     public static class ConditionalStatement extends Statement {
-        Expression cond;
-        Statement if_statement, else_statement;
+        public Expression cond;
+        public Statement if_statement, else_statement;
 
         ConditionalStatement(Scope scope, Expression cond, Statement if_statement, Statement else_statement) {
             super(scope);
@@ -257,7 +259,7 @@ public class ASTNode<T> {
     }
 
     public static class ReturnStatement extends Statement {
-        Expression expr;
+        public Expression expr;
 
         ReturnStatement(Scope scope, Expression expr) {
             super(scope);
@@ -290,7 +292,8 @@ public class ASTNode<T> {
     }
 
     public static class Expression extends Node {
-        Type type;
+        public Type type;
+        public Value val = null;
 
         Expression(Scope scope) {
             super(scope);
@@ -302,7 +305,7 @@ public class ASTNode<T> {
     }
 
     public static class ExpressionList extends Node {
-        List<Expression> exprList;
+        public List<Expression> exprList;
 
         ExpressionList(Scope scope) {
             super(scope);
@@ -324,12 +327,12 @@ public class ASTNode<T> {
     }
 
     public static class LiteralExpression extends Expression {
-        int numConstant;
-        String strConstant = null;
-        boolean isBool = false, boolConstant;
-        boolean isNull = false, isThis = false;
-        String id = null;
-        boolean isFunc = false;
+        public int numConstant;
+        public String strConstant = null;
+        public boolean isBool = false, boolConstant;
+        public boolean isNull = false, isThis = false;
+        public String id = null;
+        public boolean isFunc = false;
 
         LiteralExpression(Scope scope, int a) {
             super(scope);
@@ -371,8 +374,8 @@ public class ASTNode<T> {
     }
 
     public static class SuffixExpression extends Expression {
-        Expression expr;
-        String op;
+        public Expression expr;
+        public String op;
 
         SuffixExpression(Scope scope, Expression expr, String op) {
             super(scope);
@@ -386,8 +389,8 @@ public class ASTNode<T> {
     }
 
     public static class UnaryExpression extends Expression {
-        Expression expr;
-        String op;
+        public Expression expr;
+        public String op;
 
         UnaryExpression(Scope scope, Expression expr, String op) {
             super(scope);
@@ -401,8 +404,8 @@ public class ASTNode<T> {
     }
 
     public static class BinaryExpression extends Expression {
-        Expression expr1, expr2;
-        String op;
+        public Expression expr1, expr2;
+        public String op;
 
         BinaryExpression(Scope scope, Expression expr1, Expression expr2, String op) {
             super(scope);
@@ -417,8 +420,8 @@ public class ASTNode<T> {
     }
 
     public static class CmpExpression extends Expression {
-        Expression expr1, expr2;
-        String op;
+        public Expression expr1, expr2;
+        public String op;
 
         CmpExpression(Scope scope, Expression expr1, Expression expr2, String op) {
             super(scope);
@@ -433,8 +436,8 @@ public class ASTNode<T> {
     }
 
     public static class LogicExpression extends Expression {
-        Expression expr1, expr2;
-        String op;
+        public Expression expr1, expr2;
+        public String op;
 
         LogicExpression(Scope scope, Expression expr1, Expression expr2, String op) {
             super(scope);
@@ -449,7 +452,7 @@ public class ASTNode<T> {
     }
 
     public static class AssignExpression extends Expression {
-        Expression expr1, expr2;
+        public Expression expr1, expr2;
 
         AssignExpression(Scope scope, Expression expr1, Expression expr2) {
             super(scope);
@@ -463,8 +466,8 @@ public class ASTNode<T> {
     }
 
     public static class MemberExpression extends Expression {
-        Expression expr;
-        String id;
+        public Expression expr;
+        public String id;
 
         MemberExpression(Scope scope, Expression expr, String id) {
             super(scope);
@@ -478,8 +481,8 @@ public class ASTNode<T> {
     }
 
     public static class FuncExpression extends Expression {
-        Expression expr;
-        ExpressionList exprList;
+        public Expression expr;
+        public ExpressionList exprList;
 
         FuncExpression(Scope scope, Expression expr, ExpressionList exprList) {
             super(scope);
@@ -493,8 +496,8 @@ public class ASTNode<T> {
     }
 
     public static class ArrayExpression extends Expression {
-        Expression expr;
-        List<Expression> index;
+        public Expression expr;
+        public List<Expression> index;
 
         ArrayExpression(Scope scope, Expression expr, List<Expression> index) {
             super(scope);

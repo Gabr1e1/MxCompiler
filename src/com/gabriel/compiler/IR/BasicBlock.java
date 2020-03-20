@@ -5,8 +5,9 @@ import java.util.List;
 public class BasicBlock extends Value {
     List<Instruction> instructions;
 
-    BasicBlock(String name, Type type) {
-        super(name, type);
+    BasicBlock(String name, IRConstant.Function function) {
+        super(name, new IRType.LabelType());
+        function.addBlock(this);
     }
 
     void addInst(Instruction inst) {

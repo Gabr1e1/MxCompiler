@@ -10,8 +10,37 @@ abstract class Constant extends User {
 
 public class IRConstant {
     public static class ConstInteger extends Constant {
-        ConstInteger(String name, Type type) {
-            super(name, type);
+        int num;
+
+        ConstInteger(int num) {
+            super("const", new IRType.IntegerType("int"));
+            this.num = num;
+        }
+
+        ConstInteger(int num, String type) {
+            super("const", new IRType.IntegerType(type));
+            this.num = num;
+        }
+    }
+
+    public static class ConstString extends Constant {
+        String str;
+
+        ConstString(String str) {
+            super("const", new IRType.IntegerType("string"));
+            this.str = str;
+        }
+    }
+
+    public static class Null extends Constant {
+        Null() {
+            super("null", new IRType.VoidType());
+        }
+    }
+
+    public static class Void extends Constant {
+        Void() {
+            super("void", new IRType.VoidType());
         }
     }
 
@@ -34,6 +63,10 @@ public class IRConstant {
 
         void addBlock(BasicBlock block) {
             blocks.add(block);
+        }
+
+        Value getParam(int i) {
+            return ((IRType.FunctionType) type).params.get(i);
         }
     }
 }

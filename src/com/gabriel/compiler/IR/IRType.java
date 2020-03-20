@@ -20,7 +20,8 @@ public class IRType {
         } else if (type.isPrimitiveNonArrayType()) {
             return new IntegerType(type.toString());
         } else {
-            return new StructType(type.toString());
+            //TODO
+            return new ClassType(type.toString());
         }
     }
 
