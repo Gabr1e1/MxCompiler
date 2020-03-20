@@ -3,11 +3,6 @@ package com.gabriel.compiler.IR;
 import java.util.List;
 import java.util.Map;
 
-abstract class Type {
-    public String baseType;
-    public int bitLen;
-}
-
 public class IRType {
     public static Type convert(com.gabriel.compiler.frontend.Type type) {
         if (type.isArray()) {
@@ -29,6 +24,11 @@ public class IRType {
         VoidType() {
             this.bitLen = 0;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class IntegerType extends Type {
@@ -38,6 +38,11 @@ public class IRType {
         IntegerType(String baseType) {
             this.baseType = baseType;
             this.bitLen = BitLen.get(baseType);
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -52,6 +57,11 @@ public class IRType {
             this.member_name = member_name;
         }
 
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+
         String getName() {
             return className;
         }
@@ -64,6 +74,11 @@ public class IRType {
             this.pointer = pointer;
             this.bitLen = 4; //32-bit address
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class ArrayType extends Type {
@@ -73,6 +88,11 @@ public class IRType {
         ArrayType(Type baseType, int dimension) {
             this.baseType = baseType;
             this.dimension = dimension;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -84,9 +104,17 @@ public class IRType {
             this.params = params;
             this.returnType = returnType;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class LabelType extends Type {
-
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 }

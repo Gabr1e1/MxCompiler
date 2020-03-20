@@ -2,12 +2,6 @@ package com.gabriel.compiler.IR;
 
 import java.util.List;
 
-abstract class Constant extends User {
-    Constant(String name, Type type) {
-        super(name, type);
-    }
-}
-
 public class IRConstant {
     public static class ConstInteger extends Constant {
         int num;
@@ -21,6 +15,11 @@ public class IRConstant {
             super("const", new IRType.IntegerType(type));
             this.num = num;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class ConstString extends Constant {
@@ -30,17 +29,32 @@ public class IRConstant {
             super("const", new IRType.IntegerType("string"));
             this.str = str;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class Null extends Constant {
         Null() {
             super("null", new IRType.VoidType());
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class Void extends Constant {
         Void() {
             super("void", new IRType.VoidType());
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -51,6 +65,11 @@ public class IRConstant {
             super(name, type);
             this.Initialization = initialization;
             addOperand(initialization);
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -67,6 +86,11 @@ public class IRConstant {
 
         Value getParam(int i) {
             return ((IRType.FunctionType) type).params.get(i);
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 }

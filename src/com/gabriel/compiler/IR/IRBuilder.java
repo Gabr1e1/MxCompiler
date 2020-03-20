@@ -185,7 +185,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.ConditionalStatement node) {
-        //TODO: SHOULD I USE PHI NODE?
         Value cond = (Value) (node.cond.accept(this));
         BasicBlock taken = new BasicBlock("if_taken", curFunc);
         BasicBlock notTaken = new BasicBlock("if_notTaken", curFunc);
@@ -329,16 +328,28 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.MemberExpression node) {
+        Value base = (Value) node.expr.accept(this);
         var t = node.scope.findClass(node.expr.type.toString());
         if (t != null && t.isClass()) {
+            var c = module.getClass(((ASTNode.Class) t.node).className);
+
             if (node.type.isLeftValue()) { //Member Variable
-                
+                for (int i = 0; i < c.members.size(); i++) {
+                    if (c.member_name.get(i).equals(node.id)) {
+                        node.val = new IRInst.GEPInst(c.members.get(i), base, curBlock);
+                        ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(i));
+                        return node.val;
+                    }
+                }
             } else { //Member Function
+                var func = (IRConstant.Function) symbolTable.getFromOriginal(node.id, ((ASTNode.Class) t.node）.scope);
+                node.val = func;
+                return node.val;
             }
         } else if (node.id.equals("size")) {
             //TODO: WTF IS THIS?
         }
-        return node.val;
+        return null;
     }
 
     @Override
@@ -366,6 +377,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.NewExpression node) {
+        //TODO: MALLOC
         return null;
     }
 }

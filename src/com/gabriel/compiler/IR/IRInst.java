@@ -2,19 +2,6 @@ package com.gabriel.compiler.IR;
 
 import java.util.List;
 
-abstract class Instruction extends User {
-    enum OpType {ADD, SUB, MUL, DIV}
-
-    BasicBlock parent;
-
-    Instruction(String name, Type type, BasicBlock basicBlock) {
-        super(name, type);
-        parent = basicBlock;
-        basicBlock.addInst(this);
-    }
-
-}
-
 public class IRInst {
     public static class AllocaInst extends Instruction {
         AllocaInst(String name, Type type, BasicBlock belong) {
@@ -39,6 +26,11 @@ public class IRInst {
             this.taken = jump;
             this.notTaken = null;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class ReturnInst extends Instruction {
@@ -47,6 +39,11 @@ public class IRInst {
         ReturnInst(Value v, BasicBlock belong) {
             super("", v.type, belong);
             this.v = v;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -61,6 +58,11 @@ public class IRInst {
             this.rhs = rhs;
             this.op = op; //OpMap.get(op);
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class CmpInst extends Instruction {
@@ -73,6 +75,11 @@ public class IRInst {
             this.rhs = rhs;
             this.op = op;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class StoreInst extends Instruction {
@@ -83,6 +90,11 @@ public class IRInst {
             this.dest = dest;
             this.from = from;
         }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
     }
 
     public static class GEPInst extends Instruction {
@@ -90,6 +102,12 @@ public class IRInst {
 
         GEPInst(Type type, Value base, BasicBlock belong) {
             super("", type, belong);
+            operands.add(new IRConstant.ConstInteger(0));
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
 
         void addOperand(Value v) {
@@ -113,6 +131,11 @@ public class IRInst {
             super("call_" + func.name, ((IRType.FunctionType) func.type).returnType, belong);
             this.func = func;
             this.args = args;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 }
