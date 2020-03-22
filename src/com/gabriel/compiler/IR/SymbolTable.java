@@ -8,11 +8,16 @@ import java.util.Map;
 
 public class SymbolTable {
     Map<String, Value> symbolTable = new HashMap<>();
-    Map<Pair<Scope, String>, Value> corresTable = new HashMap<>();
+    Map<String, Map<Scope, Value>> corresTable = new HashMap<>();
 
     void put(Value value, Scope scope) {
         symbolTable.put(value.name, value);
-        corresTable.put(new Pair<>(scope, value.originalName), value);
+        if (corresTable.containsKey(value.originalName)) {
+            var map = corresTable.get(value.originalName);
+            map.put(scope, value);
+        } else {
+            corresTable.put(value.originalName, Map.of(scope, value));
+        }
     }
 
     Value get(String name) {
@@ -20,6 +25,9 @@ public class SymbolTable {
     }
 
     Value getFromOriginal(String name, Scope scope) {
-        return corresTable.get(new Pair<>(scope, name));
+        var t = corresTable.get(name);
+        if (t != null)
+            return t.get(scope);
+        return null;
     }
 }

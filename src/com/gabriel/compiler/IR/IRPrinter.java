@@ -9,7 +9,7 @@ public class IRPrinter implements IRVisitor {
     String filename;
     FileWriter codeWriter;
 
-    IRPrinter(String filename) {
+    public IRPrinter(String filename) {
         try {
             this.filename = filename;
             this.codeWriter = new FileWriter(filename);
@@ -17,6 +17,9 @@ public class IRPrinter implements IRVisitor {
         } catch (IOException e) {
             System.out.println("Can't even create a fucking file");
         }
+    }
+
+    public IRPrinter() {
     }
 
     public void finish() {
@@ -27,120 +30,28 @@ public class IRPrinter implements IRVisitor {
         }
     }
 
-    private void genCode(Object obj) {
+    private void writeCode(Object obj) {
         try {
             var str = (String) obj;
             codeWriter.write(str + "\n");
+            System.out.println(str + "\n");
         } catch (Exception e) {
             System.out.println(e.toString());
         }
     }
 
+    private String stringify(List<Value> list) {
+        List<String> ret = new ArrayList<>();
+        list.forEach((x) -> ret.add((String) x.accept(this)));
+        return String.join(", ", ret);
+    }
+
     @Override
     public Object visit(Module module) {
-        module.classes.forEach((className, type) -> {
-            genCode(type.accept(this));
-        });
-        module.globalVariables.forEach((var) -> var.accept(this));
+        module.classes.forEach((className, type) -> writeCode(type.accept(this)));
+        module.globalVariables.forEach((var) -> writeCode(var.accept(this)));
         module.functions.forEach((function) -> function.accept(this));
-        return null;
-    }
-
-    @Override
-    public Object visit(Instruction inst) {
-        inst.accept(this);
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.AllocaInst inst) {
-        var str = String.format("%%%s = alloca %s, align %d", inst.name, inst.type.accept(this), inst.type.getByteNum());
-        genCode(str);
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.BranchInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.ReturnInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.BinaryOpInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.CmpInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.StoreInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.GEPInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRInst.CallInst inst) {
-        return null;
-    }
-
-    @Override
-    public Object visit(Constant constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.ConstInteger constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.ConstString constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.Null constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.Void constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.GlobalVariable constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.Function constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(Type type) {
-        return type.visit(this);
-    }
-
-    @Override
-    public Object visit(IRType.VoidType type) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRType.IntegerType type) {
+        finish();
         return null;
     }
 
@@ -148,26 +59,139 @@ public class IRPrinter implements IRVisitor {
     public Object visit(IRType.ClassType type) {
         List<String> members = new ArrayList<>();
         type.members.forEach((m) -> members.add((String) m.accept(this)));
-        return String.format("%% %s = type { %s }", type.className, String.join(",", members);
+        return String.format("%% %s = type { %s }", type.className, String.join(", ", members));
+    }
+
+    @Override
+    public Object visit(IRConstant.GlobalVariable globalVariable) {
+        return null;
+    }
+
+    @Override
+    public Object visit(IRConstant.Function function) {
+        writeCode(String.format((String) function.type.accept(this), function.name) + " {");
+        function.blocks.forEach((block) -> block.accept(this));
+        writeCode("}");
+        return null;
+    }
+
+    @Override
+    public Object visit(BasicBlock block) {
+        writeCode("\n" + block.getName() + ":");
+        block.instructions.forEach((inst) -> writeCode(inst.accept(this)));
+        return null;
+    }
+
+    @Override
+    public Object visit(Value value) {
+        return null;
+    }
+
+    @Override
+    public Object visit(IRInst.AllocaInst inst) {
+        var t = ((IRType.PointerType) inst.type).getBase();
+        return String.format("%s = alloca %s, align %d", inst.getPrintName(),
+                t.accept(this), t.getByteNum());
+    }
+
+    @Override
+    public Object visit(IRInst.BranchInst inst) {
+        if (inst.cond != null)
+            return String.format("br %s, %s, %s", inst.cond, inst.taken, inst.notTaken);
+        else
+            return String.format("br %s", inst.taken);
+    }
+
+    @Override
+    public Object visit(IRInst.ReturnInst inst) {
+        return "ret " + inst.v;
+    }
+
+    @Override
+    public Object visit(IRInst.BinaryOpInst inst) {
+        return String.format("%s = %s %s, %s", inst.getPrintName(), inst.getCorresOp(),
+                inst.lhs, inst.rhs.getPrintName());
+    }
+
+    @Override
+    public Object visit(IRInst.CmpInst inst) {
+        return String.format("%s = icmp %s %s, %s", inst.getPrintName(), inst.getCorresOp(),
+                inst.lhs, inst.rhs.getPrintName());
+    }
+
+    @Override
+    public Object visit(IRInst.StoreInst inst) {
+        return String.format("store %s, %s", inst.from, inst.dest);
+    }
+
+    @Override
+    public Object visit(IRInst.GEPInst inst) {
+        List<String> index = new ArrayList<>();
+        inst.operands.forEach((operand) -> index.add((String) operand.accept(this)));
+        return String.format("%s = getelementpointer %s %s, %s", inst, inst.base.type.accept(this), inst.base.getPrintName(), index);
+    }
+
+    @Override
+    public Object visit(IRInst.CallInst inst) {
+        return String.format("%s = call %s @%s(%s)", inst.getPrintName(),
+                ((IRType.FunctionType) inst.func.type).returnType.accept(this), inst.func.name, stringify(inst.args));
+    }
+
+    @Override
+    public Object visit(IRInst.LoadInst inst) {
+        return String.format("%s = load %s, %s", inst.getPrintName(), ((IRType.PointerType) inst.ptr.type).pointer, inst.ptr);
+    }
+
+    @Override
+    public Object visit(IRInst.CastInst inst) {
+        return String.format("%s = bitcast %s to %s", inst.getPrintName(), inst.from.accept(this), inst.to.accept(this));
+    }
+
+    @Override
+    public Object visit(IRConstant.ConstInteger constant) {
+        return String.format("i32 %d", constant.num);
+    }
+
+    @Override
+    public Object visit(IRConstant.ConstString constant) {
+        //TODO
+        return null;
+    }
+
+    @Override
+    public Object visit(IRConstant.Null constant) {
+        //TODO
+        return null;
+    }
+
+    @Override
+    public Object visit(IRType.VoidType type) {
+        return "void";
+    }
+
+    @Override
+    public Object visit(IRType.IntegerType type) {
+        return String.format("i%d", type.bitLen);
     }
 
     @Override
     public Object visit(IRType.PointerType type) {
-        return null;
+        return type.pointer.accept(this) + "*";
     }
 
     @Override
     public Object visit(IRType.ArrayType type) {
-        return null;
+        String t = (String) type.baseType.accept(this);
+        return String.format("[%d x %s]", type.dimension, t.substring(0, t.length() - 2));
     }
 
     @Override
     public Object visit(IRType.FunctionType type) {
-        return null;
+        return String.format("define %s @%%s(%s)", type.returnType.accept(this), stringify(type.params));
     }
 
     @Override
     public Object visit(IRType.LabelType type) {
-        return null;
+        return "label";
     }
 }

@@ -2,6 +2,9 @@
   <dictionary name="zhang">
     <words>
       <w>alloca</w>
+      <w>bitcast</w>
+      <w>sdiv</w>
+      <w>srem</w>
     </words>
   </dictionary>
 </component>

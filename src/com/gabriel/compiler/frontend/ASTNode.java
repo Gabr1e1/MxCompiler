@@ -511,9 +511,9 @@ public class ASTNode<T> {
     }
 
     public static class NewExpression extends Expression {
-        String id;
-        List<Expression> expressions;
-        int dimension_left;
+        public String id;
+        public List<Expression> expressions;
+        public int dimension_left;
 
         NewExpression(Scope scope, String id, List<Expression> expressions, int dimension_left) {
             super(scope);

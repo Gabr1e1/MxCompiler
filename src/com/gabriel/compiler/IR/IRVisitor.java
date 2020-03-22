@@ -1,11 +1,16 @@
 package com.gabriel.compiler.IR;
 
 public interface IRVisitor {
-    //Entry
+    //Top level components
     Object visit(Module module);
+    Object visit(IRConstant.GlobalVariable globalVariable);
+    Object visit(IRConstant.Function function);
+    Object visit(BasicBlock block);
+
+    //Helper
+    Object visit(Value value);
 
     //Instruction
-    Object visit(Instruction inst);
     Object visit(IRInst.AllocaInst inst);
     Object visit(IRInst.BranchInst inst);
     Object visit(IRInst.ReturnInst inst);
@@ -14,18 +19,15 @@ public interface IRVisitor {
     Object visit(IRInst.StoreInst inst);
     Object visit(IRInst.GEPInst inst);
     Object visit(IRInst.CallInst inst);
+    Object visit(IRInst.LoadInst inst);
+    Object visit(IRInst.CastInst inst);
 
     //Constant
-    Object visit(Constant constant);
     Object visit(IRConstant.ConstInteger constant);
     Object visit(IRConstant.ConstString constant);
     Object visit(IRConstant.Null constant);
-    Object visit(IRConstant.Void constant);
-    Object visit(IRConstant.GlobalVariable constant);
-    Object visit(IRConstant.Function constant);
 
     //Type
-    Object visit(Type type);
     Object visit(IRType.VoidType type);
     Object visit(IRType.IntegerType type);
     Object visit(IRType.ClassType type);

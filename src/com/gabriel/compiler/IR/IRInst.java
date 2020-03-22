@@ -1,11 +1,28 @@
 package com.gabriel.compiler.IR;
 
 import java.util.List;
+import java.util.Map;
+
+abstract class Instruction extends User {
+    //    enum OpType {ADD, SUB, MUL, DIV}
+    BasicBlock parent;
+
+    Instruction(String name, Type type, BasicBlock basicBlock) {
+        super(name, type);
+        parent = basicBlock;
+        basicBlock.addInst(this);
+    }
+}
 
 public class IRInst {
     public static class AllocaInst extends Instruction {
-        AllocaInst(String name, Type type, BasicBlock belong) {
-            super(name, new IRType.PointerType(type), belong);
+        AllocaInst(String id, Type type, BasicBlock belong) {
+            super(id, new IRType.PointerType(type), belong);
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
         }
     }
 
@@ -48,15 +65,20 @@ public class IRInst {
     }
 
     public static class BinaryOpInst extends Instruction {
-        //private static Map<String, OpType> OpMap = Map.of("+", OpType.ADD, "-", OpType.SUB, "*", OpType.MUL, "/", OpType.DIV, "%", Op);
+        private static Map<String, String> OpMap = Map.of("+", "add", "-", "sub", "*", "mul", "/", "sdiv", "%", "srem",
+                "<<", "shl", ">>", "ashr", "&", "and", "|", "or", "^", "xor");
         Value lhs, rhs;
         String op;
 
         BinaryOpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
-            super(op, lhs.type, belong);
+            super("T", lhs.type, belong);
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op; //OpMap.get(op);
+        }
+
+        String getCorresOp() {
+            return OpMap.get(op);
         }
 
         @Override
@@ -66,14 +88,22 @@ public class IRInst {
     }
 
     public static class CmpInst extends Instruction {
+        private static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
+                "==", "eq", "!=", "neq");
         Value lhs, rhs;
         String op;
 
         CmpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
-            super(op, lhs.type, belong);
+            super("T", new IRType.IntegerType("bool"), belong);
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
+
+
+        }
+
+        String getCorresOp() {
+            return OpMap.get(op);
         }
 
         @Override
@@ -99,9 +129,11 @@ public class IRInst {
 
     public static class GEPInst extends Instruction {
         List<Value> operands;
+        Value base;
 
         GEPInst(Type type, Value base, BasicBlock belong) {
-            super("", type, belong);
+            super("T", type, belong);
+            this.base = base;
             operands.add(new IRConstant.ConstInteger(0));
         }
 
@@ -119,7 +151,7 @@ public class IRInst {
         }
 
         Value getBase() {
-            return operands.get(0);
+            return base;
         }
     }
 
@@ -131,6 +163,35 @@ public class IRInst {
             super("call_" + func.name, ((IRType.FunctionType) func.type).returnType, belong);
             this.func = func;
             this.args = args;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
+
+    public static class LoadInst extends Instruction {
+        Value ptr;
+
+        LoadInst(Value ptr, BasicBlock belong) {
+            super("load_" + ptr.getOrignalName(), ((IRType.PointerType) ptr.type).pointer, belong);
+            this.ptr = ptr;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
+
+    public static class CastInst extends Instruction {
+        Type from, to;
+
+        CastInst(Type from, Type to, BasicBlock belong) {
+            super("M", to, belong);
+            this.from = from;
+            this.to = to;
         }
 
         @Override

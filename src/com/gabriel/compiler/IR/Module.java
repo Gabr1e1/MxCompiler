@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.gabriel.compiler.util.Pair;
 
 public class Module {
     List<IRConstant.Function> functions = new ArrayList<>();
     List<IRConstant.GlobalVariable> globalVariables = new ArrayList<>();
     Map<String, IRType.ClassType> classes = new HashMap<>();
+    List<Pair<IRConstant.Function, String>> builtin;
 
     String name;
 

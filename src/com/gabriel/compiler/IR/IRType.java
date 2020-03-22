@@ -3,7 +3,32 @@ package com.gabriel.compiler.IR;
 import java.util.List;
 import java.util.Map;
 
+abstract class Type {
+    public String baseType;
+    public int bitLen;
+
+    public int getByteNum() {
+        return bitLen / 8 + (bitLen % 8 != 0 ? 1 : 0);
+    }
+
+    public abstract Object accept(IRVisitor visitor);
+
+    public String toString() {
+        IRPrinter t = new IRPrinter();
+        return (String) this.accept(t);
+    }
+}
+
 public class IRType {
+    public static Type convert(String type) {
+        if (type.equals("void")) return new VoidType();
+        else if (type.equals("int") || type.equals("char") || type.equals("bool") || type.equals("long"))
+            return new IntegerType(type);
+        else if (type.charAt(type.length() - 1) == '*')
+            return new PointerType(convert(type.substring(0, type.length() - 1)));
+        return null;
+    }
+
     public static Type convert(com.gabriel.compiler.frontend.Type type) {
         if (type.isArray()) {
             var pointer = new com.gabriel.compiler.frontend.Type(type.baseType, type.getDimension() - 1);
@@ -16,8 +41,9 @@ public class IRType {
             return new IntegerType(type.toString());
         } else {
             //TODO
-            return new ClassType(type.toString());
+//            return new ClassType(type.toString());
         }
+        return null;
     }
 
     public static class VoidType extends Type {
@@ -32,8 +58,8 @@ public class IRType {
     }
 
     public static class IntegerType extends Type {
-        public static final Map<String, Integer> BitLen = Map.of("char", 1,
-                "bool", 1, "int", 4, "long", 8);
+        public static final Map<String, Integer> BitLen = Map.of("char", 8,
+                "bool", 1, "int", 32, "long", 64);
 
         IntegerType(String baseType) {
             this.baseType = baseType;
@@ -72,7 +98,11 @@ public class IRType {
 
         PointerType(Type pointer) {
             this.pointer = pointer;
-            this.bitLen = 4; //32-bit address
+            this.bitLen = 32; //32-bit address
+        }
+
+        Type getBase() {
+            return pointer;
         }
 
         @Override
@@ -88,6 +118,10 @@ public class IRType {
         ArrayType(Type baseType, int dimension) {
             this.baseType = baseType;
             this.dimension = dimension;
+        }
+
+        void setDimension(int x) {
+            dimension = x;
         }
 
         @Override
@@ -112,6 +146,8 @@ public class IRType {
     }
 
     public static class LabelType extends Type {
+        String label;
+
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);

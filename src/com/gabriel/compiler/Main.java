@@ -1,5 +1,8 @@
 package com.gabriel.compiler;
 
+import com.gabriel.compiler.IR.IRBuilder;
+import com.gabriel.compiler.IR.IRPrinter;
+import com.gabriel.compiler.IR.Module;
 import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
@@ -17,10 +20,10 @@ import static java.lang.System.exit;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-//        Build Concrete Syntax Tree
-//        String path = "code.mx";
-        String path = "./testcases/sema/codeforces-package/231A.mx";
+        String path = "./code.mx";
+//        String path = "./testcases/sema/codeforces-package/231A.mx";
 
+        //        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);
         MxGrammarLexer lexer = new MxGrammarLexer(code);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -30,7 +33,7 @@ public class Main {
         parser.addErrorListener(errorListener);
 
 
-        ASTNode.Program root;
+        ASTNode.Program root = null;
         try {
             // syntax check and build CST
             ParseTree CST = parser.program();
@@ -41,8 +44,8 @@ public class Main {
             System.out.println("AST successfully created");
 
             //Print AST
-            ASTPrinter printer = new ASTPrinter();
-            printer.visit(root);
+//            ASTPrinter printer = new ASTPrinter();
+//            printer.visit(root);
 
             //Check IRType
             TypeChecker checker = new TypeChecker();
@@ -51,5 +54,11 @@ public class Main {
             System.out.println(err.toString());
             exit(1);
         }
+
+        IRBuilder ir = new IRBuilder();
+        var module = ir.visit(root);
+        IRPrinter irCodeGen = new IRPrinter("mycode.ll");
+        irCodeGen.visit((Module) module);
+        System.out.println("IR Successfully generated");
     }
 }
