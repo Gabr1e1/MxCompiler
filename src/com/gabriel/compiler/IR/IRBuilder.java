@@ -2,6 +2,7 @@ package com.gabriel.compiler.IR;
 
 import com.gabriel.compiler.frontend.ASTNode;
 import com.gabriel.compiler.frontend.ASTVisitor;
+import com.gabriel.compiler.frontend.Scope;
 import com.gabriel.compiler.util.Pair;
 
 import java.io.BufferedReader;
@@ -15,10 +16,12 @@ public class IRBuilder implements ASTVisitor {
 
     private ASTNode.Class curClass;
     private IRConstant.Function curFunc;
-    private BasicBlock curBlock;
+    private BasicBlock curBlock, retBlock;
+    private Value curBlockRet;
 
     private List<Pair<BasicBlock, BasicBlock>> controlBlock = new ArrayList<>();
     private Map<String, IRConstant.Function> builtin = new HashMap<>();
+    private Scope globalScope;
 
     public IRBuilder() {
         module = new Module("__program");
@@ -46,7 +49,7 @@ public class IRBuilder implements ASTVisitor {
                 for (int i = 3; i < t.length - 1; i++) {
                     args.add(new Value("_", IRType.convert(t[i])));
                 }
-                var func = new IRConstant.Function(funcName, new IRType.FunctionType(args, returnType));
+                var func = new IRConstant.Function(funcName, new IRType.FunctionType(args, returnType, funcName));
                 line = reader.readLine();
                 module.builtin.add(new Pair<>(func, line));
                 builtin.put(funcName, func);
@@ -78,6 +81,15 @@ public class IRBuilder implements ASTVisitor {
         return v;
     }
 
+    private Value loadUntilType(Value v, int m) {
+        int n = getPtrNum(v.type);
+        while (n > m) {
+            v = new IRInst.LoadInst(v, curBlock);
+            n -= 1;
+        }
+        return v;
+    }
+
     private List<Value> convertToCorres(List<Value> from, List<Value> to) {
         List<Value> ret = new ArrayList<>();
         for (int i = 0; i < from.size(); i++) {
@@ -97,6 +109,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.Program node) {
         init();
+        globalScope = node.scope;
         node.variables.forEach((var) -> {
             if (var.Initialization != null) {
                 Value v = (Value) var.Initialization.accept(this);
@@ -114,7 +127,6 @@ public class IRBuilder implements ASTVisitor {
 
         node.functions.forEach((func) -> {
             IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            symbolTable.put(f, node.scope);
             module.addFunction(f);
         });
         return module;
@@ -133,7 +145,6 @@ public class IRBuilder implements ASTVisitor {
         });
         node.functions.forEach((func) -> {
             IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            symbolTable.put(f, node.scope);
             module.addFunction(f);
         });
 
@@ -146,11 +157,29 @@ public class IRBuilder implements ASTVisitor {
         var funcName = (curClass != null ? curClass.className + "_" : "") + node.funcName;
         Type returnType = IRType.convert(node.returnType);
         List<Value> params = (List<Value>) (node.paramList.accept(this));
-        var type = new IRType.FunctionType(params, returnType);
+        var type = new IRType.FunctionType(params, returnType, funcName);
 
         curFunc = new IRConstant.Function(funcName, type);
+        symbolTable.put(curFunc, globalScope);
+
         curBlock = new BasicBlock("func", curFunc);
+
+        //Create Return Block
+        curBlockRet = new IRInst.AllocaInst("ret", returnType, curBlock);
+        retBlock = new BasicBlock("retBlock", curFunc);
+        var tmp = curBlock;
+        curBlock = retBlock;
+        new IRInst.ReturnInst(loadUntilType(curBlockRet, returnType), retBlock);
+        curBlock = tmp;
+
         if (node.block != null) node.block.accept(this);
+
+        for (int i = 0; i < curFunc.blocks.size(); i++) {
+            if (curFunc.blocks.get(i) == retBlock) {
+                Collections.swap(curFunc.blocks, i, curFunc.blocks.size() - 1);
+                break;
+            }
+        }
         return curFunc;
     }
 
@@ -212,7 +241,7 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock body = new BasicBlock("for_body", curFunc);
         BasicBlock after = new BasicBlock("for_after", curFunc);
 
-        new IRInst.BranchInst(curBlock, checkCond);
+        new IRInst.BranchInst(checkCond, curBlock);
 
         curBlock = checkCond;
         Value cond = (Value) node.cond.accept(this);
@@ -222,7 +251,7 @@ public class IRBuilder implements ASTVisitor {
         curBlock = body;
         node.statement.accept(this);
         node.incr.accept(this);
-        new IRInst.BranchInst(curBlock, checkCond);
+        new IRInst.BranchInst(checkCond, curBlock);
         controlBlock.remove(controlBlock.size() - 1);
 
         curBlock = after;
@@ -234,7 +263,7 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock checkCond = new BasicBlock("while_cond", curFunc);
         BasicBlock body = new BasicBlock("while_body", curFunc);
         BasicBlock after = new BasicBlock("while_after", curFunc);
-        new IRInst.BranchInst(curBlock, checkCond);
+        new IRInst.BranchInst(checkCond, curBlock);
 
         curBlock = checkCond;
         Value cond = (Value) node.cond.accept(this);
@@ -243,7 +272,7 @@ public class IRBuilder implements ASTVisitor {
         controlBlock.add(new Pair<>(checkCond, after));
         curBlock = body;
         node.statement.accept(this);
-        new IRInst.BranchInst(curBlock, checkCond);
+        new IRInst.BranchInst(checkCond, curBlock);
         controlBlock.remove(controlBlock.size() - 1);
 
         curBlock = after;
@@ -254,18 +283,18 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(ASTNode.ConditionalStatement node) {
         Value cond = (Value) (node.cond.accept(this));
         BasicBlock taken = new BasicBlock("if_taken", curFunc);
-        BasicBlock after = new BasicBlock("if_after", curFunc);
-        BasicBlock notTaken = (node.else_statement == null) ? after : new BasicBlock("if_notTaken", curFunc);
+        BasicBlock notTaken = (node.else_statement == null) ? new BasicBlock("if_after", curFunc) : new BasicBlock("if_notTaken", curFunc);
+        BasicBlock after = (node.else_statement == null) ? notTaken : new BasicBlock("if_after", curFunc);
         new IRInst.BranchInst(cond, curBlock, taken, notTaken);
 
         curBlock = taken;
         node.if_statement.accept(this);
-        new IRInst.BranchInst(curBlock, after);
+        new IRInst.BranchInst(after, curBlock);
 
         if (notTaken != after) {
             curBlock = notTaken;
             node.else_statement.accept(this);
-            new IRInst.BranchInst(curBlock, after);
+            new IRInst.BranchInst(after, curBlock);
         }
 
         curBlock = after;
@@ -276,20 +305,20 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(ASTNode.ReturnStatement node) {
         Value v = loadUntilType((Value) node.expr.accept(this),
                 ((IRType.FunctionType) curFunc.type).returnType);
-        new IRInst.ReturnInst(v, curBlock);
+        new IRInst.StoreInst(curBlockRet, v, curBlock);
+        new IRInst.BranchInst(retBlock, curBlock);
         return null;
     }
 
     @Override
     public Object visit(ASTNode.BreakStatement node) {
-        //TODO: POSSIBLE UNREACHABLE BRANCH
-        new IRInst.BranchInst(curBlock, controlBlock.get(controlBlock.size() - 1).second);
+        new IRInst.BranchInst(controlBlock.get(controlBlock.size() - 1).second, curBlock);
         return null;
     }
 
     @Override
     public Object visit(ASTNode.ContinueStatement node) {
-        new IRInst.BranchInst(curBlock, controlBlock.get(controlBlock.size() - 1).first);
+        new IRInst.BranchInst(controlBlock.get(controlBlock.size() - 1).first, curBlock);
         return null;
     }
 
@@ -323,7 +352,7 @@ public class IRBuilder implements ASTVisitor {
                 //Load only when need to read, doesn't need to load on store
                 node.val = symbolTable.getFromOriginal(node.id, node.scope);
             } else if (node.type.isFunction()) {
-                node.val = symbolTable.getFromOriginal(node.id, node.scope);
+                node.val = symbolTable.getFromOriginal(node.id, globalScope);
             }
         } else {
             node.val = new IRConstant.ConstInteger(node.numConstant);
@@ -432,10 +461,16 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.FuncExpression node) {
         var func = (IRConstant.Function) node.expr.accept(this);
-        var args = (List<Value>) node.exprList.accept(this);
+        var args = new ArrayList<Value>();
+
         if (node.expr.type.isClass()) { //class constructor
             //TODO: MALLOC
         } else {
+            var tmp = (List<Value>) node.exprList.accept(this);
+            var argsNeed = ((IRType.FunctionType) func.type).params;
+            for (int i = 0; i < argsNeed.size(); i++) {
+                args.add(loadUntilType(tmp.get(i), argsNeed.get(i).type));
+            }
             node.val = new IRInst.CallInst(func, args, curBlock);
         }
         return node.val;
@@ -443,24 +478,24 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.ArrayExpression node) {
-        Value base = loadUntilType((Value) node.expr.accept(this), new IRType.PointerType(IRType.convert(node.type)));
-        List<Value> iVal = new ArrayList<>();
-        node.index.forEach((index) -> {
-            Value i = load((Value) index.accept(this));
-            iVal.add(i);
-        });
-        node.val = new IRInst.GEPInst(IRType.convert(node.type), base, curBlock, false);
-        iVal.forEach((i) -> ((IRInst.GEPInst) node.val).addOperand(i));
+        Value base = loadUntilType((Value) node.expr.accept(this), getPtrNum(IRType.convert(node.type)) + node.index.size());
+        node.val = base;
+
+        for (int i = 0; i < node.index.size(); i++) {
+            var index = node.index.get(i);
+            Value v = load((Value) index.accept(this));
+            var t = ((IRType.PointerType) node.val.type).pointer;
+            node.val = new IRInst.GEPInst(t, node.val, curBlock, false);
+            ((IRInst.GEPInst) node.val).addOperand(v);
+            if (i != node.index.size() - 1) node.val = loadUntilType(node.val, t);
+        }
         return node.val;
     }
 
     @Override
     public Object visit(ASTNode.NewExpression node) {
-        Type t = IRType.convert(node.id);
-        for (int i = 0; i < node.dimension_left; i++) {
-            t = new IRType.PointerType(t);
-        }
-        t = new IRType.PointerType(t);
+        Type t = IRType.convert(node.type);
+
         Value size = null;
         for (ASTNode.Expression expr : node.expressions) {
             Value cur = (Value) expr.accept(this);
@@ -470,6 +505,9 @@ public class IRBuilder implements ASTVisitor {
                 size = cur;
             }
         }
+        assert size != null;
+        size = new IRInst.BinaryOpInst(size, new IRConstant.ConstInteger(t.getByteNum()), "*", curBlock);
+
         var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
         Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
         node.val = new IRInst.CastInst(malloc, t, curBlock);

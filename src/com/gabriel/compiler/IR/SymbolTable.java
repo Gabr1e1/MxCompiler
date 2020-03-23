@@ -1,7 +1,6 @@
 package com.gabriel.compiler.IR;
 
 import com.gabriel.compiler.frontend.Scope;
-import com.gabriel.compiler.util.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +15,9 @@ public class SymbolTable {
             var map = corresTable.get(value.originalName);
             map.put(scope, value);
         } else {
-            corresTable.put(value.originalName, Map.of(scope, value));
+            var map = new HashMap<Scope, Value>();
+            map.put(scope, value);
+            corresTable.put(value.originalName, map);
         }
     }
 

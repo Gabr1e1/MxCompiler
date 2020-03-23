@@ -75,16 +75,27 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRConstant.Function function) {
-        writeCode(String.format((String) function.type.accept(this), function.name) + " {");
+        writeCode(function.type.accept(this) + "{");
         function.blocks.forEach((block) -> block.accept(this));
-        writeCode("}");
+        writeCode("}\n");
         return null;
     }
 
     @Override
     public Object visit(BasicBlock block) {
-        writeCode("\n" + block.getName() + ":");
-        block.instructions.forEach((inst) -> writeCode(inst.accept(this)));
+        if (block.instructions.size() == 0) {
+            return null;
+        }
+        writeCode(block.getName() + ":");
+        for (int i = 0; i < block.instructions.size(); i++) {
+            var inst = block.instructions.get(i);
+            writeCode(inst.accept(this));
+            if (IRInst.isTerminator(inst)) {
+                block.instructions = block.instructions.subList(0, i + 1);
+                break;
+            }
+        }
+        writeCode("");
         return null;
     }
 
@@ -189,15 +200,15 @@ public class IRPrinter implements IRVisitor {
         return type.pointer.accept(this) + "*";
     }
 
-    @Override
-    public Object visit(IRType.ArrayType type) {
-        String t = (String) type.baseType.accept(this);
-        return String.format("[%d x %s]", type.dimension, t.substring(0, t.length() - 2));
-    }
+//    @Override
+//    public Object visit(IRType.ArrayType type) {
+//        String t = (String) type.baseType.accept(this);
+//        return String.format("[%d x %s]", type.dimension, t.substring(0, t.length() - 2));
+//    }
 
     @Override
     public Object visit(IRType.FunctionType type) {
-        return String.format("define %s @%%s(%s)", type.returnType.accept(this), stringify(type.params));
+        return String.format("define %s @%s(%s)", type.returnType.accept(this), type.funcName, stringify(type.params));
     }
 
     @Override

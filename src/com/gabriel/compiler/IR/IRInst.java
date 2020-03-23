@@ -16,6 +16,10 @@ abstract class Instruction extends User {
 }
 
 public class IRInst {
+    public static boolean isTerminator(Instruction i) {
+        return i instanceof BranchInst || i instanceof ReturnInst;
+    }
+
     public static class AllocaInst extends Instruction {
         AllocaInst(String id, Type type, BasicBlock belong) {
             super(id, new IRType.PointerType(type), belong);
@@ -38,7 +42,7 @@ public class IRInst {
             this.notTaken = notTaken;
         }
 
-        BranchInst(BasicBlock belong, BasicBlock jump) {
+        BranchInst(BasicBlock jump, BasicBlock belong) {
             super("", new IRType.VoidType(), belong);
             this.cond = null;
             this.taken = jump;

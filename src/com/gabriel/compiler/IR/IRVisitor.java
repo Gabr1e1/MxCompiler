@@ -33,7 +33,7 @@ public interface IRVisitor {
     Object visit(IRType.IntegerType type);
     Object visit(IRType.ClassType type);
     Object visit(IRType.PointerType type);
-    Object visit(IRType.ArrayType type);
+//    Object visit(IRType.ArrayType type);
     Object visit(IRType.FunctionType type);
     Object visit(IRType.LabelType type);
 }
