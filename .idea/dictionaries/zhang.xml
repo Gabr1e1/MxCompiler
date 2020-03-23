@@ -3,7 +3,9 @@
     <words>
       <w>alloca</w>
       <w>bitcast</w>
+      <w>getelementptr</w>
       <w>sdiv</w>
+      <w>sext</w>
       <w>srem</w>
     </words>
   </dictionary>

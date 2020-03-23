@@ -21,6 +21,7 @@ public interface IRVisitor {
     Object visit(IRInst.CallInst inst);
     Object visit(IRInst.LoadInst inst);
     Object visit(IRInst.CastInst inst);
+    Object visit(IRInst.SextInst inst);
 
     //Constant
     Object visit(IRConstant.ConstInteger constant);

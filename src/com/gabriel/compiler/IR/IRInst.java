@@ -1,5 +1,6 @@
 package com.gabriel.compiler.IR;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -128,13 +129,22 @@ public class IRInst {
     }
 
     public static class GEPInst extends Instruction {
-        List<Value> operands;
+        List<Value> operands = new ArrayList<>();
         Value base;
+        Type valueType;
 
-        GEPInst(Type type, Value base, BasicBlock belong) {
-            super("T", type, belong);
+        GEPInst(Type valueType, Value base, BasicBlock belong) {
+            super("T", new IRType.PointerType(valueType), belong);
             this.base = base;
+            this.valueType = valueType;
             operands.add(new IRConstant.ConstInteger(0));
+        }
+
+        GEPInst(Type valueType, Value base, BasicBlock belong, boolean zeroPad) {
+            super("T", new IRType.PointerType(valueType), belong);
+            this.base = base;
+            this.valueType = valueType;
+            if (zeroPad) operands.add(new IRConstant.ConstInteger(0));
         }
 
         @Override
@@ -186,9 +196,26 @@ public class IRInst {
     }
 
     public static class CastInst extends Instruction {
-        Type from, to;
+        Value from;
+        Type to;
 
-        CastInst(Type from, Type to, BasicBlock belong) {
+        CastInst(Value from, Type to, BasicBlock belong) {
+            super("M", to, belong);
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
+
+    public static class SextInst extends Instruction {
+        Value from;
+        Type to;
+
+        SextInst(Value from, Type to, BasicBlock belong) {
             super("M", to, belong);
             this.from = from;
             this.to = to;

@@ -42,12 +42,18 @@ public class IRPrinter implements IRVisitor {
 
     private String stringify(List<Value> list) {
         List<String> ret = new ArrayList<>();
-        list.forEach((x) -> ret.add((String) x.accept(this)));
+        list.forEach((x) -> ret.add(x.toString()));
         return String.join(", ", ret);
+    }
+
+    void addBuiltinFunctions(Module module) {
+        module.builtin.forEach((x) -> writeCode(x.second));
+        writeCode("");
     }
 
     @Override
     public Object visit(Module module) {
+        addBuiltinFunctions(module);
         module.classes.forEach((className, type) -> writeCode(type.accept(this)));
         module.globalVariables.forEach((var) -> writeCode(var.accept(this)));
         module.functions.forEach((function) -> function.accept(this));
@@ -126,9 +132,8 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.GEPInst inst) {
-        List<String> index = new ArrayList<>();
-        inst.operands.forEach((operand) -> index.add((String) operand.accept(this)));
-        return String.format("%s = getelementpointer %s %s, %s", inst, inst.base.type.accept(this), inst.base.getPrintName(), index);
+        return String.format("%s = getelementptr %s, %s %s, %s", inst.getPrintName(), inst.valueType.accept(this),
+                inst.base.type.accept(this), inst.base.getPrintName(), stringify(inst.operands));
     }
 
     @Override
@@ -144,7 +149,12 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.CastInst inst) {
-        return String.format("%s = bitcast %s to %s", inst.getPrintName(), inst.from.accept(this), inst.to.accept(this));
+        return String.format("%s = bitcast %s to %s", inst.getPrintName(), inst.from, inst.to.accept(this));
+    }
+
+    @Override
+    public Object visit(IRInst.SextInst inst) {
+        return String.format("%s = sext %s to %s", inst.getPrintName(), inst.from, inst.to.accept(this));
     }
 
     @Override
