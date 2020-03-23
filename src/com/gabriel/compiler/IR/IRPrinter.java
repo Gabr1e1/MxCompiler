@@ -65,7 +65,7 @@ public class IRPrinter implements IRVisitor {
     public Object visit(IRType.ClassType type) {
         List<String> members = new ArrayList<>();
         type.members.forEach((m) -> members.add((String) m.accept(this)));
-        return String.format("%% %s = type { %s }", type.className, String.join(", ", members));
+        return String.format("%%%s = type { %s }\n", type.className, String.join(", ", members));
     }
 
     @Override
@@ -170,7 +170,7 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRConstant.ConstInteger constant) {
-        return String.format("i32 %d", constant.num);
+        return String.format("%s %d", constant.type.accept(this), constant.num);
     }
 
     @Override

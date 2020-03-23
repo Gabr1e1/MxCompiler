@@ -29,10 +29,10 @@ public class IRType {
         return null;
     }
 
-    public static Type convert(com.gabriel.compiler.frontend.Type type) {
+    public static Type convert(com.gabriel.compiler.frontend.Type type, Module module) {
         if (type.isArray()) {
             var pointer = new com.gabriel.compiler.frontend.Type(type.baseType, type.getDimension() - 1);
-            return new PointerType(convert(pointer));
+            return new PointerType(convert(pointer, module));
         } else if (type.isString()) {
             return new PointerType(new IntegerType("char"));
         } else if (type.isVoid()) {
@@ -40,10 +40,8 @@ public class IRType {
         } else if (type.isPrimitiveNonArrayType()) {
             return new IntegerType(type.toString());
         } else {
-            //TODO
-//            return new ClassType(type.toString());
+            return module.getClass("struct." + type.baseType);
         }
-        return null;
     }
 
     public static class VoidType extends Type {
@@ -59,11 +57,15 @@ public class IRType {
 
     public static class IntegerType extends Type {
         public static final Map<String, Integer> BitLen = Map.of("char", 8,
-                "bool", 1, "int", 32);
+                "bool", 8, "int", 32);
 
         IntegerType(String baseType) {
             this.baseType = baseType;
             this.bitLen = BitLen.get(baseType);
+        }
+
+        IntegerType(int num) {
+            this.bitLen = num;
         }
 
         @Override
@@ -77,10 +79,11 @@ public class IRType {
         List<String> member_name;
         String className;
 
-        ClassType(String className, List<Type> members, List<String> member_name) {
+        ClassType(String className, List<Type> members, List<String> member_name, int size) {
             this.className = className;
             this.members = members;
             this.member_name = member_name;
+            this.bitLen = size;
         }
 
         @Override

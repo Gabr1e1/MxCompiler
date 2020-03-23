@@ -92,6 +92,18 @@ public class IRInst {
         }
     }
 
+    private static void constantConvert(Value a, Value b) {
+        if (a instanceof IRConstant.ConstInteger) {
+            if (b.type instanceof IRType.PointerType) a.type.bitLen = ((IRType.PointerType) b.type).pointer.bitLen;
+            else a.type.bitLen = b.type.bitLen;
+        }
+
+        if (b instanceof IRConstant.ConstInteger) {
+            if (a.type instanceof IRType.PointerType) b.type.bitLen = ((IRType.PointerType) a.type).pointer.bitLen;
+            else b.type.bitLen = a.type.bitLen;
+        }
+    }
+
     public static class CmpInst extends Instruction {
         private static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
                 "==", "eq", "!=", "neq");
@@ -99,12 +111,11 @@ public class IRInst {
         String op;
 
         CmpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
-            super("T", new IRType.IntegerType("bool"), belong);
+            super("T", new IRType.IntegerType(1), belong);
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
-
-
+//            constantConvert(lhs, rhs);
         }
 
         String getCorresOp() {
@@ -124,6 +135,7 @@ public class IRInst {
             super("", dest.type, belong);
             this.dest = dest;
             this.from = from;
+//            constantConvert(dest, from);
         }
 
         @Override
