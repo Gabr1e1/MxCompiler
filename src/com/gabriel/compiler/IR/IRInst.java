@@ -242,4 +242,20 @@ public class IRInst {
             return visitor.visit(this);
         }
     }
+
+    public static class TruncInst extends Instruction {
+        Value from;
+        Type to;
+
+        TruncInst(Value from, Type to, BasicBlock belong) {
+            super("M", to, belong);
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
 }

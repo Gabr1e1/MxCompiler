@@ -22,11 +22,13 @@ public interface IRVisitor {
     Object visit(IRInst.LoadInst inst);
     Object visit(IRInst.CastInst inst);
     Object visit(IRInst.SextInst inst);
+    Object visit(IRInst.TruncInst inst);
 
     //Constant
     Object visit(IRConstant.ConstInteger constant);
     Object visit(IRConstant.ConstString constant);
     Object visit(IRConstant.Null constant);
+    Object visit(IRConstant.Void constant);
 
     //Type
     Object visit(IRType.VoidType type);

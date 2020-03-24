@@ -32,6 +32,8 @@ public class Module {
     }
 
     IRType.ClassType getClass(String className) {
-        return classes.get(className);
+        if (classes.get(className) == null) {
+            return classes.get("struct." + className);
+        } else return classes.get(className);
     }
 }

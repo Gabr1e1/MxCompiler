@@ -54,7 +54,11 @@ public class IRPrinter implements IRVisitor {
     @Override
     public Object visit(Module module) {
         addBuiltinFunctions(module);
-        module.classes.forEach((className, type) -> writeCode(type.accept(this)));
+        module.classes.forEach((className, type) -> {
+            List<String> members = new ArrayList<>();
+            type.members.forEach((m) -> members.add((String) m.accept(this)));
+            writeCode(String.format("%%%s = type { %s }\n", type.className, String.join(", ", members)));
+        });
         module.globalVariables.forEach((var) -> writeCode(var.accept(this)));
         module.functions.forEach((function) -> function.accept(this));
         finish();
@@ -63,9 +67,10 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRType.ClassType type) {
-        List<String> members = new ArrayList<>();
-        type.members.forEach((m) -> members.add((String) m.accept(this)));
-        return String.format("%%%s = type { %s }\n", type.className, String.join(", ", members));
+//        List<String> members = new ArrayList<>();
+//        type.members.forEach((m) -> members.add((String) m.accept(this)));
+//        return String.format("%%%s = type { %s }\n", type.className, String.join(", ", members));
+        return String.format("%%%s", type.className);
     }
 
     @Override
@@ -143,13 +148,16 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.GEPInst inst) {
-        return String.format("%s = getelementptr %s, %s %s, %s", inst.getPrintName(), inst.valueType.accept(this),
+        return String.format("%s = getelementptr %s, %s %s, %s", inst.getPrintName(), ((IRType.PointerType) inst.base.type).pointer.accept(this),
                 inst.base.type.accept(this), inst.base.getPrintName(), stringify(inst.operands));
     }
 
     @Override
     public Object visit(IRInst.CallInst inst) {
-        return String.format("%s = call %s @%s(%s)", inst.getPrintName(),
+        if (inst.type instanceof IRType.VoidType)
+            return String.format("call %s @%s(%s)", ((IRType.FunctionType) inst.func.type).returnType.accept(this),
+                    inst.func.name, stringify(inst.args));
+        else return String.format("%s = call %s @%s(%s)", inst.getPrintName(),
                 ((IRType.FunctionType) inst.func.type).returnType.accept(this), inst.func.name, stringify(inst.args));
     }
 
@@ -169,6 +177,11 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
+    public Object visit(IRInst.TruncInst inst) {
+        return String.format("%s = trunc %s to %s", inst.getPrintName(), inst.from, inst.to.accept(this));
+    }
+
+    @Override
     public Object visit(IRConstant.ConstInteger constant) {
         return String.format("%s %d", constant.type.accept(this), constant.num);
     }
@@ -183,6 +196,11 @@ public class IRPrinter implements IRVisitor {
     public Object visit(IRConstant.Null constant) {
         //TODO
         return null;
+    }
+
+    @Override
+    public Object visit(IRConstant.Void constant) {
+        return "void";
     }
 
     @Override

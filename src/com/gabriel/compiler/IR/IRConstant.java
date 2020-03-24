@@ -54,6 +54,7 @@ public class IRConstant {
         }
     }
 
+    //Probably don't need this
     public static class Null extends Constant {
         Null() {
             super("null", new IRType.VoidType());
@@ -62,6 +63,22 @@ public class IRConstant {
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
+        }
+    }
+
+    public static class Void extends Constant {
+        Void() {
+            super("void", new IRType.VoidType());
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+
+        @Override
+        public String toString() {
+            return "void";
         }
     }
 

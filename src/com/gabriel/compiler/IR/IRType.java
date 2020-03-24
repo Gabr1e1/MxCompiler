@@ -1,5 +1,7 @@
 package com.gabriel.compiler.IR;
 
+import com.gabriel.compiler.util.Pair;
+
 import java.util.List;
 import java.util.Map;
 
@@ -20,9 +22,21 @@ abstract class Type {
 }
 
 public class IRType {
+    public static boolean isClassPointer(Type f) {
+        while (f instanceof IRType.PointerType) {
+            f = ((IRType.PointerType) f).pointer;
+        }
+        return f instanceof IRType.ClassType;
+    }
+
+    public static boolean isClassPointer(Value v) {
+        var f = ((Instruction) v).type;
+        return isClassPointer(f);
+    }
+
     public static Type convert(String type) {
         if (type.equals("void")) return new VoidType();
-        else if (type.equals("int") || type.equals("char") || type.equals("bool"))
+        else if (type.equals("int") || type.equals("char") || type.equals("bool") || type.equals("long"))
             return new IntegerType(type);
         else if (type.charAt(type.length() - 1) == '*')
             return new PointerType(convert(type.substring(0, type.length() - 1)));
@@ -40,7 +54,7 @@ public class IRType {
         } else if (type.isPrimitiveNonArrayType()) {
             return new IntegerType(type.toString());
         } else {
-            return module.getClass("struct." + type.baseType);
+            return new PointerType(module.getClass("struct." + type.baseType));
         }
     }
 
@@ -57,15 +71,15 @@ public class IRType {
 
     public static class IntegerType extends Type {
         public static final Map<String, Integer> BitLen = Map.of("char", 8,
-                "bool", 8, "int", 32);
+                "bool", 8, "int", 32, "long", 64);
 
         IntegerType(String baseType) {
             this.baseType = baseType;
             this.bitLen = BitLen.get(baseType);
         }
 
-        IntegerType(int num) {
-            this.bitLen = num;
+        IntegerType(int bitLen) {
+            this.bitLen = bitLen;
         }
 
         @Override
@@ -78,6 +92,7 @@ public class IRType {
         List<Type> members;
         List<String> member_name;
         String className;
+        IRConstant.Function constructor;
 
         ClassType(String className, List<Type> members, List<String> member_name, int size) {
             this.className = className;
@@ -93,6 +108,19 @@ public class IRType {
 
         String getName() {
             return className;
+        }
+
+        Pair<Type, Integer> getType(String name) {
+            for (int i = 0; i < members.size(); i++) {
+                if (name.equals(member_name.get(i))) {
+                    return new Pair<>(members.get(i), i);
+                }
+            }
+            return null;
+        }
+
+        void addConstructor(IRConstant.Function f) {
+            constructor = f;
         }
     }
 
@@ -147,6 +175,10 @@ public class IRType {
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
+        }
+
+        void addFront(Value v) {
+            params.add(0, v);
         }
     }
 

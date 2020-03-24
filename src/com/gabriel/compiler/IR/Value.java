@@ -56,4 +56,8 @@ public class Value {
         IRPrinter t = new IRPrinter();
         return type.accept(t) + " %" + name;
     }
+
+    void replaceAllUsesWith(Value other) {
+        //TODO
+    }
 }
