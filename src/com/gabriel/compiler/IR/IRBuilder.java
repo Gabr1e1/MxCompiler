@@ -58,11 +58,9 @@ public class IRBuilder implements ASTVisitor {
         }
     }
 
-    private void addStringMethods() {
-        module.classes.put("struct.string", new IRType.ClassType("string", null, null,
-                (new IRType.PointerType(new IRType.IntegerType("char"))).bitLen));
+    private void _addStringMethods(String filename, boolean member) {
         try {
-            FileReader fr = new FileReader("./src/com/gabriel/compiler/builtin/string_methods.info");
+            FileReader fr = new FileReader(filename);
             BufferedReader reader = new BufferedReader(fr);
             String line;
             while ((line = reader.readLine()) != null) {
@@ -70,11 +68,11 @@ public class IRBuilder implements ASTVisitor {
                 var returnType = IRType.convert(t[0]);
                 String funcName = t[1];
                 var args = new ArrayList<Value>();
-                args.add(new Value("_", new IRType.PointerType(new IRType.IntegerType("char"))));
+                if (member) args.add(new Value("_", new IRType.PointerType(new IRType.IntegerType("char"))));
                 for (int i = 3; i < t.length - 1; i++) {
                     args.add(new Value("_", IRType.convert(t[i])));
                 }
-                var func = new IRConstant.Function("string_" + funcName, new IRType.FunctionType(args, returnType, funcName));
+                var func = new IRConstant.Function("_string_" + funcName, new IRType.FunctionType(args, returnType, funcName));
                 line = reader.readLine();
                 module.builtin.add(new Pair<>(func, line));
                 symbolTable.put(func, globalScope);
@@ -82,6 +80,13 @@ public class IRBuilder implements ASTVisitor {
         } catch (Exception e) {
             System.out.println("error reading string methods " + e.toString());
         }
+    }
+
+    private void addStringMethods() {
+        module.classes.put("struct.string", new IRType.ClassType("string", null, null,
+                (new IRType.PointerType(new IRType.IntegerType("char"))).bitLen));
+        _addStringMethods("./src/com/gabriel/compiler/builtin/string_methods.info", true);
+        _addStringMethods("./src/com/gabriel/compiler/builtin/string_utility.info", false);
     }
 
     private Value load(Value v) {
@@ -482,10 +487,16 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.BinaryExpression node) {
-        //TODO: STRING CONCATENATE
-        Value lhs = load((Value) node.expr1.accept(this));
-        Value rhs = load((Value) node.expr2.accept(this));
-        node.val = new IRInst.BinaryOpInst(lhs, rhs, node.op, curBlock);
+        if (node.type.baseType.equals("string")) {
+            Value lhs = loadUntilType((Value) node.expr1.accept(this), 1);
+            Value rhs = loadUntilType((Value) node.expr2.accept(this), 1);
+            node.val = new IRInst.CallInst((IRConstant.Function) symbolTable.get("_string_concatenate"),
+                    Arrays.asList(lhs, rhs), curBlock);
+        } else {
+            Value lhs = load((Value) node.expr1.accept(this));
+            Value rhs = load((Value) node.expr2.accept(this));
+            node.val = new IRInst.BinaryOpInst(lhs, rhs, node.op, curBlock);
+        }
         return node.val;
     }
 
@@ -525,7 +536,7 @@ public class IRBuilder implements ASTVisitor {
                 ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(c.getType(node.id).second));
                 return node.val;
             } else { //Member Function
-                var func = (IRConstant.Function) symbolTable.getFromOriginal(c.className + "_" + node.id, globalScope);
+                var func = (IRConstant.Function) symbolTable.getFromOriginal("_" + c.className + "_" + node.id, globalScope);
                 node.val = func;
                 This = base;
                 return node.val;
