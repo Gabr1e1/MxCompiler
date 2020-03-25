@@ -7,3 +7,6 @@
 /code.ll
 /mycode.ll
 /code.cpp
+/src/com/gabriel/compiler/builtin/builtin.ll
+/src/com/gabriel/compiler/builtin/builtin.o
+/mycode.s
