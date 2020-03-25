@@ -370,7 +370,6 @@ public class ASTNode<T> {
         public Object accept(ASTVisitor visitor) {
             return visitor.visit(this);
         }
-        //TODO: methods that return to which constant type the expression belongs
     }
 
     public static class SuffixExpression extends Expression {

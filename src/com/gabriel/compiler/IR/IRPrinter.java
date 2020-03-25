@@ -34,7 +34,7 @@ public class IRPrinter implements IRVisitor {
         try {
             var str = (String) obj;
             codeWriter.write(str + "\n");
-            System.out.println(str + "\n");
+            System.out.print(str + "\n");
         } catch (Exception e) {
             System.out.println(e.toString());
         }
@@ -53,10 +53,13 @@ public class IRPrinter implements IRVisitor {
     @Override
     public Object visit(Module module) {
         addBuiltinFunctions(module);
+        writeCode("");
         module.classes.forEach((className, type) -> {
-            List<String> members = new ArrayList<>();
-            type.members.forEach((m) -> members.add((String) m.accept(this)));
-            writeCode(String.format("%%%s = type { %s }\n", type.className, String.join(", ", members)));
+            if (!(className.equals("struct.string"))) {
+                List<String> members = new ArrayList<>();
+                type.members.forEach((m) -> members.add((String) m.accept(this)));
+                writeCode(String.format("%%%s = type { %s }\n", type.className, String.join(", ", members)));
+            }
         });
         module.globalVariables.forEach((var) -> writeCode(var.accept(this)));
         module.functions.forEach((function) -> function.accept(this));
@@ -186,14 +189,7 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
-    public Object visit(IRConstant.ConstString constant) {
-        //TODO
-        return null;
-    }
-
-    @Override
     public Object visit(IRConstant.Null constant) {
-        //TODO
         return null;
     }
 

@@ -30,11 +30,10 @@ public class IRBuilder implements ASTVisitor {
 
     void init() {
         //TODO: String member functions
-        //TODO: Main Block
         addBuiltinFunctions();
+        addStringMethods();
     }
     //TODO: ADD USER?
-    //TODO: FIX FUNCTION PARAM 0, SHOULD BE THIS
 
     private void addBuiltinFunctions() {
         try {
@@ -56,6 +55,32 @@ public class IRBuilder implements ASTVisitor {
             }
         } catch (Exception e) {
             System.out.println("error reading builtin functions " + e.toString());
+        }
+    }
+
+    private void addStringMethods() {
+        module.classes.put("struct.string", new IRType.ClassType("string", null, null,
+                (new IRType.PointerType(new IRType.IntegerType("char"))).bitLen));
+        try {
+            FileReader fr = new FileReader("./src/com/gabriel/compiler/builtin/string_methods.info");
+            BufferedReader reader = new BufferedReader(fr);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                var t = line.split(" ");
+                var returnType = IRType.convert(t[0]);
+                String funcName = t[1];
+                var args = new ArrayList<Value>();
+                args.add(new Value("_", new IRType.PointerType(new IRType.IntegerType("char"))));
+                for (int i = 3; i < t.length - 1; i++) {
+                    args.add(new Value("_", IRType.convert(t[i])));
+                }
+                var func = new IRConstant.Function("string_" + funcName, new IRType.FunctionType(args, returnType, funcName));
+                line = reader.readLine();
+                module.builtin.add(new Pair<>(func, line));
+                symbolTable.put(func, globalScope);
+            }
+        } catch (Exception e) {
+            System.out.println("error reading string methods " + e.toString());
         }
     }
 
@@ -109,10 +134,16 @@ public class IRBuilder implements ASTVisitor {
         return ret;
     }
 
+    private Value malloc(Value size, Type baseType) {
+        var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
+        Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
+        return new IRInst.CastInst(malloc, baseType, curBlock);
+    }
+
     @Override
     public Object visit(ASTNode.Program node) {
-        init();
         globalScope = node.scope;
+        init();
         node.variables.forEach((var) -> {
             if (var.Initialization != null) {
                 Value v = (Value) var.Initialization.accept(this);
@@ -371,10 +402,24 @@ public class IRBuilder implements ASTVisitor {
         return ret;
     }
 
+    private Value newString(String str) {
+        Value ret = new IRInst.AllocaInst("str", new IRType.PointerType(new IRType.IntegerType("char")), curBlock);
+        Value m = malloc(new IRConstant.ConstInteger(1 + str.length() * IRType.IntegerType.BitLen.get("char"), "long"),
+                new IRType.PointerType(new IRType.IntegerType("char")));
+        for (int i = 0; i <= str.length(); i++) {
+            var t = new IRInst.GEPInst(new IRType.IntegerType("char"), m, curBlock, false);
+            t.addOperand(new IRConstant.ConstInteger(i));
+            new IRInst.StoreInst(t, new IRConstant.ConstInteger(i < str.length() ? str.charAt(i) : 0, "char"), curBlock);
+        }
+        new IRInst.StoreInst(ret, m, curBlock);
+        return ret;
+    }
+
     @Override
     public Object visit(ASTNode.LiteralExpression node) {
-        if (node.strConstant != null) node.val = new IRConstant.ConstString(node.strConstant);
-        else if (node.isBool) node.val = new IRConstant.ConstInteger(node.boolConstant ? 1 : 0, "bool");
+        if (node.strConstant != null) {
+            node.val = newString(node.strConstant);
+        } else if (node.isBool) node.val = new IRConstant.ConstInteger(node.boolConstant ? 1 : 0, "bool");
         else if (node.isNull) node.val = new IRConstant.Null();
         else if (node.isThis) {
             node.val = curFunc.getParam(0);
@@ -437,7 +482,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.BinaryExpression node) {
-        //TODO: STRING & INT, SCREW THE BUILTIN FUNCTIONS!!!
+        //TODO: STRING CONCATENATE
         Value lhs = load((Value) node.expr1.accept(this));
         Value rhs = load((Value) node.expr2.accept(this));
         node.val = new IRInst.BinaryOpInst(lhs, rhs, node.op, curBlock);
@@ -474,7 +519,6 @@ public class IRBuilder implements ASTVisitor {
         var t = node.scope.findClass(node.expr.type.toString());
         if (t != null && t.isClass()) {
             var c = module.getClass(((ASTNode.Class) t.node).className);
-
             if (node.type.isLeftValue()) { //Member Variable
                 base = loadUntilType(base, 1);
                 node.val = new IRInst.GEPInst(c.getType(node.id).first, base, curBlock, true);
@@ -501,11 +545,13 @@ public class IRBuilder implements ASTVisitor {
             var func = (IRConstant.Function) f;
             var tmp = (List<Value>) node.exprList.accept(this);
             var argsNeed = ((IRType.FunctionType) func.type).params;
+            boolean flg = false;
             if (tmp.size() == argsNeed.size() - 1) { //lacking "this"
                 args.add(loadUntilType(This, 1));
+                flg = true;
             }
             for (int i = 0; i < tmp.size(); i++) {
-                args.add(loadUntilType(tmp.get(i), argsNeed.get(i).type));
+                args.add(loadUntilType(tmp.get(i), argsNeed.get(flg ? (i + 1) : i).type));
             }
             node.val = new IRInst.CallInst(func, args, curBlock);
         } else if (IRType.isClassPointer((Value) f)) { //class constructor
@@ -535,9 +581,7 @@ public class IRBuilder implements ASTVisitor {
 
     private Value allocateArray(Type baseType, Value dimension) {
         var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), dimension, "*", curBlock);
-        var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
-        Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
-        return new IRInst.CastInst(malloc, baseType, curBlock);
+        return malloc(size, baseType);
     }
 
     private Value allocate(Type t, List<Value> d) {
@@ -585,10 +629,8 @@ public class IRBuilder implements ASTVisitor {
         }
         if (d.size() != 0) node.val = allocate(t, d);
         else {
-            var size = new IRConstant.ConstInteger(((IRType.PointerType) t).pointer.getByteNum());
-            var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
-            Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
-            node.val = new IRInst.CastInst(malloc, t, curBlock);
+            var size = new IRConstant.ConstInteger(((IRType.PointerType) t).pointer.getByteNum(), "long");
+            node.val = malloc(size, t);
         }
         return node.val;
     }

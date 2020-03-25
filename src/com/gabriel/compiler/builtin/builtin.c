@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 void print(char *str) {
     printf("%s", str);
@@ -43,4 +42,10 @@ int getInt() {
     int ret;
     scanf("%d", &ret);
     return ret;
+}
+
+char* getString() {
+    char* str = (char*) malloc(256);
+    scanf("%s", str);
+    return str;
 }

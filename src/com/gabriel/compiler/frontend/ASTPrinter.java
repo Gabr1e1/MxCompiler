@@ -1,8 +1,6 @@
 package com.gabriel.compiler.frontend;
 
 public class ASTPrinter implements ASTVisitor {
-    //TODO: Print scope
-
     @Override
     public Object visit(ASTNode.Program node) {
         System.out.println("Visiting Program");

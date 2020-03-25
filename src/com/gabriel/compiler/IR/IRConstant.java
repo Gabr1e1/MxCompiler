@@ -40,20 +40,6 @@ public class IRConstant {
         }
     }
 
-    public static class ConstString extends Constant {
-        String str;
-
-        ConstString(String str) {
-            super("const", new IRType.IntegerType("string"));
-            this.str = str;
-        }
-
-        @Override
-        public Object accept(IRVisitor visitor) {
-            return visitor.visit(this);
-        }
-    }
-
     //Probably don't need this
     public static class Null extends Constant {
         Null() {

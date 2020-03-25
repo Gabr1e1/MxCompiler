@@ -11,3 +11,4 @@
 /src/com/gabriel/compiler/builtin/builtin.o
 /mycode.s
 /builtin.ll
+/string_builtin.ll

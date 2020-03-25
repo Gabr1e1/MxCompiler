@@ -26,7 +26,6 @@ public interface IRVisitor {
 
     //Constant
     Object visit(IRConstant.ConstInteger constant);
-    Object visit(IRConstant.ConstString constant);
     Object visit(IRConstant.Null constant);
     Object visit(IRConstant.Void constant);
 
