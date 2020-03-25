@@ -1,2 +1,0 @@
-char* malloc ( long )
-declare i8* @malloc(i64)

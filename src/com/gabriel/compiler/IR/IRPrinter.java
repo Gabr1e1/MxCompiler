@@ -48,7 +48,6 @@ public class IRPrinter implements IRVisitor {
 
     void addBuiltinFunctions(Module module) {
         module.builtin.forEach((x) -> writeCode(x.second));
-        writeCode("");
     }
 
     @Override

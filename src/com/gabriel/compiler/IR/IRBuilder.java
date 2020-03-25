@@ -38,7 +38,7 @@ public class IRBuilder implements ASTVisitor {
 
     private void addBuiltinFunctions() {
         try {
-            FileReader fr = new FileReader("./src/com/gabriel/compiler/IR/builtin");
+            FileReader fr = new FileReader("./src/com/gabriel/compiler/builtin/builtin");
             BufferedReader reader = new BufferedReader(fr);
             String line;
             while ((line = reader.readLine()) != null) {
@@ -198,7 +198,8 @@ public class IRBuilder implements ASTVisitor {
         if (!(returnType instanceof IRType.VoidType)) {
             for (int i = 0; i < curFunc.blocks.size(); i++) {
                 if (curFunc.blocks.get(i) == retBlock) {
-                    Collections.swap(curFunc.blocks, i, curFunc.blocks.size() - 1);
+                    curFunc.blocks.remove(i);
+                    curFunc.blocks.add(retBlock);
                     break;
                 }
             }
@@ -398,6 +399,7 @@ public class IRBuilder implements ASTVisitor {
         node.val = (Value) node.expr.accept(this);
         Value lvalue = load(node.val);
         Value ret = new IRInst.AllocaInst("T", lvalue.type, curBlock);
+        new IRInst.StoreInst(ret, lvalue, curBlock);
         Value v = new IRInst.BinaryOpInst(lvalue, new IRConstant.ConstInteger(1),
                 node.op.equals("++") ? "+" : "-", curBlock);
         new IRInst.StoreInst(node.val, v, curBlock);
@@ -406,30 +408,30 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.UnaryExpression node) {
-        Value t = load((Value) node.expr.accept(this));
+        Value t = (Value) node.expr.accept(this);
         Value v = null;
         switch (node.op) {
             case "++":
             case "--":
-                v = new IRInst.BinaryOpInst(t, new IRConstant.ConstInteger(1),
+                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(1),
                         node.op.equals("++") ? "+" : "-", curBlock);
                 break;
             case "+":
             case "-":
-                v = new IRInst.BinaryOpInst(t, new IRConstant.ConstInteger(0),
+                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(0),
                         node.op, curBlock);
                 break;
             case "!":
-                v = new IRInst.BinaryOpInst(t, new IRConstant.ConstInteger(1),
+                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(1),
                         "^", curBlock);
                 break;
             case "~":
-                v = new IRInst.BinaryOpInst(t, new IRConstant.ConstInteger(-1),
+                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(-1),
                         "&", curBlock);
                 break;
         }
-        node.val = v;
-        return node.val;
+        new IRInst.StoreInst(t, v, curBlock);
+        return t;
     }
 
     @Override
@@ -530,29 +532,63 @@ public class IRBuilder implements ASTVisitor {
         return node.val;
     }
 
+    private Value allocateArray(Type baseType, Value dimension) {
+        var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), dimension, "*", curBlock);
+        var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
+        Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
+        return new IRInst.CastInst(malloc, baseType, curBlock);
+    }
+
+    private Value allocate(Type t, List<Value> d) {
+        Value dimension = d.get(0);
+        Value ret = allocateArray(t, dimension);
+        ((IRType.PointerType) ret.type).setDimension(dimension);
+        if (d.size() > 1) {
+            t = ((IRType.PointerType) t).pointer;
+            d = d.subList(1, d.size());
+
+            var i = new IRInst.AllocaInst("i", new IRType.IntegerType("int"), curBlock);
+            new IRInst.StoreInst(i, new IRConstant.ConstInteger(0), curBlock);
+
+            BasicBlock checkCond = new BasicBlock("for_cond", curFunc);
+            BasicBlock body = new BasicBlock("for_body", curFunc);
+            BasicBlock after = new BasicBlock("for_after", curFunc);
+            new IRInst.BranchInst(checkCond, curBlock);
+
+            curBlock = checkCond;
+            var tmp = load(i);
+            Value cond = new IRInst.CmpInst(tmp, dimension, "<", curBlock);
+            cond = convertToCorres(Collections.singletonList(cond),
+                    Collections.singletonList(new Value("", new IRType.IntegerType(1)))).get(0);
+            new IRInst.BranchInst(cond, curBlock, body, after);
+
+            curBlock = body;
+            var curStore = new IRInst.GEPInst(t, ret, curBlock, false);
+            curStore.addOperand(tmp);
+
+            new IRInst.StoreInst(curStore, allocate(t, d), curBlock);
+            var newi = new IRInst.BinaryOpInst(tmp, new IRConstant.ConstInteger(1), "+", curBlock);
+            new IRInst.StoreInst(i, newi, curBlock);
+            new IRInst.BranchInst(checkCond, curBlock);
+            curBlock = after;
+        }
+        return ret;
+    }
+
     @Override
     public Object visit(ASTNode.NewExpression node) {
         Type t = IRType.convert(node.type, module);
-
-        Value size = null;
-        if (IRType.isClassPointer(t)) {
-            size = new IRConstant.ConstInteger(((IRType.PointerType) t).pointer.getByteNum());
-        } else {
-            for (ASTNode.Expression expr : node.expressions) {
-                Value cur = (Value) expr.accept(this);
-                if (size != null) {
-                    size = new IRInst.BinaryOpInst(size, cur, "*", curBlock);
-                } else {
-                    size = cur;
-                }
-            }
-            assert size != null;
-            size = new IRInst.BinaryOpInst(size, new IRConstant.ConstInteger(t.getByteNum()), "*", curBlock);
+        List<Value> d = new ArrayList<>();
+        for (ASTNode.Expression expr : node.expressions) {
+            d.add((Value) expr.accept(this));
         }
-
-        var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
-        Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
-        node.val = new IRInst.CastInst(malloc, t, curBlock);
+        if (d.size() != 0) node.val = allocate(t, d);
+        else {
+            var size = new IRConstant.ConstInteger(((IRType.PointerType) t).pointer.getByteNum());
+            var args = convertToCorres(Collections.singletonList(size), ((IRType.FunctionType) builtin.get("malloc").type).params);
+            Value malloc = new IRInst.CallInst(builtin.get("malloc"), args, curBlock);
+            node.val = new IRInst.CastInst(malloc, t, curBlock);
+        }
         return node.val;
     }
 }

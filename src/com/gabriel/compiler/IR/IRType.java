@@ -126,14 +126,19 @@ public class IRType {
 
     public static class PointerType extends Type {
         Type pointer;
+        Value dimension; //maintained for array.size()
 
         PointerType(Type pointer) {
             this.pointer = pointer;
-            this.bitLen = 32; //32-bit address
+            this.bitLen = 64;
         }
 
         Type getBase() {
             return pointer;
+        }
+
+        void setDimension(Value d) {
+            dimension = d;
         }
 
         @Override
