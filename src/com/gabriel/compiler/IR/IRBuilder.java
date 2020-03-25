@@ -38,7 +38,7 @@ public class IRBuilder implements ASTVisitor {
 
     private void addBuiltinFunctions() {
         try {
-            FileReader fr = new FileReader("./src/com/gabriel/compiler/builtin/builtin");
+            FileReader fr = new FileReader("./src/com/gabriel/compiler/builtin/builtin.info");
             BufferedReader reader = new BufferedReader(fr);
             String line;
             while ((line = reader.readLine()) != null) {
@@ -387,6 +387,7 @@ public class IRBuilder implements ASTVisitor {
                 }
             } else if (node.type.isFunction()) {
                 node.val = symbolTable.getFromOriginal(curClass != null ? curClass.className + "_" + node.id : node.id, globalScope);
+                if (node.val == null) node.val = builtin.get(node.id);
             }
         } else {
             node.val = new IRConstant.ConstInteger(node.numConstant);
