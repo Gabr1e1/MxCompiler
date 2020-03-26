@@ -29,7 +29,6 @@ public class IRBuilder implements ASTVisitor {
     }
 
     void init() {
-        //TODO: String member functions
         addBuiltinFunctions();
         addStringMethods();
     }
@@ -534,17 +533,15 @@ public class IRBuilder implements ASTVisitor {
                 base = loadUntilType(base, 1);
                 node.val = new IRInst.GEPInst(c.getType(node.id).first, base, curBlock, true);
                 ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(c.getType(node.id).second));
-                return node.val;
             } else { //Member Function
                 var func = (IRConstant.Function) symbolTable.getFromOriginal("_" + c.className + "_" + node.id, globalScope);
                 node.val = func;
                 This = base;
-                return node.val;
             }
         } else if (node.id.equals("size")) {
-            //TODO: WTF IS THIS?
+            node.val = base;
         }
-        return null;
+        return node.val;
     }
 
     @Override
@@ -552,7 +549,13 @@ public class IRBuilder implements ASTVisitor {
         var f = node.expr.accept(this);
         var args = new ArrayList<Value>();
 
-        if (f instanceof IRConstant.Function) {
+        if (node.expr instanceof ASTNode.MemberExpression && ((ASTNode.MemberExpression) node.expr).id.equals("size")) {
+            var start = new IRInst.LoadInst((Value) f, curBlock);
+            var t = new IRInst.CastInst(start, IRType.convert("int*"), curBlock);
+            var sizePtr = new IRInst.GEPInst(IRType.convert("int"), t, curBlock, false);
+            sizePtr.addOperand(new IRConstant.ConstInteger(-1));
+            node.val = load(sizePtr);
+        } else if (f instanceof IRConstant.Function) {
             var func = (IRConstant.Function) f;
             var tmp = (List<Value>) node.exprList.accept(this);
             var argsNeed = ((IRType.FunctionType) func.type).params;
@@ -592,13 +595,19 @@ public class IRBuilder implements ASTVisitor {
 
     private Value allocateArray(Type baseType, Value dimension) {
         var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), dimension, "*", curBlock);
-        return malloc(size, baseType);
+        size = new IRInst.BinaryOpInst(size, new IRConstant.ConstInteger(IRType.convert("int").getByteNum()), "+", curBlock);
+        var ret = malloc(size, IRType.convert("int*"));
+        //Store size
+        new IRInst.StoreInst(ret, load(dimension), curBlock);
+        var locAfterSize = new IRInst.GEPInst(IRType.convert("int"), ret, curBlock, false);
+        locAfterSize.addOperand(new IRConstant.ConstInteger(1));
+        ret = new IRInst.CastInst(locAfterSize, baseType, curBlock);
+        return ret;
     }
 
     private Value allocate(Type t, List<Value> d) {
         Value dimension = d.get(0);
         Value ret = allocateArray(t, dimension);
-        ((IRType.PointerType) ret.type).setDimension(dimension);
         if (d.size() > 1) {
             t = ((IRType.PointerType) t).pointer;
             d = d.subList(1, d.size());

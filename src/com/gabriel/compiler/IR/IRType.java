@@ -126,7 +126,6 @@ public class IRType {
 
     public static class PointerType extends Type {
         Type pointer;
-        Value dimension; //maintained for array.size()
 
         PointerType(Type pointer) {
             this.pointer = pointer;
@@ -135,10 +134,6 @@ public class IRType {
 
         Type getBase() {
             return pointer;
-        }
-
-        void setDimension(Value d) {
-            dimension = d;
         }
 
         @Override
