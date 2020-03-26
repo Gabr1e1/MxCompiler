@@ -22,6 +22,14 @@ abstract class Type {
 }
 
 public class IRType {
+    public static Value getDefaultValue(Type type) {
+        if (type instanceof IntegerType)
+            return new IRConstant.ConstInteger(0, type);
+        else if (type instanceof PointerType)
+            return new IRConstant.Null(type);
+        return null;
+    }
+
     public static boolean isClassPointer(Type f) {
         while (f instanceof IRType.PointerType) {
             f = ((IRType.PointerType) f).pointer;

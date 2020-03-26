@@ -70,8 +70,11 @@ public class IRInst {
     }
 
     public static class BinaryOpInst extends Instruction {
-        private static Map<String, String> OpMap = Map.of("+", "add", "-", "sub", "*", "mul", "/", "sdiv", "%", "srem",
-                "<<", "shl", ">>", "ashr", "&", "and", "|", "or", "^", "xor");
+        private static Map<String, String> OpMap = Map.ofEntries(Map.entry("+", "add"), Map.entry("-", "sub"),
+                Map.entry("*", "mul"), Map.entry("/", "sdiv"), Map.entry("%", "srem"),
+                Map.entry("<<", "shl"), Map.entry(">>", "ashr"),
+                Map.entry("&", "and"), Map.entry("|", "or"), Map.entry("^", "xor"),
+                Map.entry("&&", "and"), Map.entry("||", "or"));
         Value lhs, rhs;
         String op;
 

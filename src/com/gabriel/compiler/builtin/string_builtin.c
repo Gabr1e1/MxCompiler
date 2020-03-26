@@ -7,7 +7,7 @@ int _string_length(char *this) {
 
 char* _string_substring(char *this, int left, int right) {
     char* ret = (char*) malloc(sizeof(char) * (right - left + 1));
-    for (int i = left; i < right; i++) ret[i] = this[i];
+    for (int i = left; i < right; i++) ret[i - left] = this[i];
     ret[right - left] = '\0';
     return ret;
 }

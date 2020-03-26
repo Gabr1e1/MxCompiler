@@ -27,14 +27,13 @@ char* toString(int n) {
     }
     char *str = (char*) malloc((cnt + 1) * sizeof(char));
 
-    cnt = m < 0;
     if (m < 0) str[0] = '-';
     m = m < 0 ? -m : m;
+    str[cnt--] = '\0';
     while (m) {
-        str[cnt++] = n % 10;
-        n /= 10;
+        str[cnt--] = m % 10 + '0';
+        m /= 10;
     }
-    str[cnt] = '\0';
     return str;
 }
 

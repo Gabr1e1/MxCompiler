@@ -23,6 +23,11 @@ public class IRConstant {
             this.num = num;
         }
 
+        ConstInteger(int num, Type type) {
+            super("const", type);
+            this.num = num;
+        }
+
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
@@ -42,8 +47,11 @@ public class IRConstant {
 
     //Probably don't need this
     public static class Null extends Constant {
-        Null() {
-            super("null", new IRType.VoidType());
+        Type type;
+
+        Null(Type type) {
+            super("_", type);
+            this.type = type;
         }
 
         @Override
@@ -69,17 +77,27 @@ public class IRConstant {
     }
 
     public static class GlobalVariable extends Constant {
-        Value Initialization;
+        Value init;
 
-        GlobalVariable(String name, Type type, Value initialization) {
-            super(name, type);
-            this.Initialization = initialization;
-            addOperand(initialization);
+        GlobalVariable(String name, Type type, Value init) {
+            super(name, new IRType.PointerType(type));
+            this.init = init;
         }
 
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
+        }
+
+        @Override
+        String getPrintName() {
+            return "@" + name;
+        }
+
+        @Override
+        public String toString() {
+            IRPrinter t = new IRPrinter();
+            return type.accept(t) + " @" + name;
         }
     }
 

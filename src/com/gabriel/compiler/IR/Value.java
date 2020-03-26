@@ -54,10 +54,12 @@ public class Value {
 
     public String toString() {
         IRPrinter t = new IRPrinter();
-        return type.accept(t) + " %" + name;
+        if (type instanceof IRType.VoidType)
+            return (String) type.accept(t);
+        else return type.accept(t) + " %" + name;
     }
 
     void replaceAllUsesWith(Value other) {
-        //TODO
+        //TODO!!!
     }
 }

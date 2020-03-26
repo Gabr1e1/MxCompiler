@@ -6,7 +6,6 @@ import com.gabriel.compiler.IR.Module;
 import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
-import com.gabriel.compiler.frontend.ASTPrinter;
 import com.gabriel.compiler.frontend.TypeChecker;
 import com.gabriel.compiler.parser.MxGrammarLexer;
 import com.gabriel.compiler.parser.MxGrammarParser;
@@ -20,8 +19,8 @@ import static java.lang.System.exit;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String path = "./code.mx";
-//        String path = "./testcases/sema/codeforces-package/231A.mx";
+//        String path = "./code.mx";
+        String path = "./testcases/codegen/e7.mx";
 
         //        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);

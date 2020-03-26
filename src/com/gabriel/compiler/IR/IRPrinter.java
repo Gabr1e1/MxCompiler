@@ -76,11 +76,6 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
-    public Object visit(IRConstant.GlobalVariable globalVariable) {
-        return null;
-    }
-
-    @Override
     public Object visit(IRConstant.Function function) {
         writeCode(function.type.accept(this) + "{");
         function.blocks.forEach((block) -> block.accept(this));
@@ -116,6 +111,12 @@ public class IRPrinter implements IRVisitor {
         var t = ((IRType.PointerType) inst.type).getBase();
         return String.format("%s = alloca %s, align %d", inst.getPrintName(),
                 t.accept(this), t.getByteNum());
+    }
+
+    @Override
+    public Object visit(IRConstant.GlobalVariable globalVariable) {
+        return String.format("%s = global %s, align %d", globalVariable.getPrintName(),
+                globalVariable.init.accept(this), globalVariable.type.getByteNum());
     }
 
     @Override
@@ -190,7 +191,7 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRConstant.Null constant) {
-        return null;
+        return constant.type.accept(this) + " null";
     }
 
     @Override
