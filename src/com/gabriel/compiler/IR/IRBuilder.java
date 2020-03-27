@@ -158,6 +158,41 @@ public class IRBuilder implements ASTVisitor {
         return new IRInst.CastInst(malloc, baseType, curBlock);
     }
 
+    private boolean collecting = false;
+
+    private IRConstant.Function work(List<ASTNode.Function> functions, List<ASTNode.Function> constructors) {
+        List<BasicBlock> blocks = new ArrayList<>();
+        IRConstant.Function ret = null;
+
+        functions.forEach((func) -> {
+            collecting = true;
+            IRConstant.Function f = (IRConstant.Function) func.accept(this);
+            module.addFunction(f);
+            blocks.add(curBlock);
+        });
+        for (var func : constructors) {
+            collecting = true;
+            IRConstant.Function f = (IRConstant.Function) func.accept(this);
+            module.addFunction(f);
+            blocks.add(curBlock);
+            ret = f;
+        }
+
+        for (int i = 0; i < functions.size(); i++) {
+            var func = functions.get(i);
+            collecting = false;
+            curBlock = blocks.get(i);
+            func.accept(this);
+        }
+        for (int i = 0; i < constructors.size(); i++) {
+            var func = constructors.get(i);
+            collecting = false;
+            curBlock = blocks.get(i);
+            func.accept(this);
+        }
+        return ret;
+    }
+
     @Override
     public Object visit(ASTNode.Program node) {
         globalScope = node.scope;
@@ -187,10 +222,7 @@ public class IRBuilder implements ASTVisitor {
             module.addClass(classType.getName(), classType);
         });
 
-        node.functions.forEach((func) -> {
-            IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            module.addFunction(f);
-        });
+        work(node.functions, new ArrayList<>());
         return module;
     }
 
@@ -208,16 +240,8 @@ public class IRBuilder implements ASTVisitor {
         }
         var ret = new IRType.ClassType("struct." + node.className, members, member_name, size);
         curClass = ret;
-        node.functions.forEach((func) -> {
-            IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            module.addFunction(f);
-        });
-        node.constructors.forEach((func) -> {
-            IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            module.addFunction(f);
-            ret.addConstructor(f);
-        });
 
+        ret.addConstructor(work(node.functions, node.constructors));
         curClass = null;
         return ret;
     }
@@ -227,51 +251,56 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.Function node) {
         var funcName = (curClass != null ? curClass.className + "_" : "") + node.funcName;
-        Type returnType = IRType.convert(node.returnType, module);
-        curFunc = new IRConstant.Function(funcName, null);
-        curBlock = new BasicBlock("func", curFunc);
-        symbolTable.put(curFunc, globalScope);
+        if (collecting) {
+            Type returnType = IRType.convert(node.returnType, module);
+            curFunc = new IRConstant.Function(funcName, null);
+            curBlock = new BasicBlock("func_init", curFunc);
+            symbolTable.put(curFunc, globalScope);
 
-        List<Value> params = (List<Value>) (node.paramList.accept(this));
-        if (curClass != null) {
-            This = new Value("this", new IRType.PointerType(curClass));
-            params.add(0, This);
-        }
-        var type = new IRType.FunctionType(params, returnType, funcName);
-        curFunc.type = type;
-
-        //Create Return Block
-        if (!(returnType instanceof IRType.VoidType)) {
-            curBlockRet = new IRInst.AllocaInst("ret", returnType, curBlock);
-            retBlock = new BasicBlock("retBlock", curFunc);
-            var tmp = curBlock;
-            curBlock = retBlock;
-            new IRInst.ReturnInst(loadUntilType(curBlockRet, returnType), retBlock);
-            curBlock = tmp;
-        }
-
-        //initialize global variable
-        if (node.funcName.equals("main")) {
-            new IRInst.CallInst((IRConstant.Function) symbolTable.get("__global_init"), new ArrayList<Value>(), curBlock);
-        }
-
-        if (node.block != null) node.block.accept(this);
-        curFunc.blocks.forEach((block) -> {
-            if (block.instructions.size() == 0) block.replaceAllUsesWith(retBlock);
-        });
-
-        if (!(returnType instanceof IRType.VoidType)) {
-            for (int i = 0; i < curFunc.blocks.size(); i++) {
-                if (curFunc.blocks.get(i) == retBlock) {
-                    curFunc.blocks.remove(i);
-                    curFunc.blocks.add(retBlock);
-                    break;
-                }
+            List<Value> params = (List<Value>) (node.paramList.accept(this));
+            if (curClass != null) {
+                This = new Value("this", new IRType.PointerType(curClass));
+                params.add(0, This);
             }
+            var type = new IRType.FunctionType(params, returnType, funcName);
+            curFunc.type = type;
+            return curFunc;
         } else {
-            new IRInst.ReturnInst(new IRConstant.Void(), curBlock);
+            //Create Return Block
+            curFunc = (IRConstant.Function) symbolTable.getFromOriginal(funcName, globalScope);
+            var returnType = curFunc == null ? new IRType.VoidType() : ((IRType.FunctionType) curFunc.type).returnType;
+            if (!(returnType instanceof IRType.VoidType)) {
+                curBlockRet = new IRInst.AllocaInst("ret", returnType, curBlock);
+                retBlock = new BasicBlock("retBlock", curFunc);
+                var tmp = curBlock;
+                curBlock = retBlock;
+                new IRInst.ReturnInst(loadUntilType(curBlockRet, returnType), retBlock);
+                curBlock = tmp;
+            }
+
+            //initialize global variable
+            if (node.funcName.equals("main")) {
+                new IRInst.CallInst((IRConstant.Function) symbolTable.get("__global_init"), new ArrayList<Value>(), curBlock);
+            }
+
+            if (node.block != null) node.block.accept(this);
+            curFunc.blocks.forEach((block) -> {
+                if (block.instructions.size() == 0) block.replaceAllUsesWith(retBlock);
+            });
+
+            if (!(returnType instanceof IRType.VoidType)) {
+                for (int i = 0; i < curFunc.blocks.size(); i++) {
+                    if (curFunc.blocks.get(i) == retBlock) {
+                        curFunc.blocks.remove(i);
+                        curFunc.blocks.add(retBlock);
+                        break;
+                    }
+                }
+            } else {
+                new IRInst.ReturnInst(new IRConstant.Void(), curBlock);
+            }
         }
-        return curFunc;
+        return null;
     }
 
     @Override
