@@ -26,6 +26,7 @@ public interface IRVisitor {
 
     //Constant
     Object visit(IRConstant.ConstInteger constant);
+    Object visit(IRConstant.ConstString constant);
     Object visit(IRConstant.Null constant);
     Object visit(IRConstant.Void constant);
 
@@ -34,7 +35,7 @@ public interface IRVisitor {
     Object visit(IRType.IntegerType type);
     Object visit(IRType.ClassType type);
     Object visit(IRType.PointerType type);
-//    Object visit(IRType.ArrayType type);
+    Object visit(IRType.ArrayType type);
     Object visit(IRType.FunctionType type);
     Object visit(IRType.LabelType type);
 }

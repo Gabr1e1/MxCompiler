@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class Module {
     List<IRConstant.Function> functions = new ArrayList<>();
-    List<IRConstant.GlobalVariable> globalVariables = new ArrayList<>();
+    List<Value> globalVariables = new ArrayList<>();
     Map<String, IRType.ClassType> classes = new HashMap<>();
     List<Pair<IRConstant.Function, String>> builtin = new ArrayList<>();
 

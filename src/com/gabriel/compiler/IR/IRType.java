@@ -79,7 +79,7 @@ public class IRType {
 
     public static class IntegerType extends Type {
         public static final Map<String, Integer> BitLen = Map.of("char", 8,
-                "bool", 8, "int", 32, "long", 64);
+                "bool", 1, "int", 32, "long", 64);
 
         IntegerType(String baseType) {
             this.baseType = baseType;
@@ -150,24 +150,20 @@ public class IRType {
         }
     }
 
-    //NOT NEEDED ACTUALLY
-//    public static class ArrayType extends Type {
-//        Type baseType;
-//        int dimension;
-//
-//        ArrayType(Type baseType, int dimension) {
-//            this.baseType = baseType;
-//            this.dimension = dimension;
-//        }
-//
-//        void setDimension(int x) {
-//            dimension = x;
-//        }
-//        @Override
-//        public Object accept(IRVisitor visitor) {
-//            return visitor.visit(this);
-//        }
-//    }
+    public static class ArrayType extends Type {
+        Type baseType;
+        int dimension;
+
+        ArrayType(Type baseType, int dimension) {
+            this.baseType = baseType;
+            this.dimension = dimension;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
 
     public static class FunctionType extends Type {
         List<Value> params;

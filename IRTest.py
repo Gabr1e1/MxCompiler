@@ -26,7 +26,8 @@ def test(filename):
     os.system("./semantic.sh >/dev/null")
     os.system("llvm-link mycode.ll builtin.ll string_builtin.ll string_utility.ll -o code.ll")
     os.system("lli code.ll < test.in > my.out")
-    if os.system("diff -w ans.out my.out"):
+    os.system("diff -w ans.out my.out | head")
+    if os.system("diff -w ans.out my.out > /dev/null 2>&1"):
         print("WRONG")
     else:
         print("PASS")
@@ -34,5 +35,5 @@ def test(filename):
 # for i in range(1, 11):
     # test("./testcases/codegen/e" + str(i))
 
-for i in range(1, 18):
+for i in range(10,11):
     test("./testcases/codegen/t" + str(i))

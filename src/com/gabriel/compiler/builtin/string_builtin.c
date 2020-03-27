@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int _string_length(char *this) {
     return strlen(this);
@@ -16,7 +17,7 @@ int _string_parseInt(char *this) {
     int ret = 0, sgn = 1, cnt = 0;
     if (this[0] == '-') sgn = -1, cnt = 1;
     while (this[cnt] >= '0' && this[cnt] <= '9') 
-        ret = ret * 10 + this[cnt++];
+        ret = ret * 10 + this[cnt++] - '0';
     return ret * sgn;
 }
 

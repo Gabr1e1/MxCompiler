@@ -190,6 +190,11 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
+    public Object visit(IRConstant.ConstString constant) {
+        return String.format("%s = constant %s c\"%s\\00\", align 1", constant.getPrintName(), constant.type.accept(this), constant.str);
+    }
+
+    @Override
     public Object visit(IRConstant.Null constant) {
         return constant.type.accept(this) + " null";
     }
@@ -214,11 +219,10 @@ public class IRPrinter implements IRVisitor {
         return type.pointer.accept(this) + "*";
     }
 
-//    @Override
-//    public Object visit(IRType.ArrayType type) {
-//        String t = (String) type.baseType.accept(this);
-//        return String.format("[%d x %s]", type.dimension, t.substring(0, t.length() - 2));
-//    }
+    @Override
+    public Object visit(IRType.ArrayType type) {
+        return String.format("[%d x %s]", type.dimension, type.baseType.accept(this));
+    }
 
     @Override
     public Object visit(IRType.FunctionType type) {

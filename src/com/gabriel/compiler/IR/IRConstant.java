@@ -45,6 +45,33 @@ public class IRConstant {
         }
     }
 
+    public static class ConstString extends Constant {
+        Type type;
+        String str;
+
+        ConstString(String str, Type type) {
+            super(".conststr", new IRType.PointerType(type));
+            this.str = str;
+            this.type = type;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+
+        @Override
+        String getPrintName() {
+            return "@" + name;
+        }
+
+        @Override
+        public String toString() {
+            IRPrinter t = new IRPrinter();
+            return type.accept(t) + " @" + name;
+        }
+    }
+
     //Probably don't need this
     public static class Null extends Constant {
         Type type;
