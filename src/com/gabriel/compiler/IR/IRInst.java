@@ -35,7 +35,7 @@ public class IRInst {
         Value cond; //null if always taken
         BasicBlock taken, notTaken;
 
-        BranchInst(Value cond, BasicBlock belong, BasicBlock taken, BasicBlock notTaken) {
+        BranchInst(Value cond, BasicBlock taken, BasicBlock notTaken, BasicBlock belong) {
             super("", new IRType.VoidType(), belong);
             this.cond = cond;
             this.taken = taken;
@@ -108,8 +108,8 @@ public class IRInst {
     }
 
     public static class CmpInst extends Instruction {
-        private static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
-                "==", "eq", "!=", "neq");
+        static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
+                "==", "eq", "!=", "ne");
         Value lhs, rhs;
         String op;
 
@@ -118,7 +118,6 @@ public class IRInst {
             this.lhs = lhs;
             this.rhs = rhs;
             this.op = op;
-//            constantConvert(lhs, rhs);
         }
 
         String getCorresOp() {

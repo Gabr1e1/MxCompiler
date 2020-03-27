@@ -85,6 +85,17 @@ public class IRConstant {
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
         }
+
+        @Override
+        public String toString() {
+            IRPrinter t = new IRPrinter();
+            return (String) this.accept(t);
+        }
+
+        @Override
+        String getPrintName() {
+            return "null";
+        }
     }
 
     public static class Void extends Constant {

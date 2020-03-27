@@ -65,7 +65,7 @@ public class IRBuilder implements ASTVisitor {
             String line;
             while ((line = reader.readLine()) != null) {
                 var t = line.split(" ");
-                var returnType = IRType.convert(t[0]);
+                var returnType = t[0].equals("char") ? IRType.convert("bool") : IRType.convert(t[0]);
                 String funcName = t[1];
                 var args = new ArrayList<Value>();
                 if (member) args.add(new Value("_", new IRType.PointerType(new IRType.IntegerType("char"))));
@@ -89,13 +89,6 @@ public class IRBuilder implements ASTVisitor {
         _addStringMethods("./src/com/gabriel/compiler/builtin/string_utility.info", false);
     }
 
-    private Value load(Value v) {
-        while (v.type instanceof IRType.PointerType) {
-            v = new IRInst.LoadInst(v, curBlock);
-        }
-        return v;
-    }
-
     private int getPtrNum(Type t) {
         if (t instanceof IRType.PointerType)
             return getPtrNum(((IRType.PointerType) t).pointer) + 1;
@@ -103,6 +96,10 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value loadUntilType(Value v, Type t) {
+        if (v instanceof IRConstant.Null) {
+            v = new IRConstant.Null(t);
+            return v;
+        }
         int n = getPtrNum(v.type), m = getPtrNum(t);
         while (n > m) {
             v = new IRInst.LoadInst(v, curBlock);
@@ -122,7 +119,8 @@ public class IRBuilder implements ASTVisitor {
 
     private Value loadTimes(Value v, int m) {
         for (int i = 0; i < m; i++) {
-            v = new IRInst.LoadInst(v, curBlock);
+            if (v.type instanceof IRType.PointerType)
+                v = new IRInst.LoadInst(v, curBlock);
         }
         return v;
     }
@@ -197,6 +195,10 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(ASTNode.Program node) {
         globalScope = node.scope;
         init();
+        node.classes.forEach((c) -> {
+            IRType.ClassType classType = (IRType.ClassType) c.accept(this);
+//            module.addClass(classType.getName(), classType);
+        });
 
         var type = new IRType.FunctionType(new ArrayList<Value>(), IRType.convert("void"), "__global_init");
         curFunc = new IRConstant.Function("__global_init", type);
@@ -217,11 +219,6 @@ public class IRBuilder implements ASTVisitor {
         });
         new IRInst.ReturnInst(new Value("_", new IRType.VoidType()), curBlock);
 
-        node.classes.forEach((c) -> {
-            IRType.ClassType classType = (IRType.ClassType) c.accept(this);
-            module.addClass(classType.getName(), classType);
-        });
-
         work(node.functions, new ArrayList<>());
         return module;
     }
@@ -231,6 +228,9 @@ public class IRBuilder implements ASTVisitor {
         List<Type> members = new ArrayList<>();
         List<String> member_name = new ArrayList<>();
         int size = 0;
+        var ret = new IRType.ClassType("struct." + node.className, members, member_name, size);
+        module.addClass(ret.getName(), ret);
+
         for (ASTNode.Variable var : node.variables) {
             var type = IRType.convert(var.type, module);
             members.add(type);
@@ -238,9 +238,8 @@ public class IRBuilder implements ASTVisitor {
             size += (type.bitLen - (size % type.bitLen)) % type.bitLen;
             size += type.bitLen;
         }
-        var ret = new IRType.ClassType("struct." + node.className, members, member_name, size);
-        curClass = ret;
 
+        curClass = ret;
         ret.addConstructor(work(node.functions, node.constructors));
         curClass = null;
         return ret;
@@ -269,13 +268,15 @@ public class IRBuilder implements ASTVisitor {
             //Create Return Block
             curFunc = (IRConstant.Function) symbolTable.getFromOriginal(funcName, globalScope);
             var returnType = curFunc == null ? new IRType.VoidType() : ((IRType.FunctionType) curFunc.type).returnType;
+            retBlock = new BasicBlock("retBlock", curFunc);
             if (!(returnType instanceof IRType.VoidType)) {
                 curBlockRet = new IRInst.AllocaInst("ret", returnType, curBlock);
-                retBlock = new BasicBlock("retBlock", curFunc);
                 var tmp = curBlock;
                 curBlock = retBlock;
                 new IRInst.ReturnInst(loadUntilType(curBlockRet, returnType), retBlock);
                 curBlock = tmp;
+            } else {
+                new IRInst.ReturnInst(new IRConstant.Void(), retBlock);
             }
 
             //initialize global variable
@@ -354,7 +355,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.ForStatement node) {
-        Value init = (Value) node.init.accept(this);
+        if (node.init != null) node.init.accept(this);
         BasicBlock checkCond = new BasicBlock("for_cond", curFunc);
         BasicBlock body = new BasicBlock("for_body", curFunc);
         BasicBlock after = new BasicBlock("for_after", curFunc);
@@ -362,15 +363,19 @@ public class IRBuilder implements ASTVisitor {
         new IRInst.BranchInst(checkCond, curBlock);
 
         curBlock = checkCond;
-        Value cond = load((Value) node.cond.accept(this));
-        cond = convertToCorres(Collections.singletonList(cond),
-                Collections.singletonList(new Value("", new IRType.IntegerType(1)))).get(0);
-        new IRInst.BranchInst(cond, curBlock, body, after);
+        if (node.cond != null) {
+            Value cond = loadTimes((Value) node.cond.accept(this), 1);
+            cond = convertToCorres(Collections.singletonList(cond),
+                    Collections.singletonList(new Value("", new IRType.IntegerType(1)))).get(0);
+            new IRInst.BranchInst(cond, body, after, curBlock);
+        } else {
+            new IRInst.BranchInst(body, curBlock);
+        }
 
         controlBlock.add(new Pair<>(checkCond, after));
         curBlock = body;
         if (node.statement != null) node.statement.accept(this);
-        node.incr.accept(this);
+        if (node.incr != null) node.incr.accept(this);
         new IRInst.BranchInst(checkCond, curBlock);
         controlBlock.remove(controlBlock.size() - 1);
 
@@ -386,10 +391,10 @@ public class IRBuilder implements ASTVisitor {
         new IRInst.BranchInst(checkCond, curBlock);
 
         curBlock = checkCond;
-        Value cond = load((Value) node.cond.accept(this));
+        Value cond = loadTimes((Value) node.cond.accept(this), 1);
         cond = convertToCorres(Collections.singletonList(cond),
                 Collections.singletonList(new Value("", new IRType.IntegerType(1)))).get(0);
-        new IRInst.BranchInst(cond, curBlock, body, after);
+        new IRInst.BranchInst(cond, body, after, curBlock);
 
         controlBlock.add(new Pair<>(checkCond, after));
         curBlock = body;
@@ -403,14 +408,14 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.ConditionalStatement node) {
-        Value cond = load((Value) node.cond.accept(this));
+        Value cond = loadTimes((Value) node.cond.accept(this), 1);
         cond = convertToCorres(Collections.singletonList(cond),
                 Collections.singletonList(new Value("", new IRType.IntegerType(1)))).get(0);
 
         BasicBlock taken = new BasicBlock("if_taken", curFunc);
         BasicBlock notTaken = (node.else_statement == null) ? new BasicBlock("if_after", curFunc) : new BasicBlock("if_notTaken", curFunc);
         BasicBlock after = (node.else_statement == null) ? notTaken : new BasicBlock("if_after", curFunc);
-        new IRInst.BranchInst(cond, curBlock, taken, notTaken);
+        new IRInst.BranchInst(cond, taken, notTaken, curBlock);
 
         curBlock = taken;
         node.if_statement.accept(this);
@@ -428,9 +433,11 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.ReturnStatement node) {
-        Value v = loadUntilType((Value) node.expr.accept(this),
-                ((IRType.FunctionType) curFunc.type).returnType);
-        store(curBlockRet, v, curBlock);
+        if (node.expr != null) {
+            Value v = loadUntilType((Value) node.expr.accept(this),
+                    ((IRType.FunctionType) curFunc.type).returnType);
+            store(curBlockRet, v, curBlock);
+        }
         new IRInst.BranchInst(retBlock, curBlock);
         return null;
     }
@@ -497,7 +504,8 @@ public class IRBuilder implements ASTVisitor {
             node.strConstant = replace1(node.strConstant);
             node.val = newString(node.strConstant);
         } else if (node.isBool) node.val = new IRConstant.ConstInteger(node.boolConstant ? 1 : 0, "bool");
-        else if (node.isNull) node.val = new IRConstant.Null(IRType.convert(node.type, module));
+        else if (node.isNull)
+            node.val = new IRConstant.Null(null);
         else if (node.isThis) {
             node.val = curFunc.getParam(0);
         } else if (node.id != null) {
@@ -520,7 +528,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.SuffixExpression node) {
         node.val = (Value) node.expr.accept(this);
-        Value lvalue = load(node.val);
+        Value lvalue = loadTimes(node.val, 1);
         Value ret = new IRInst.AllocaInst("T", lvalue.type, curBlock);
         store(ret, lvalue, curBlock);
         Value v = new IRInst.BinaryOpInst(lvalue, new IRConstant.ConstInteger(1),
@@ -536,20 +544,20 @@ public class IRBuilder implements ASTVisitor {
         switch (node.op) {
             case "++":
             case "--":
-                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(1),
+                v = new IRInst.BinaryOpInst(loadTimes(t, 1), new IRConstant.ConstInteger(1),
                         node.op.equals("++") ? "+" : "-", curBlock);
                 break;
             case "+":
             case "-":
-                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(0),
+                v = new IRInst.BinaryOpInst(loadTimes(t, 1), new IRConstant.ConstInteger(0),
                         node.op, curBlock);
                 break;
             case "!":
-                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(1),
+                v = new IRInst.BinaryOpInst(loadTimes(t, 1), new IRConstant.ConstInteger(1),
                         "^", curBlock);
                 break;
             case "~":
-                v = new IRInst.BinaryOpInst(load(t), new IRConstant.ConstInteger(-1),
+                v = new IRInst.BinaryOpInst(loadTimes(t, 1), new IRConstant.ConstInteger(-1),
                         "&", curBlock);
                 break;
         }
@@ -569,8 +577,8 @@ public class IRBuilder implements ASTVisitor {
             node.val = new IRInst.CallInst((IRConstant.Function) symbolTable.get("_string_concatenate"),
                     Arrays.asList(lhs, rhs), curBlock);
         } else {
-            Value lhs = load((Value) node.expr1.accept(this));
-            Value rhs = load((Value) node.expr2.accept(this));
+            Value lhs = loadTimes((Value) node.expr1.accept(this), 1);
+            Value rhs = loadTimes((Value) node.expr2.accept(this), 1);
             node.val = new IRInst.BinaryOpInst(lhs, rhs, node.op, curBlock);
         }
         return node.val;
@@ -578,16 +586,34 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.CmpExpression node) {
-        Value lhs = load((Value) node.expr1.accept(this));
-        Value rhs = load((Value) node.expr2.accept(this));
-        node.val = new IRInst.CmpInst(lhs, rhs, node.op, curBlock);
+        Value lhs = (Value) node.expr1.accept(this);
+        Value rhs = (Value) node.expr2.accept(this);
+        if (node.expr1.type.toString().equals("string")) {
+            var func = (IRConstant.Function) symbolTable.getFromOriginal("_string_" + IRInst.CmpInst.OpMap.get(node.op), globalScope);
+            lhs = loadUntilType(lhs, 1);
+            rhs = loadUntilType(rhs, 1);
+            node.val = new IRInst.CallInst(func, Arrays.asList(lhs, rhs), curBlock);
+        } else {
+            //TODO: SHITTY CODE
+            if (rhs instanceof IRConstant.Null) {
+                lhs = loadTimes(lhs, 1);
+                rhs = new IRConstant.Null(lhs.type);
+            } else if (lhs instanceof IRConstant.Null) {
+                rhs = loadTimes(rhs, 1);
+                lhs = new IRConstant.Null(rhs.type);
+            } else {
+                lhs = loadTimes(lhs, 1);
+                rhs = loadTimes(rhs, 1);
+            }
+            node.val = new IRInst.CmpInst(lhs, rhs, node.op, curBlock);
+        }
         return node.val;
     }
 
     @Override
     public Object visit(ASTNode.LogicExpression node) {
-        Value lhs = load((Value) node.expr1.accept(this));
-        Value rhs = load((Value) node.expr2.accept(this));
+        Value lhs = loadTimes((Value) node.expr1.accept(this), 1);
+        Value rhs = loadTimes((Value) node.expr2.accept(this), 1);
         node.val = new IRInst.BinaryOpInst(lhs, rhs, node.op, curBlock);
         return node.val;
     }
@@ -631,7 +657,7 @@ public class IRBuilder implements ASTVisitor {
             var t = new IRInst.CastInst(start, IRType.convert("int*"), curBlock);
             var sizePtr = new IRInst.GEPInst(IRType.convert("int"), t, curBlock, false);
             sizePtr.addOperand(new IRConstant.ConstInteger(-1));
-            node.val = load(sizePtr);
+            node.val = loadTimes(sizePtr, 1);
         } else if (f instanceof IRConstant.Function) {
             var func = (IRConstant.Function) f;
             var tmp = (List<Value>) node.exprList.accept(this);
@@ -661,7 +687,7 @@ public class IRBuilder implements ASTVisitor {
 
         for (int i = 0; i < node.index.size(); i++) {
             var index = node.index.get(i);
-            Value v = load((Value) index.accept(this));
+            Value v = loadTimes((Value) index.accept(this), 1);
             var t = ((IRType.PointerType) node.val.type).pointer;
             node.val = new IRInst.GEPInst(t, node.val, curBlock, false);
             ((IRInst.GEPInst) node.val).addOperand(v);
@@ -671,11 +697,11 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value allocateArray(Type baseType, Value dimension) {
-        var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), load(dimension), "*", curBlock);
+        var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), loadTimes(dimension, 1), "*", curBlock);
         size = new IRInst.BinaryOpInst(size, new IRConstant.ConstInteger(IRType.convert("int").getByteNum()), "+", curBlock);
         var ret = malloc(size, IRType.convert("int*"));
         //Store size
-        store(ret, load(dimension), curBlock);
+        store(ret, loadTimes(dimension, 1), curBlock);
         var locAfterSize = new IRInst.GEPInst(IRType.convert("int"), ret, curBlock, false);
         locAfterSize.addOperand(new IRConstant.ConstInteger(1));
         ret = new IRInst.CastInst(locAfterSize, baseType, curBlock);
@@ -698,11 +724,11 @@ public class IRBuilder implements ASTVisitor {
             new IRInst.BranchInst(checkCond, curBlock);
 
             curBlock = checkCond;
-            var tmp = load(i);
+            var tmp = loadTimes(i, 1);
             Value cond = new IRInst.CmpInst(tmp, dimension, "<", curBlock);
             cond = convertToCorres(Collections.singletonList(cond),
                     Collections.singletonList(new Value("", new IRType.IntegerType(1)))).get(0);
-            new IRInst.BranchInst(cond, curBlock, body, after);
+            new IRInst.BranchInst(cond, body, after, curBlock);
 
             curBlock = body;
             var curStore = new IRInst.GEPInst(t, ret, curBlock, false);

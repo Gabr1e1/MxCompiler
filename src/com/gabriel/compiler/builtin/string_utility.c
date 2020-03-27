@@ -14,7 +14,7 @@ char _string_eq(char *a, char *b) {
     return strcmp(a, b) == 0;
 }
 
-char _string_neq(char *a, char *b) {
+char _string_ne(char *a, char *b) {
     return strcmp(a, b) != 0;
 }
 

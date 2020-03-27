@@ -35,10 +35,10 @@ def test(filename):
 # for i in range(1, 11):
     # test("./testcases/codegen/e" + str(i))
 
-test_wrong = [2]
+test_wrong = [2,3]
 
-# still wrong: 3, 16, 17, 18
+# still wrong: 3, 22, 24(inf loop),31,32,47,54,55,56,57,59,60,61,63,64,65,66
 
-for i in range(16, 17):
+for i in range(60,69):
     if i not in test_wrong:
         test("./testcases/codegen/t" + str(i))
