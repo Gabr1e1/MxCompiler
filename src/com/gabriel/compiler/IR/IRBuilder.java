@@ -549,7 +549,7 @@ public class IRBuilder implements ASTVisitor {
                 break;
             case "+":
             case "-":
-                v = new IRInst.BinaryOpInst(loadTimes(t, 1), new IRConstant.ConstInteger(0),
+                v = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(0), loadTimes(t, 1),
                         node.op, curBlock);
                 break;
             case "!":

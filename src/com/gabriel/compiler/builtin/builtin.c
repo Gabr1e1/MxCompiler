@@ -19,7 +19,7 @@ void printlnInt(int num) {
 
 char* toString(int n) {
     if (n == 0) {
-        char *str = malloc(2);
+        char *str = (char*) malloc(2);
         str[0] = '0';
         str[1] = '\0';
         return str;

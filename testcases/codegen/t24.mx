@@ -120,7 +120,9 @@ int search(int x, int y, int z)
             }
     	}
     }
+    return 0;
 }
+
 int main()
 {
     count[0] = 0;

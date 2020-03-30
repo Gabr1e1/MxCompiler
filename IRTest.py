@@ -21,9 +21,9 @@ def getInput(filename):
 def test(filename):
     print("Testing %s" % filename)
     getInput(filename + '.mx')
-    os.system("./build.sh >/dev/null 2>&1")
+    os.system("./build.bash >/dev/null 2>&1")
     os.system("cat " + filename + '.mx' + " > " + "code.mx")
-    os.system("./semantic.sh >/dev/null")
+    os.system("./semantic.bash >/dev/null 2>&1")
     os.system("llvm-link mycode.ll builtin.ll string_builtin.ll string_utility.ll -o code.ll")
     os.system("lli code.ll < test.in > my.out")
     os.system("diff -w ans.out my.out | head")
@@ -36,9 +36,12 @@ def test(filename):
     # test("./testcases/codegen/e" + str(i))
 
 test_wrong = [2,3]
+# 2: lacking global init
+# 22: return type of printNum()
+# 24: no return statement in search()
 
-# still wrong: 3, 22, 24(inf loop),31,32,47,54,55,56,57,59,60,61,63,64,65,66
+# still wrong: 3, 24, 31,47,54,55,56,57,59,60,61,63,64,65,66
 
-for i in range(60,69):
+for i in range(64,65):
     if i not in test_wrong:
         test("./testcases/codegen/t" + str(i))

@@ -68,9 +68,10 @@ class rec {
 
 rec[] b = new rec[5];
 
-int printNum(int num) {
+void printNum(int num) {
     println(toString(num));
 }
+
 int main() {
     for (i = 0; i < 4; i++) {
         a[i] = new int[11];
