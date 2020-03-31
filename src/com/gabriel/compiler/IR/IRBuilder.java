@@ -156,37 +156,24 @@ public class IRBuilder implements ASTVisitor {
         return new IRInst.CastInst(malloc, baseType, curBlock);
     }
 
-    private boolean collecting = false;
+    private int classCollecting, funcCollecting;
 
-    private IRConstant.Function work(List<ASTNode.Function> functions, List<ASTNode.Function> constructors) {
-        List<BasicBlock> blocks = new ArrayList<>();
+    private IRConstant.Function work(List<ASTNode.Function> functions, boolean collecting) {
         IRConstant.Function ret = null;
-
-        functions.forEach((func) -> {
-            collecting = true;
-            IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            module.addFunction(f);
-            blocks.add(curBlock);
-        });
-        for (var func : constructors) {
-            collecting = true;
-            IRConstant.Function f = (IRConstant.Function) func.accept(this);
-            module.addFunction(f);
-            blocks.add(curBlock);
-            ret = f;
-        }
-
-        for (int i = 0; i < functions.size(); i++) {
-            var func = functions.get(i);
-            collecting = false;
-            curBlock = blocks.get(i);
-            func.accept(this);
-        }
-        for (int i = 0; i < constructors.size(); i++) {
-            var func = constructors.get(i);
-            collecting = false;
-            curBlock = blocks.get(i);
-            func.accept(this);
+        if (collecting) {
+            for (ASTNode.Function func : functions) {
+                funcCollecting = 1;
+                IRConstant.Function f = (IRConstant.Function) func.accept(this);
+                module.addFunction(f);
+                ret = f;
+            }
+        } else {
+            for (ASTNode.Function func : functions) {
+                funcCollecting = 2;
+                var funcName = (curClass != null ? curClass.className + "_" : "") + func.funcName;
+                curBlock = ((IRConstant.Function) symbolTable.getFromOriginal(funcName, globalScope)).blocks.get(0);
+                func.accept(this);
+            }
         }
         return ret;
     }
@@ -195,11 +182,19 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(ASTNode.Program node) {
         globalScope = node.scope;
         init();
-        //Collect class & function
+        //Collect class info: className
+        classCollecting = 1;
+        node.classes.forEach((c) -> c.accept(this));
 
+        //Collect function info: name, args
+        work(node.functions, true);
+
+        //Collect class info: member, method def
+        classCollecting = 2;
+        node.classes.forEach((c) -> c.accept(this));
 
         //Global Variable
-        var type = new IRType.FunctionType(new ArrayList<Value>(), IRType.convert("void"), "__global_init");
+        var type = new IRType.FunctionType(new ArrayList<>(), IRType.convert("void"), "__global_init");
         curFunc = new IRConstant.Function("__global_init", type);
         curBlock = new BasicBlock("init", curFunc);
         symbolTable.put(curFunc, globalScope);
@@ -217,34 +212,50 @@ public class IRBuilder implements ASTVisitor {
         });
         new IRInst.ReturnInst(new Value("_", new IRType.VoidType()), curBlock);
 
-        //work on class & function
+        //finalize class collecting: methods impl
+        classCollecting = 3;
+        node.classes.forEach((c) -> c.accept(this));
 
+        //finalize function collecting: function impl
+        work(node.functions, false);
         return module;
     }
 
     @Override
     public Object visit(ASTNode.Class node) {
-//        List<Type> members = new ArrayList<>();
-//        List<String> member_name = new ArrayList<>();
-//        if (collecting) {
-//            int size = 0;
-//            var ret = new IRType.ClassType("struct." + node.className, members, member_name, size);
-//            module.addClass(ret.getName(), ret);
-//        } else {
-//
-//            for (ASTNode.Variable var : node.variables) {
-//                var type = IRType.convert(var.type, module);
-//                members.add(type);
-//                member_name.add(var.id);
-//                size += (type.bitLen - (size % type.bitLen)) % type.bitLen;
-//                size += type.bitLen;
-//            }
-//
-//            curClass = ret;
-//            ret.addConstructor(work(node.functions, node.constructors));
-//            curClass = null;
-//            return ret;
-//        }
+        List<Type> members;
+        List<String> member_name;
+
+        if (classCollecting == 1) {
+            members = new ArrayList<>();
+            member_name = new ArrayList<>();
+            var ret = new IRType.ClassType("struct." + node.className, members, member_name, 0);
+            module.addClass(ret.getName(), ret);
+        } else if (classCollecting == 2) {
+            var c = module.getClass("struct." + node.className);
+            members = c.members;
+            member_name = c.member_name;
+            int size = 0;
+            for (ASTNode.Variable var : node.variables) {
+                var type = IRType.convert(var.type, module);
+                members.add(type);
+                member_name.add(var.id);
+                size += (type.bitLen - (size % type.bitLen)) % type.bitLen;
+                size += type.bitLen;
+            }
+            c.bitLen = size;
+            curClass = c;
+            work(node.functions, true);
+            c.addConstructor(work(node.constructors, true));
+            curClass = null;
+        } else if (classCollecting == 3) {
+            var c = module.getClass("struct." + node.className);
+            curClass = c;
+            work(node.functions, false);
+            work(node.constructors, false);
+            curClass = null;
+            return c;
+        }
         return null;
     }
 
@@ -253,20 +264,19 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.Function node) {
         var funcName = (curClass != null ? curClass.className + "_" : "") + node.funcName;
-        if (collecting) {
+        if (funcCollecting == 1) {
             Type returnType = IRType.convert(node.returnType, module);
             curFunc = new IRConstant.Function(funcName, null);
             funcName = curFunc.name;
             curBlock = new BasicBlock("func_init", curFunc);
             symbolTable.put(curFunc, globalScope);
 
-            List<Value> params = (List<Value>) (node.paramList.accept(this));
+            @SuppressWarnings("unchecked") List<Value> params = (List<Value>) (node.paramList.accept(this));
             if (curClass != null) {
                 This = new Value("this", new IRType.PointerType(curClass));
                 params.add(0, This);
             }
-            var type = new IRType.FunctionType(params, returnType, funcName);
-            curFunc.type = type;
+            curFunc.type = new IRType.FunctionType(params, returnType, funcName);
             return curFunc;
         } else {
             //Create Return Block
@@ -285,7 +295,7 @@ public class IRBuilder implements ASTVisitor {
 
             //initialize global variable
             if (node.funcName.equals("main")) {
-                new IRInst.CallInst((IRConstant.Function) symbolTable.get("__global_init"), new ArrayList<Value>(), curBlock);
+                new IRInst.CallInst((IRConstant.Function) symbolTable.get("__global_init"), new ArrayList<>(), curBlock);
             }
 
             if (node.block != null) node.block.accept(this);
@@ -353,7 +363,9 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.Block node) {
-        node.statements.forEach((stmt) -> stmt.accept(this));
+        for (var stmt : node.statements) {
+            stmt.accept(this);
+        }
         return null;
     }
 
@@ -521,6 +533,7 @@ public class IRBuilder implements ASTVisitor {
                 }
             } else if (node.type.isFunction()) {
                 node.val = symbolTable.getFromOriginal(curClass != null ? curClass.className + "_" + node.id : node.id, globalScope);
+                if (node.val == null) node.val = symbolTable.getFromOriginal(node.id, globalScope);
                 if (node.val == null) node.val = builtin.get(node.id);
             }
         } else {
@@ -656,7 +669,7 @@ public class IRBuilder implements ASTVisitor {
                 node.val = new IRInst.GEPInst(c.getType(node.id).first, base, curBlock, true);
                 ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(c.getType(node.id).second));
             } else { //Member Function
-                var func = (IRConstant.Function) symbolTable.getFromOriginal("_" + c.className + "_" + node.id, globalScope);
+                var func = (IRConstant.Function) symbolTable.getFromOriginal(c.className + "_" + node.id, globalScope);
                 node.val = func;
                 This = base;
             }
@@ -679,7 +692,7 @@ public class IRBuilder implements ASTVisitor {
             node.val = loadTimes(sizePtr, 1);
         } else if (f instanceof IRConstant.Function) {
             var func = (IRConstant.Function) f;
-            var tmp = (List<Value>) node.exprList.accept(this);
+            @SuppressWarnings("unchecked") var tmp = (List<Value>) node.exprList.accept(this);
             var argsNeed = ((IRType.FunctionType) func.type).params;
             boolean flg = false;
             if (tmp.size() == argsNeed.size() - 1) { //lacking "this"

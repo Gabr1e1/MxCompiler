@@ -53,7 +53,6 @@ int j;
 
 void origin(int N)
 {
-    for (i = 0; i < 10; i++) color[i] = 0;
 	make = new int[N][];
     for (i = 0; i < N; i ++ ) {
 		make[i] = new int[N];
@@ -62,7 +61,7 @@ void origin(int N)
     }	
 }
 
-int search(int x, int y, int z)
+void search(int x, int y, int z)
 {
 	int s;
 	int i;
@@ -121,9 +120,7 @@ int search(int x, int y, int z)
             }
     	}
     }
-    return 0;
 }
-
 int main()
 {
     count[0] = 0;

@@ -30,5 +30,4 @@ a[i] = getInt();
 for(i=0;a[i]>=a[k-1]&&a[i] > 0&&i<m;i++);
 printInt(i);
 //printf("%d",i);
-return 0;
 }

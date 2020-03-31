@@ -34,13 +34,12 @@ int main()
         q = getInt();
         r = getInt();
         //scanf("%d %d %d", &p,&q,&r);
-		x = x + p;
+		x = x + p; 
         y = y + q;
         z = z + r;
 	}
 if(x==0 && y==0&& z==0)
 print("YES");
 else print("NO");
-return 0;
 }
  

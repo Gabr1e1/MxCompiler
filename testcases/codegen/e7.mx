@@ -16,6 +16,7 @@ ExitCode: 0
 InstLimit: -1
 Origin Package: Codeforces 231A #46181712
 */
+int n;
 int x;
 int y;
 int z;
@@ -24,7 +25,7 @@ int k;
 int main(){
 	//int n,x,y,z,c=0,k;
 	//scanf("%d",&n);
-	int n = getInt();
+	n = getInt();
     for(k=0;k<n;k++){
 		//scanf("%d %d %d",&x,&y,&z);
 		x = getInt();
@@ -34,5 +35,4 @@ int main(){
 	}
     printlnInt(c);
 	//printf("%d\n",c);
-	return 0;
 }

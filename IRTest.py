@@ -35,7 +35,7 @@ def test(filename):
 # for i in range(1, 11):
     # test("./testcases/codegen/e" + str(i))
 
-test_wrong = [2]
+
 # 2: lacking init of everything
 # 22: return type of printNum()
 # 24: no return statement in search(), no init of color[]
@@ -43,6 +43,5 @@ test_wrong = [2]
 
 # still wrong: 3,59,60,61,63,64,65,66
 
-for i in range(61, 67):
-    if i not in test_wrong:
-        test("./testcases/codegen/t" + str(i))
+for i in range(59, 60):
+    test("./testcases/codegen/t" + str(i))
