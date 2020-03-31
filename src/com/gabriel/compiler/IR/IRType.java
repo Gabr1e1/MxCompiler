@@ -118,7 +118,7 @@ public class IRType {
             return className;
         }
 
-        Pair<Type, Integer> getType(String name) {
+        Pair<Type, Integer> getMember(String name) {
             for (int i = 0; i < members.size(); i++) {
                 if (name.equals(member_name.get(i))) {
                     return new Pair<>(members.get(i), i);

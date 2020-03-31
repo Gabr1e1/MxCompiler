@@ -55,7 +55,7 @@ public class IRPrinter implements IRVisitor {
         addBuiltinFunctions(module);
         writeCode("");
         module.classes.forEach((className, type) -> {
-            if (!(className.equals("struct.string"))) {
+            if (!(className.equals("string"))) {
                 List<String> members = new ArrayList<>();
                 type.members.forEach((m) -> members.add((String) m.accept(this)));
                 writeCode(String.format("%%%s = type { %s }\n", type.className, String.join(", ", members)));

@@ -83,7 +83,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private void addStringMethods() {
-        module.classes.put("struct.string", new IRType.ClassType("string", null, null,
+        module.classes.put("string", new IRType.ClassType("_string", null, null,
                 (new IRType.PointerType(new IRType.IntegerType("char"))).bitLen));
         _addStringMethods("./src/com/gabriel/compiler/builtin/string_methods.info", true);
         _addStringMethods("./src/com/gabriel/compiler/builtin/string_utility.info", false);
@@ -260,6 +260,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value This;
+    private boolean currentThis;
 
     @Override
     public Object visit(ASTNode.Function node) {
@@ -528,8 +529,8 @@ public class IRBuilder implements ASTVisitor {
             if (node.type.isVariable()) {
                 node.val = symbolTable.getFromOriginal(node.id, node.scope);
                 if (node.val == null) { //class member
-                    node.val = new IRInst.GEPInst(curClass.getType(node.id).first, This, curBlock, true);
-                    ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(curClass.getType(node.id).second));
+                    node.val = new IRInst.GEPInst(curClass.getMember(node.id).first, ((IRType.FunctionType) curFunc.type).params.get(0), curBlock, true);
+                    ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(curClass.getMember(node.id).second));
                 }
             } else if (node.type.isFunction()) {
                 node.val = symbolTable.getFromOriginal(curClass != null ? curClass.className + "_" + node.id : node.id, globalScope);
@@ -575,7 +576,7 @@ public class IRBuilder implements ASTVisitor {
                 break;
             case "~":
                 v = new IRInst.BinaryOpInst(loadTimes(t, 1), new IRConstant.ConstInteger(-1),
-                        "&", curBlock);
+                        "^", curBlock);
                 break;
         }
         if (node.op.equals("++") || node.op.equals("--")) {
@@ -666,12 +667,12 @@ public class IRBuilder implements ASTVisitor {
             var c = module.getClass(((ASTNode.Class) t.node).className);
             if (node.type.isLeftValue()) { //Member Variable
                 base = loadUntilType(base, 1);
-                node.val = new IRInst.GEPInst(c.getType(node.id).first, base, curBlock, true);
-                ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(c.getType(node.id).second));
+                node.val = new IRInst.GEPInst(c.getMember(node.id).first, base, curBlock, true);
+                ((IRInst.GEPInst) node.val).addOperand(new IRConstant.ConstInteger(c.getMember(node.id).second));
             } else { //Member Function
-                var func = (IRConstant.Function) symbolTable.getFromOriginal(c.className + "_" + node.id, globalScope);
-                node.val = func;
+                node.val = (IRConstant.Function) symbolTable.getFromOriginal(c.className + "_" + node.id, globalScope);
                 This = base;
+                currentThis = true;
             }
         } else if (node.id.equals("size")) {
             node.val = base;
@@ -696,18 +697,14 @@ public class IRBuilder implements ASTVisitor {
             var argsNeed = ((IRType.FunctionType) func.type).params;
             boolean flg = false;
             if (tmp.size() == argsNeed.size() - 1) { //lacking "this"
-                args.add(loadUntilType(This, 1));
+                args.add(loadUntilType(currentThis ? This : ((IRType.FunctionType) curFunc.type).params.get(0), 1));
                 flg = true;
             }
             for (int i = 0; i < tmp.size(); i++) {
                 args.add(loadUntilType(tmp.get(i), argsNeed.get(flg ? (i + 1) : i).type));
             }
             node.val = new IRInst.CallInst(func, args, curBlock);
-        } else if (IRType.isClassPointer((Value) f)) { //class constructor
-            var c = (IRType.ClassType) ((IRType.PointerType) (((Value) f).type)).pointer;
-            args.add(0, (Value) f);
-            new IRInst.CallInst(c.constructor, args, curBlock);
-            node.val = (Value) f;
+            currentThis = false;
         }
         return node.val;
     }
@@ -729,11 +726,11 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value allocateArray(Type baseType, Value dimension) {
-        var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), loadTimes(dimension, 1), "*", curBlock);
+        var size = new IRInst.BinaryOpInst(new IRConstant.ConstInteger(((IRType.PointerType) baseType).pointer.getByteNum()), dimension, "*", curBlock);
         size = new IRInst.BinaryOpInst(size, new IRConstant.ConstInteger(IRType.convert("int").getByteNum()), "+", curBlock);
         var ret = malloc(size, IRType.convert("int*"));
         //Store size
-        store(ret, loadTimes(dimension, 1), curBlock);
+        store(ret, dimension, curBlock);
         var locAfterSize = new IRInst.GEPInst(IRType.convert("int"), ret, curBlock, false);
         locAfterSize.addOperand(new IRConstant.ConstInteger(1));
         ret = new IRInst.CastInst(locAfterSize, baseType, curBlock);
@@ -741,7 +738,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Value allocate(Type t, List<Value> d) {
-        Value dimension = d.get(0);
+        Value dimension = loadTimes(d.get(0), 1);
         Value ret = allocateArray(t, dimension);
         if (d.size() > 1) {
             t = ((IRType.PointerType) t).pointer;
@@ -786,6 +783,12 @@ public class IRBuilder implements ASTVisitor {
         else {
             var size = new IRConstant.ConstInteger(((IRType.PointerType) t).pointer.getByteNum(), "long");
             node.val = malloc(size, t);
+            if (IRType.isClassPointer(t)) { //class constructor
+                var c = (IRType.ClassType) ((IRType.PointerType) t).pointer;
+                var args = new ArrayList<Value>();
+                args.add(0, node.val);
+                new IRInst.CallInst(c.constructor, args, curBlock);
+            }
         }
         return node.val;
     }
