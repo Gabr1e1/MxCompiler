@@ -23,7 +23,7 @@ public class Value {
         } else {
             counter.put(name, 0);
         }
-        return name + (cnt == 0 ? "" : cnt);
+        return name + (cnt == 0 ? "" : "." + cnt);
     }
 
     private boolean noName() {

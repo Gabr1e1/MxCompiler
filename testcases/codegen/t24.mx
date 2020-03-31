@@ -53,6 +53,7 @@ int j;
 
 void origin(int N)
 {
+    for (i = 0; i < 10; i++) color[i] = 0;
 	make = new int[N][];
     for (i = 0; i < N; i ++ ) {
 		make[i] = new int[N];

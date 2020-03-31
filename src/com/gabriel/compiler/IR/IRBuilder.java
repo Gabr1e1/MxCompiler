@@ -195,17 +195,15 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(ASTNode.Program node) {
         globalScope = node.scope;
         init();
-        node.classes.forEach((c) -> {
-            IRType.ClassType classType = (IRType.ClassType) c.accept(this);
-//            module.addClass(classType.getName(), classType);
-        });
+        //Collect class & function
 
+
+        //Global Variable
         var type = new IRType.FunctionType(new ArrayList<Value>(), IRType.convert("void"), "__global_init");
         curFunc = new IRConstant.Function("__global_init", type);
         curBlock = new BasicBlock("init", curFunc);
         symbolTable.put(curFunc, globalScope);
         module.addFunction(curFunc);
-
         node.variables.forEach((var) -> {
             IRConstant.GlobalVariable g = new IRConstant.GlobalVariable(var.id,
                     IRType.convert(var.type, module), IRType.getDefaultValue(IRType.convert(var.type, module)));
@@ -219,30 +217,35 @@ public class IRBuilder implements ASTVisitor {
         });
         new IRInst.ReturnInst(new Value("_", new IRType.VoidType()), curBlock);
 
-        work(node.functions, new ArrayList<>());
+        //work on class & function
+
         return module;
     }
 
     @Override
     public Object visit(ASTNode.Class node) {
-        List<Type> members = new ArrayList<>();
-        List<String> member_name = new ArrayList<>();
-        int size = 0;
-        var ret = new IRType.ClassType("struct." + node.className, members, member_name, size);
-        module.addClass(ret.getName(), ret);
-
-        for (ASTNode.Variable var : node.variables) {
-            var type = IRType.convert(var.type, module);
-            members.add(type);
-            member_name.add(var.id);
-            size += (type.bitLen - (size % type.bitLen)) % type.bitLen;
-            size += type.bitLen;
-        }
-
-        curClass = ret;
-        ret.addConstructor(work(node.functions, node.constructors));
-        curClass = null;
-        return ret;
+//        List<Type> members = new ArrayList<>();
+//        List<String> member_name = new ArrayList<>();
+//        if (collecting) {
+//            int size = 0;
+//            var ret = new IRType.ClassType("struct." + node.className, members, member_name, size);
+//            module.addClass(ret.getName(), ret);
+//        } else {
+//
+//            for (ASTNode.Variable var : node.variables) {
+//                var type = IRType.convert(var.type, module);
+//                members.add(type);
+//                member_name.add(var.id);
+//                size += (type.bitLen - (size % type.bitLen)) % type.bitLen;
+//                size += type.bitLen;
+//            }
+//
+//            curClass = ret;
+//            ret.addConstructor(work(node.functions, node.constructors));
+//            curClass = null;
+//            return ret;
+//        }
+        return null;
     }
 
     private Value This;
@@ -253,6 +256,7 @@ public class IRBuilder implements ASTVisitor {
         if (collecting) {
             Type returnType = IRType.convert(node.returnType, module);
             curFunc = new IRConstant.Function(funcName, null);
+            funcName = curFunc.name;
             curBlock = new BasicBlock("func_init", curFunc);
             symbolTable.put(curFunc, globalScope);
 
@@ -613,9 +617,24 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.LogicExpression node) {
         Value lhs = loadTimes((Value) node.expr1.accept(this), 1);
+        //Short circuit eval
+        BasicBlock cont = new BasicBlock("continue", curFunc);
+        BasicBlock short_circuit = new BasicBlock("short_circuit", curFunc);
+        var result = new IRInst.AllocaInst("logicExpr", new IRType.IntegerType("bool"), curBlock);
+        new IRInst.StoreInst(result, lhs, curBlock);
+
+        if (node.op.equals("&&"))
+            new IRInst.BranchInst(lhs, cont, short_circuit, curBlock);
+        else
+            new IRInst.BranchInst(lhs, short_circuit, cont, curBlock);
+
+        curBlock = cont;
         Value rhs = loadTimes((Value) node.expr2.accept(this), 1);
-        node.val = new IRInst.BinaryOpInst(lhs, rhs, node.op, curBlock);
-        return node.val;
+        new IRInst.StoreInst(result, rhs, curBlock);
+        new IRInst.BranchInst(short_circuit, curBlock);
+
+        curBlock = short_circuit;
+        return result;
     }
 
     @Override

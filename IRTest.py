@@ -35,13 +35,14 @@ def test(filename):
 # for i in range(1, 11):
     # test("./testcases/codegen/e" + str(i))
 
-test_wrong = [2,3]
-# 2: lacking global init
+test_wrong = [2]
+# 2: lacking init of everything
 # 22: return type of printNum()
-# 24: no return statement in search()
+# 24: no return statement in search(), no init of color[]
+# 31: no return statement in prime() & printF()
 
-# still wrong: 3, 24, 31,47,54,55,56,57,59,60,61,63,64,65,66
+# still wrong: 3,59,60,61,63,64,65,66
 
-for i in range(64,65):
+for i in range(61, 67):
     if i not in test_wrong:
         test("./testcases/codegen/t" + str(i))

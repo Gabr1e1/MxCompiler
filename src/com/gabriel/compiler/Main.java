@@ -1,8 +1,5 @@
 package com.gabriel.compiler;
 
-import com.gabriel.compiler.IR.IRBuilder;
-import com.gabriel.compiler.IR.IRPrinter;
-import com.gabriel.compiler.IR.Module;
 import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
@@ -20,7 +17,7 @@ import static java.lang.System.exit;
 public class Main {
     public static void main(String[] args) throws Exception {
         String path = "./code.mx";
-//        String path = "./testcases/codegen/t18.mx";
+//        String path = "./testcases/codegen/t24.mx";
 
         //        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);
@@ -54,10 +51,10 @@ public class Main {
             exit(1);
         }
 
-        IRBuilder ir = new IRBuilder();
-        var module = ir.visit(root);
-        IRPrinter irCodeGen = new IRPrinter("mycode.ll");
-        irCodeGen.visit((Module) module);
-        System.out.println("IR Successfully generated");
+//        IRBuilder ir = new IRBuilder();
+//        var module = ir.visit(root);
+//        IRPrinter irCodeGen = new IRPrinter("mycode.ll");
+//        irCodeGen.visit((Module) module);
+//        System.out.println("IR Successfully generated");
     }
 }
