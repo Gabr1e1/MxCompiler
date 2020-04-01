@@ -1,6 +1,5 @@
 package com.gabriel.compiler.IR;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,21 +31,14 @@ public class IRInst {
     }
 
     public static class BranchInst extends Instruction {
-        Value cond; //null if always taken
-        BasicBlock taken, notTaken;
-
         BranchInst(Value cond, BasicBlock taken, BasicBlock notTaken, BasicBlock belong) {
             super("", new IRType.VoidType(), belong);
-            this.cond = cond;
-            this.taken = taken;
-            this.notTaken = notTaken;
+            addOperand(cond, taken, notTaken);
         }
 
         BranchInst(BasicBlock jump, BasicBlock belong) {
             super("", new IRType.VoidType(), belong);
-            this.cond = null;
-            this.taken = jump;
-            this.notTaken = null;
+            addOperand(jump);
         }
 
         @Override
@@ -56,11 +48,9 @@ public class IRInst {
     }
 
     public static class ReturnInst extends Instruction {
-        Value v;
-
         ReturnInst(Value v, BasicBlock belong) {
             super("", v.type, belong);
-            this.v = v;
+            addOperand(v);
         }
 
         @Override
@@ -75,13 +65,11 @@ public class IRInst {
                 Map.entry("<<", "shl"), Map.entry(">>", "ashr"),
                 Map.entry("&", "and"), Map.entry("|", "or"), Map.entry("^", "xor"),
                 Map.entry("&&", "and"), Map.entry("||", "or"));
-        Value lhs, rhs;
         String op;
 
         BinaryOpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
             super("T", lhs.type, belong);
-            this.lhs = lhs;
-            this.rhs = rhs;
+            addOperand(lhs, rhs);
             this.op = op; //OpMap.get(op);
         }
 
@@ -110,13 +98,11 @@ public class IRInst {
     public static class CmpInst extends Instruction {
         static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
                 "==", "eq", "!=", "ne");
-        Value lhs, rhs;
         String op;
 
         CmpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
             super("T", new IRType.IntegerType(1), belong);
-            this.lhs = lhs;
-            this.rhs = rhs;
+            addOperand(lhs, rhs);
             this.op = op;
         }
 
@@ -131,13 +117,9 @@ public class IRInst {
     }
 
     public static class StoreInst extends Instruction {
-        Value dest, from;
-
         StoreInst(Value dest, Value from, BasicBlock belong) {
             super("", dest.type, belong);
-            this.dest = dest;
-            this.from = from;
-//            constantConvert(dest, from);
+            addOperand(dest, from);
         }
 
         @Override
@@ -147,20 +129,18 @@ public class IRInst {
     }
 
     public static class GEPInst extends Instruction {
-        List<Value> operands = new ArrayList<>();
-        Value base;
         Type valueType;
 
         GEPInst(Type valueType, Value base, BasicBlock belong) {
             super("T", new IRType.PointerType(valueType), belong);
-            this.base = base;
+            addOperand(base);
             this.valueType = valueType;
             operands.add(new IRConstant.ConstInteger(0));
         }
 
         GEPInst(Type valueType, Value base, BasicBlock belong, boolean zeroPad) {
             super("T", new IRType.PointerType(valueType), belong);
-            this.base = base;
+            addOperand(base);
             this.valueType = valueType;
             if (zeroPad) operands.add(new IRConstant.ConstInteger(0));
         }
@@ -170,27 +150,17 @@ public class IRInst {
             return visitor.visit(this);
         }
 
-        void addOperand(Value v) {
-            operands.add(v);
-        }
-
-        Value getOperand(int i) {
-            return operands.get(i);
-        }
-
         Value getBase() {
-            return base;
+            return getOperand(0);
         }
     }
 
     public static class CallInst extends Instruction {
-        IRConstant.Function func;
-        List<Value> args;
 
         CallInst(IRConstant.Function func, List<Value> args, BasicBlock belong) {
             super("call_" + func.name, ((IRType.FunctionType) func.type).returnType, belong);
-            this.func = func;
-            this.args = args;
+            addOperand(func);
+            addOperand(args);
         }
 
         @Override
@@ -200,11 +170,9 @@ public class IRInst {
     }
 
     public static class LoadInst extends Instruction {
-        Value ptr;
-
         LoadInst(Value ptr, BasicBlock belong) {
             super("load_" + ptr.getOrignalName(), ((IRType.PointerType) ptr.type).pointer, belong);
-            this.ptr = ptr;
+            addOperand(ptr);
         }
 
         @Override
@@ -214,12 +182,11 @@ public class IRInst {
     }
 
     public static class CastInst extends Instruction {
-        Value from;
         Type to;
 
         CastInst(Value from, Type to, BasicBlock belong) {
             super("M", to, belong);
-            this.from = from;
+            addOperand(from);
             this.to = to;
         }
 
@@ -230,12 +197,11 @@ public class IRInst {
     }
 
     public static class SextInst extends Instruction {
-        Value from;
         Type to;
 
         SextInst(Value from, Type to, BasicBlock belong) {
             super("M", to, belong);
-            this.from = from;
+            addOperand(from);
             this.to = to;
         }
 
@@ -246,12 +212,11 @@ public class IRInst {
     }
 
     public static class TruncInst extends Instruction {
-        Value from;
         Type to;
 
         TruncInst(Value from, Type to, BasicBlock belong) {
             super("M", to, belong);
-            this.from = from;
+            addOperand(from);
             this.to = to;
         }
 

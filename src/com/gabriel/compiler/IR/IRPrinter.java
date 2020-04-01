@@ -116,72 +116,72 @@ public class IRPrinter implements IRVisitor {
     @Override
     public Object visit(IRConstant.GlobalVariable globalVariable) {
         return String.format("%s = global %s, align %d", globalVariable.getPrintName(),
-                globalVariable.init.accept(this), globalVariable.type.getByteNum());
+                globalVariable.getOperand(0).accept(this), globalVariable.type.getByteNum());
     }
 
     @Override
     public Object visit(IRInst.BranchInst inst) {
-        if (inst.cond != null)
-            return String.format("br %s, %s, %s", inst.cond, inst.taken, inst.notTaken);
+        if (inst.operands.size() != 1)
+            return String.format("br %s, %s, %s", inst.getOperand(0), inst.getOperand(1), inst.getOperand(2));
         else
-            return String.format("br %s", inst.taken);
+            return String.format("br %s", inst.getOperand(0));
     }
 
     @Override
     public Object visit(IRInst.ReturnInst inst) {
-        return "ret " + inst.v;
+        return "ret " + inst.getOperand(0);
     }
 
     @Override
     public Object visit(IRInst.BinaryOpInst inst) {
         return String.format("%s = %s %s, %s", inst.getPrintName(), inst.getCorresOp(),
-                inst.lhs, inst.rhs.getPrintName());
+                inst.getOperand(0), inst.getOperand(1).getPrintName());
     }
 
     @Override
     public Object visit(IRInst.CmpInst inst) {
         return String.format("%s = icmp %s %s, %s", inst.getPrintName(), inst.getCorresOp(),
-                inst.lhs, inst.rhs.getPrintName());
+                inst.getOperand(0), inst.getOperand(1).getPrintName());
     }
 
     @Override
     public Object visit(IRInst.StoreInst inst) {
-        return String.format("store %s, %s", inst.from, inst.dest);
+        return String.format("store %s, %s", inst.getOperand(1), inst.getOperand(0));
     }
 
     @Override
     public Object visit(IRInst.GEPInst inst) {
-        return String.format("%s = getelementptr %s, %s %s, %s", inst.getPrintName(), ((IRType.PointerType) inst.base.type).pointer.accept(this),
-                inst.base.type.accept(this), inst.base.getPrintName(), stringify(inst.operands));
+        return String.format("%s = getelementptr %s, %s %s, %s", inst.getPrintName(), ((IRType.PointerType) inst.getBase().type).pointer.accept(this),
+                inst.getBase().type.accept(this), inst.getBase().getPrintName(), stringify(inst.operands.subList(1, inst.operands.size())));
     }
 
     @Override
     public Object visit(IRInst.CallInst inst) {
         if (inst.type instanceof IRType.VoidType)
-            return String.format("call %s @%s(%s)", ((IRType.FunctionType) inst.func.type).returnType.accept(this),
-                    inst.func.name, stringify(inst.args));
+            return String.format("call %s @%s(%s)", ((IRType.FunctionType) inst.getOperand(0).type).returnType.accept(this),
+                    inst.getOperand(0).name, stringify(inst.operands.subList(1, inst.operands.size())));
         else return String.format("%s = call %s @%s(%s)", inst.getPrintName(),
-                ((IRType.FunctionType) inst.func.type).returnType.accept(this), inst.func.name, stringify(inst.args));
+                ((IRType.FunctionType) inst.getOperand(0).type).returnType.accept(this), inst.getOperand(0).name, stringify(inst.operands.subList(1, inst.operands.size())));
     }
 
     @Override
     public Object visit(IRInst.LoadInst inst) {
-        return String.format("%s = load %s, %s", inst.getPrintName(), ((IRType.PointerType) inst.ptr.type).pointer, inst.ptr);
+        return String.format("%s = load %s, %s", inst.getPrintName(), ((IRType.PointerType) inst.getOperand(0).type).pointer, inst.getOperand(0));
     }
 
     @Override
     public Object visit(IRInst.CastInst inst) {
-        return String.format("%s = bitcast %s to %s", inst.getPrintName(), inst.from, inst.to.accept(this));
+        return String.format("%s = bitcast %s to %s", inst.getPrintName(), inst.getOperand(0), inst.to.accept(this));
     }
 
     @Override
     public Object visit(IRInst.SextInst inst) {
-        return String.format("%s = sext %s to %s", inst.getPrintName(), inst.from, inst.to.accept(this));
+        return String.format("%s = sext %s to %s", inst.getPrintName(), inst.getOperand(0), inst.to.accept(this));
     }
 
     @Override
     public Object visit(IRInst.TruncInst inst) {
-        return String.format("%s = trunc %s to %s", inst.getPrintName(), inst.from, inst.to.accept(this));
+        return String.format("%s = trunc %s to %s", inst.getPrintName(), inst.getOperand(0), inst.to.accept(this));
     }
 
     @Override

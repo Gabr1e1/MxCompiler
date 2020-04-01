@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Use {
-    List<Value> user = new ArrayList<>();
+    List<User> user = new ArrayList<>();
 
-    void addUser(Value v) {
-        user.add(v);
+    void addUser(User u) {
+        user.add(u);
     }
 
-    void deleteUser(Value v) {
-        user.remove(v);
+    void deleteUser(Value u) {
+        user.remove(u);
     }
 }

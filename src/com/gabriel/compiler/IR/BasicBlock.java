@@ -19,4 +19,11 @@ public class BasicBlock extends Value {
     void addInst(Instruction inst) {
         instructions.add(inst);
     }
+
+    boolean hasTerminator() {
+        for (var inst : instructions) {
+            if (IRInst.isTerminator(inst)) return true;
+        }
+        return false;
+    }
 }

@@ -115,11 +115,9 @@ public class IRConstant {
     }
 
     public static class GlobalVariable extends Constant {
-        Value init;
-
         GlobalVariable(String name, Type type, Value init) {
             super(name, new IRType.PointerType(type));
-            this.init = init;
+            addOperand(init);
         }
 
         @Override

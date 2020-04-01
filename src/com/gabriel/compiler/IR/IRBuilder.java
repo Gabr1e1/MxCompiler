@@ -28,12 +28,12 @@ public class IRBuilder implements ASTVisitor {
         module = new Module("__program");
         symbolTable = new SymbolTable();
     }
+    //TODO: !!!COULD ALLOCATE LESS
 
     void init() {
         addBuiltinFunctions();
         addStringMethods();
     }
-    //TODO: ADD USER?
 
     private void addBuiltinFunctions() {
         try {
@@ -218,6 +218,20 @@ public class IRBuilder implements ASTVisitor {
 
         //finalize function collecting: function impl
         work(node.functions, false);
+
+        //put alloca forward
+        for (var func : module.functions) {
+            var first = func.blocks.get(0);
+            for (int i = 1; i < func.blocks.size(); i++) {
+                for (var inst : func.blocks.get(i).instructions) {
+                    if (inst instanceof IRInst.AllocaInst) {
+                        first.instructions.add(0, inst);
+                    }
+                }
+                func.blocks.get(i).instructions.removeIf(inst -> inst instanceof IRInst.AllocaInst);
+            }
+        }
+
         return module;
     }
 
@@ -286,6 +300,8 @@ public class IRBuilder implements ASTVisitor {
             retBlock = new BasicBlock("retBlock", curFunc);
             if (!(returnType instanceof IRType.VoidType)) {
                 curBlockRet = new IRInst.AllocaInst("ret", returnType, curBlock);
+                if (node.funcName.equals("main"))
+                    new IRInst.StoreInst(curBlockRet, new IRConstant.ConstInteger(0), curBlock);
                 var tmp = curBlock;
                 curBlock = retBlock;
                 new IRInst.ReturnInst(loadUntilType(curBlockRet, returnType), retBlock);
@@ -302,19 +318,10 @@ public class IRBuilder implements ASTVisitor {
             if (node.block != null) node.block.accept(this);
             curFunc.blocks.forEach((block) -> {
                 if (block.instructions.size() == 0) block.replaceAllUsesWith(retBlock);
-            });
-
-            if (!(returnType instanceof IRType.VoidType)) {
-                for (int i = 0; i < curFunc.blocks.size(); i++) {
-                    if (curFunc.blocks.get(i) == retBlock) {
-                        curFunc.blocks.remove(i);
-                        curFunc.blocks.add(retBlock);
-                        break;
-                    }
+                else if (!block.hasTerminator()) {
+                    new IRInst.BranchInst(retBlock, block);
                 }
-            } else {
-                new IRInst.ReturnInst(new IRConstant.Void(), curBlock);
-            }
+            });
         }
         return null;
     }
@@ -547,12 +554,10 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(ASTNode.SuffixExpression node) {
         node.val = (Value) node.expr.accept(this);
         Value lvalue = loadTimes(node.val, 1);
-        Value ret = new IRInst.AllocaInst("T", lvalue.type, curBlock);
-        store(ret, lvalue, curBlock);
         Value v = new IRInst.BinaryOpInst(lvalue, new IRConstant.ConstInteger(1),
                 node.op.equals("++") ? "+" : "-", curBlock);
         store(node.val, v, curBlock);
-        return ret;
+        return lvalue;
     }
 
     @Override
@@ -628,14 +633,15 @@ public class IRBuilder implements ASTVisitor {
         return node.val;
     }
 
+
     @Override
     public Object visit(ASTNode.LogicExpression node) {
         Value lhs = loadTimes((Value) node.expr1.accept(this), 1);
         //Short circuit eval
         BasicBlock cont = new BasicBlock("continue", curFunc);
         BasicBlock short_circuit = new BasicBlock("short_circuit", curFunc);
-        var result = new IRInst.AllocaInst("logicExpr", new IRType.IntegerType("bool"), curBlock);
-        new IRInst.StoreInst(result, lhs, curBlock);
+        var logic = new IRInst.AllocaInst("", new IRType.IntegerType("bool"), curBlock);
+        new IRInst.StoreInst(logic, lhs, curBlock);
 
         if (node.op.equals("&&"))
             new IRInst.BranchInst(lhs, cont, short_circuit, curBlock);
@@ -644,11 +650,11 @@ public class IRBuilder implements ASTVisitor {
 
         curBlock = cont;
         Value rhs = loadTimes((Value) node.expr2.accept(this), 1);
-        new IRInst.StoreInst(result, rhs, curBlock);
+        new IRInst.StoreInst(logic, rhs, curBlock);
         new IRInst.BranchInst(short_circuit, curBlock);
 
         curBlock = short_circuit;
-        return result;
+        return logic;
     }
 
     @Override

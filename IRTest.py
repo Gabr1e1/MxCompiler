@@ -26,30 +26,18 @@ def test(filename, input = "test.in", output = "ans.out"):
     os.system("cat " + filename + '.mx' + " > " + "code.mx")
     os.system("./semantic.bash >/dev/null 2>&1")
     os.system("llvm-link mycode.ll builtin.ll string_builtin.ll string_utility.ll -o code.ll; llc code.ll -o code.s; clang code.s -o code")
-    os.system("./code < " + input + " > my.out; truncate -s -1 my.out")
-    os.system("diff -w " + output + " my.out | head")
-    if os.system("diff -w " + output + " my.out | head > /dev/null 2>&1"):
+    os.system("./code < " + input + " > my.out")
+    os.system("diff -wBEZb " + output + " my.out")
+    if os.system("diff -wBEZb " + output + " my.out > /dev/null 2>&1"):
         print("WRONG")
+        return 0
     else:
         print("PASS")
+        return 1
 
-# for i in range(1, 11):
-    # test("./testcases/codegen/e" + str(i))
-
-
-# 2: lacking init of everything
-# 22: return type of printNum()
-# 24: no return statement in search(), no init of color[]
-# 31: no return statement in prime() & printF()
-
-# still wrong: 65
-
-# for i in range(2,3):
-#     test("./testcases/codegen/t" + str(i))
-
-# with open("./testcases/codegen/judgelist.txt", "r") as f:
-#     l = f.readlines()
-# for i in l:
-#     test("./testcases/codegen/" + i[2:-4])
-
-test("./testcases/codegen2/shortest_path/spfa", "./testcases/codegen2/shortest_path/shortest_path.0.in", "./testcases/codegen2/shortest_path/shortest_path.0.ans")
+with open("./testcases/codegen/judgelist.txt", "r") as f:
+    l = f.readlines()
+ans = 0
+for i in l:
+    ans += test("./testcases/codegen/" + i[2:-4])
+print("PASSED %d out of %d" % (ans, len(l)))

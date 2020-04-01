@@ -35,6 +35,7 @@ public class Value {
         this.originalName = originalName;
         this.type = type;
         this.name = noName() ? "" : gen(originalName);
+        this.user = new Use();
     }
 
     String getName() {
@@ -61,6 +62,9 @@ public class Value {
     }
 
     void replaceAllUsesWith(Value other) {
-        //TODO!!!
+        for (var u : user.user) {
+            var index = u.findOperand(this);
+            u.operands.set(index, other);
+        }
     }
 }
