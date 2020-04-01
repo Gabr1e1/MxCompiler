@@ -10,6 +10,7 @@ public class Value {
     String originalName;
     String name;
     Type type;
+    Use user;
 
     static String labelAllocator() {
         return "label_" + (++label);
