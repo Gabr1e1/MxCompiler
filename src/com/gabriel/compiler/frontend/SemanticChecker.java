@@ -2,7 +2,7 @@ package com.gabriel.compiler.frontend;
 
 import com.gabriel.compiler.error.SemanticError;
 
-public class TypeChecker implements ASTVisitor {
+public class SemanticChecker implements ASTVisitor {
     @Override
     public Object visit(ASTNode.Program node) {
         Type t = node.scope.find("main");
