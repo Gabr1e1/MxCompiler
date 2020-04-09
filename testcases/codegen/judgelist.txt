@@ -1,3 +1,11 @@
+./sorting/bubble_sort.mx
+./shortest_path/dijkstra.mx
+./shortest_path/spfa.mx
+./shortest_path/floyd.mx
+./sorting/merge_sort.mx
+./sorting/quick_sort.mx
+./sorting/selection_sort.mx
+./std/queue.mx
 ./e8.mx
 ./t9.mx
 ./t8.mx

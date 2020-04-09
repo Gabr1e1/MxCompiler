@@ -382,6 +382,7 @@ public class IRBuilder implements ASTVisitor {
         if (node.init != null) node.init.accept(this);
         BasicBlock checkCond = new BasicBlock("for_cond", curFunc);
         BasicBlock body = new BasicBlock("for_body", curFunc);
+        BasicBlock incr = new BasicBlock("for_incr", curFunc);
         BasicBlock after = new BasicBlock("for_after", curFunc);
 
         new IRInst.BranchInst(checkCond, curBlock);
@@ -396,9 +397,12 @@ public class IRBuilder implements ASTVisitor {
             new IRInst.BranchInst(body, curBlock);
         }
 
-        controlBlock.add(new Pair<>(checkCond, after));
+        controlBlock.add(new Pair<>(incr, after));
         curBlock = body;
         if (node.statement != null) node.statement.accept(this);
+        new IRInst.BranchInst(incr, curBlock);
+
+        curBlock = incr;
         if (node.incr != null) node.incr.accept(this);
         new IRInst.BranchInst(checkCond, curBlock);
         controlBlock.remove(controlBlock.size() - 1);
@@ -691,7 +695,8 @@ public class IRBuilder implements ASTVisitor {
         var f = node.expr.accept(this);
         var args = new ArrayList<Value>();
 
-        if (node.expr instanceof ASTNode.MemberExpression && ((ASTNode.MemberExpression) node.expr).id.equals("size")) {
+        if (node.expr instanceof ASTNode.MemberExpression && ((ASTNode.MemberExpression) node.expr).expr.type.isArray()
+                && ((ASTNode.MemberExpression) node.expr).id.equals("size")) {
             var start = new IRInst.LoadInst((Value) f, curBlock);
             var t = new IRInst.CastInst(start, IRType.convert("int*"), curBlock);
             var sizePtr = new IRInst.GEPInst(IRType.convert("int"), t, curBlock, false);
@@ -699,18 +704,23 @@ public class IRBuilder implements ASTVisitor {
             node.val = loadTimes(sizePtr, 1);
         } else if (f instanceof IRConstant.Function) {
             var func = (IRConstant.Function) f;
+            var curThis = currentThis ? This : (curClass == null ? null : ((IRType.FunctionType) curFunc.type).params.get(0));
+            currentThis = false;
+
             @SuppressWarnings("unchecked") var tmp = (List<Value>) node.exprList.accept(this);
             var argsNeed = ((IRType.FunctionType) func.type).params;
             boolean flg = false;
             if (tmp.size() == argsNeed.size() - 1) { //lacking "this"
-                args.add(loadUntilType(currentThis ? This : ((IRType.FunctionType) curFunc.type).params.get(0), 1));
+                assert curThis != null;
+                args.add(loadUntilType(curThis, 1));
                 flg = true;
             }
             for (int i = 0; i < tmp.size(); i++) {
                 args.add(loadUntilType(tmp.get(i), argsNeed.get(flg ? (i + 1) : i).type));
             }
             node.val = new IRInst.CallInst(func, args, curBlock);
-            currentThis = false;
+        } else {
+            node.val = (Value) f;
         }
         return node.val;
     }

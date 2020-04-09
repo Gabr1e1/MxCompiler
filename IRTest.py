@@ -22,9 +22,9 @@ def test(filename, input = "test.in", output = "ans.out"):
     print("Testing %s" % filename)
     if input == "test.in":
         getInput(filename + '.mx')
-    os.system("./build.bash >/dev/null 2>&1")
+    os.system("./build.sh >/dev/null 2>&1")
     os.system("cat " + filename + '.mx' + " > " + "code.mx")
-    os.system("./semantic.bash >/dev/null 2>&1")
+    os.system("./semantic.sh >/dev/null 2>&1")
     os.system("llvm-link mycode.ll builtin.ll string_builtin.ll string_utility.ll -o code.ll; llc code.ll -o code.s; clang code.s -o code")
     os.system("./code < " + input + " > my.out")
     os.system("diff -wBEZb " + output + " my.out")
