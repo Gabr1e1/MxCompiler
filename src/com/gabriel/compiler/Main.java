@@ -7,6 +7,7 @@ import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
 import com.gabriel.compiler.frontend.SemanticChecker;
+import com.gabriel.compiler.optimization.Optimizer;
 import com.gabriel.compiler.parser.MxGrammarLexer;
 import com.gabriel.compiler.parser.MxGrammarParser;
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -58,5 +59,8 @@ public class Main {
         IRPrinter irCodeGen = new IRPrinter("mycode.ll");
         irCodeGen.visit((Module) module);
         System.out.println("IR Successfully generated");
+
+        Optimizer optimizer = new Optimizer((Module) module);
+        optimizer.optimize();
     }
 }

@@ -38,15 +38,15 @@ public class Value {
         this.user = new Use();
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    String getPrintName() {
+    public String getPrintName() {
         return "%" + name;
     }
 
-    String getOrignalName() {
+    public String getOrignalName() {
         return originalName;
     }
 

@@ -28,7 +28,6 @@ public class IRBuilder implements ASTVisitor {
         module = new Module("__program");
         symbolTable = new SymbolTable();
     }
-    //TODO: !!!COULD ALLOCATE LESS
 
     void init() {
         addBuiltinFunctions();
@@ -640,6 +639,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(ASTNode.LogicExpression node) {
+        //TODO: RHS Could jump directly to the global short_circuit block, instead of jumping several times between different sc blocks
         Value lhs = loadTimes((Value) node.expr1.accept(this), 1);
         //Short circuit eval
         BasicBlock cont = new BasicBlock("continue", curFunc);

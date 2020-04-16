@@ -26,4 +26,19 @@ public class BasicBlock extends Value {
         }
         return false;
     }
+
+    public List<BasicBlock> getSuccessors() {
+        List<BasicBlock> successors = new ArrayList<>();
+        for (var inst : instructions) {
+            if (inst instanceof IRInst.BranchInst) {
+                if (inst.operands.size() == 1) { //Direct jump
+                    successors.add((BasicBlock) inst.operands.get(0));
+                } else {
+                    successors.add((BasicBlock) inst.operands.get(1));
+                    successors.add((BasicBlock) inst.operands.get(2));
+                }
+            }
+        }
+        return successors;
+    }
 }

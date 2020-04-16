@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Module {
-    List<IRConstant.Function> functions = new ArrayList<>();
-    List<Value> globalVariables = new ArrayList<>();
-    Map<String, IRType.ClassType> classes = new HashMap<>();
-    List<Pair<IRConstant.Function, String>> builtin = new ArrayList<>();
+    public List<IRConstant.Function> functions = new ArrayList<>();
+    public List<Value> globalVariables = new ArrayList<>();
+    public Map<String, IRType.ClassType> classes = new HashMap<>();
+    public List<Pair<IRConstant.Function, String>> builtin = new ArrayList<>();
 
     String name;
 

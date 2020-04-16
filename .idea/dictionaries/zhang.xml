@@ -4,10 +4,13 @@
       <w>alloca</w>
       <w>ashr</w>
       <w>bitcast</w>
+      <w>corres</w>
       <w>getelementptr</w>
+      <w>preds</w>
       <w>sdiv</w>
       <w>sext</w>
       <w>srem</w>
+      <w>succ</w>
       <w>testcases</w>
     </words>
   </dictionary>

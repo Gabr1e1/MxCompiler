@@ -40,7 +40,7 @@ public class IRConstant {
         }
 
         @Override
-        String getPrintName() {
+        public String getPrintName() {
             return "" + num;
         }
     }
@@ -61,7 +61,7 @@ public class IRConstant {
         }
 
         @Override
-        String getPrintName() {
+        public String getPrintName() {
             return "@" + name;
         }
 
@@ -93,7 +93,7 @@ public class IRConstant {
         }
 
         @Override
-        String getPrintName() {
+        public String getPrintName() {
             return "null";
         }
     }
@@ -126,7 +126,7 @@ public class IRConstant {
         }
 
         @Override
-        String getPrintName() {
+        public String getPrintName() {
             return "@" + name;
         }
 
@@ -138,7 +138,7 @@ public class IRConstant {
     }
 
     public static class Function extends Constant {
-        List<BasicBlock> blocks = new ArrayList<>();
+        public List<BasicBlock> blocks = new ArrayList<>();
 
         Function(String name, Type type) {
             super(name, type);
