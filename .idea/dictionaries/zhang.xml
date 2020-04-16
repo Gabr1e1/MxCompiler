@@ -2,10 +2,13 @@
   <dictionary name="zhang">
     <words>
       <w>alloca</w>
+      <w>allocas</w>
       <w>ashr</w>
       <w>bitcast</w>
       <w>corres</w>
       <w>getelementptr</w>
+      <w>optim</w>
+      <w>optims</w>
       <w>preds</w>
       <w>sdiv</w>
       <w>sext</w>

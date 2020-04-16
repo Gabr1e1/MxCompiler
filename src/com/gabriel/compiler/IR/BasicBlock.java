@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BasicBlock extends Value {
-    List<Instruction> instructions = new ArrayList<>();
+    public List<IRInst.Instruction> instructions = new ArrayList<>();
 
     BasicBlock(String name, IRConstant.Function function) {
         super(name, new IRType.LabelType());
@@ -16,7 +16,7 @@ public class BasicBlock extends Value {
         return visitor.visit(this);
     }
 
-    void addInst(Instruction inst) {
+    void addInst(IRInst.Instruction inst) {
         instructions.add(inst);
     }
 

@@ -38,7 +38,7 @@ public class IRType {
     }
 
     public static boolean isClassPointer(Value v) {
-        var f = ((Instruction) v).type;
+        var f = ((IRInst.Instruction) v).type;
         return isClassPointer(f);
     }
 

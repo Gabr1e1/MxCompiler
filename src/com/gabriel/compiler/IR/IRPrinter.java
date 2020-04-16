@@ -185,6 +185,16 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
+    public Object visit(IRInst.PhiInst inst) {
+        String ret = String.format("%s = phi %s", inst.getPrintName(), inst.type);
+        for (var op : inst.operands) {
+            ret = ret + String.format("[%s, %s],", op.getPrintName(), ((IRInst.Instruction) op).belong);
+        }
+        ret = ret.substring(0, ret.length() - 2);
+        return ret;
+    }
+
+    @Override
     public Object visit(IRConstant.ConstInteger constant) {
         return String.format("%s %d", constant.type.accept(this), constant.num);
     }

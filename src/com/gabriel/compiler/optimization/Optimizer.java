@@ -3,6 +3,8 @@ package com.gabriel.compiler.optimization;
 import com.gabriel.compiler.IR.IRConstant;
 import com.gabriel.compiler.IR.Module;
 
+import java.util.ArrayList;
+
 public class Optimizer {
     Module module;
 
@@ -10,26 +12,17 @@ public class Optimizer {
         this.module = module;
     }
 
-    private abstract class runOnFunction {
+    abstract static class runOnFunction {
         abstract void exec(IRConstant.Function func);
-
-        void run() {
-            for (var func : module.functions) {
-                exec(func);
-            }
-        }
-    }
-
-    public class Mem2Reg extends runOnFunction {
-
-        @Override
-        void exec(IRConstant.Function func) {
-            var domTree = new DomTree(func.blocks.get(0));
-            domTree.calcDominanceFrontier();
-        }
     }
 
     public void optimize() {
-        (new Mem2Reg()).run();
+        var optims = new ArrayList<Object>();
+        optims.add(new Mem2Reg());
+        for (var optim : optims) {
+            if (optim instanceof runOnFunction) {
+                module.functions.forEach(((runOnFunction) optim)::exec);
+            }
+        }
     }
 }

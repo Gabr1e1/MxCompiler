@@ -3,18 +3,18 @@ package com.gabriel.compiler.IR;
 import java.util.List;
 import java.util.Map;
 
-abstract class Instruction extends User {
-    //    enum OpType {ADD, SUB, MUL, DIV}
-    BasicBlock parent;
-
-    Instruction(String name, Type type, BasicBlock basicBlock) {
-        super(name, type);
-        parent = basicBlock;
-        basicBlock.addInst(this);
-    }
-}
-
 public class IRInst {
+    public abstract static class Instruction extends User {
+        //    enum OpType {ADD, SUB, MUL, DIV}
+        public BasicBlock belong;
+
+        Instruction(String name, Type type, BasicBlock basicBlock) {
+            super(name, type);
+            belong = basicBlock;
+            basicBlock.addInst(this);
+        }
+    }
+
     public static boolean isTerminator(Instruction i) {
         return i instanceof BranchInst || i instanceof ReturnInst;
     }
@@ -171,7 +171,7 @@ public class IRInst {
 
     public static class LoadInst extends Instruction {
         LoadInst(Value ptr, BasicBlock belong) {
-            super("load_" + ptr.getOrignalName(), ((IRType.PointerType) ptr.type).pointer, belong);
+            super("load_" + ptr.getOriginalName(), ((IRType.PointerType) ptr.type).pointer, belong);
             addOperand(ptr);
         }
 
@@ -223,6 +223,22 @@ public class IRInst {
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
+        }
+    }
+
+    public static class PhiInst extends Instruction {
+
+        public PhiInst(String name, Type t, BasicBlock belong) {
+            super(name, t, belong);
+        }
+
+        public void addIncoming(Value v) {
+            addOperand(v);
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return super.accept(visitor);
         }
     }
 }

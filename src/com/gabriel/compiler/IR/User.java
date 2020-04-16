@@ -11,21 +11,21 @@ public class User extends Value {
         super(name, type);
     }
 
-    void addOperand(Value... v) {
+    public void addOperand(Value... v) {
         operands.addAll(Arrays.asList(v));
         (Arrays.asList(v)).forEach((i) -> i.user.addUser(this));
     }
 
-    void addOperand(List<Value> v) {
+    public void addOperand(List<Value> v) {
         operands.addAll(v);
         v.forEach((i) -> i.user.addUser(this));
     }
 
-    Value getOperand(int i) {
+    public Value getOperand(int i) {
         return operands.get(i);
     }
 
-    int findOperand(Value v) {
+    public int findOperand(Value v) {
         return operands.indexOf(v);
     }
 }

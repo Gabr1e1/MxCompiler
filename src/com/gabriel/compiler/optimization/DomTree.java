@@ -86,7 +86,7 @@ public class DomTree {
         }
     }
 
-    public Map<BasicBlock, Set<BasicBlock>> DF = new HashMap<>();
+    private Map<BasicBlock, Set<BasicBlock>> DF = new HashMap<>();
 
     public void calcDominanceFrontier() {
         for (var block : rpo) {
@@ -101,6 +101,10 @@ public class DomTree {
                 }
             }
         }
-        print();
+//        print();
+    }
+
+    public Set<BasicBlock> getDominanceFrontier(BasicBlock block) {
+        return DF.get(block);
     }
 }

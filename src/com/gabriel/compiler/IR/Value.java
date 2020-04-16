@@ -38,6 +38,11 @@ public class Value {
         this.user = new Use();
     }
 
+    public void changeName(String newName) {
+        this.originalName = newName;
+        this.name = noName() ? "" : gen(newName);
+    }
+
     public String getName() {
         return name;
     }
@@ -46,7 +51,7 @@ public class Value {
         return "%" + name;
     }
 
-    public String getOrignalName() {
+    public String getOriginalName() {
         return originalName;
     }
 
@@ -61,10 +66,18 @@ public class Value {
         else return type.accept(t) + " %" + name;
     }
 
-    void replaceAllUsesWith(Value other) {
+    public void replaceAllUsesWith(Value other) {
         for (var u : user.user) {
             var index = u.findOperand(this);
             u.operands.set(index, other);
         }
+    }
+
+    public Use getUser() {
+        return user;
+    }
+
+    public Type getType() {
+        return type;
     }
 }
