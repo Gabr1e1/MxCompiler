@@ -18,11 +18,13 @@ def getInput(filename):
         output = open("./testcases/test.out", "w")
         output.write(outputDataStr)
 
+def init():
+    os.system("./build.sh >/dev/null 2>&1")
+
 def test(filename, input = "./testcases/test.in", output = "./testcases/test.out"):
     print("Testing %s" % filename)
     if input == "./testcases/test.in":
         getInput(filename + '.mx')
-    os.system("./build.sh >/dev/null 2>&1")
     os.system("cat " + filename + '.mx' + " > " + "code.mx")
     os.system("./semantic.sh >/dev/null 2>&1")
     os.system("llvm-link ./testcases/mycode_opt.ll ./src/com/gabriel/compiler/builtin/builtin.ll ./src/com/gabriel/compiler/builtin/string_builtin.ll  ./src/com/gabriel/compiler/builtin/string_utility.ll -o code.ll; llc code.ll -o code.s; clang code.s -o code")
@@ -39,6 +41,7 @@ with open("./testcases/codegen/judgelist.txt", "r") as f:
     l = f.readlines()
 ans = 0
 wrong = []
+init()
 for i in l:
     t = test("./testcases/codegen/" + i[2:-4])
     ans += t
