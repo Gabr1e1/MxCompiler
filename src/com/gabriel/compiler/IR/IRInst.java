@@ -1,5 +1,6 @@
 package com.gabriel.compiler.IR;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -8,10 +9,17 @@ public class IRInst {
         //    enum OpType {ADD, SUB, MUL, DIV}
         public BasicBlock belong;
 
-        Instruction(String name, Type type, BasicBlock basicBlock) {
+        Instruction(String name, IRType.Type type, BasicBlock basicBlock) {
             super(name, type);
             belong = basicBlock;
             basicBlock.addInst(this);
+        }
+
+        Instruction(String name, IRType.Type type, BasicBlock basicBlock, boolean front) {
+            super(name, type);
+            belong = basicBlock;
+            if (!front) basicBlock.addInst(this);
+            else basicBlock.addInstToFront(this);
         }
     }
 
@@ -20,7 +28,7 @@ public class IRInst {
     }
 
     public static class AllocaInst extends Instruction {
-        AllocaInst(String id, Type type, BasicBlock belong) {
+        AllocaInst(String id, IRType.Type type, BasicBlock belong) {
             super(id, new IRType.PointerType(type), belong);
         }
 
@@ -129,16 +137,16 @@ public class IRInst {
     }
 
     public static class GEPInst extends Instruction {
-        Type valueType;
+        IRType.Type valueType;
 
-        GEPInst(Type valueType, Value base, BasicBlock belong) {
+        GEPInst(IRType.Type valueType, Value base, BasicBlock belong) {
             super("T", new IRType.PointerType(valueType), belong);
             addOperand(base);
             this.valueType = valueType;
             operands.add(new IRConstant.ConstInteger(0));
         }
 
-        GEPInst(Type valueType, Value base, BasicBlock belong, boolean zeroPad) {
+        GEPInst(IRType.Type valueType, Value base, BasicBlock belong, boolean zeroPad) {
             super("T", new IRType.PointerType(valueType), belong);
             addOperand(base);
             this.valueType = valueType;
@@ -182,9 +190,9 @@ public class IRInst {
     }
 
     public static class CastInst extends Instruction {
-        Type to;
+        IRType.Type to;
 
-        CastInst(Value from, Type to, BasicBlock belong) {
+        CastInst(Value from, IRType.Type to, BasicBlock belong) {
             super("M", to, belong);
             addOperand(from);
             this.to = to;
@@ -197,9 +205,9 @@ public class IRInst {
     }
 
     public static class SextInst extends Instruction {
-        Type to;
+        IRType.Type to;
 
-        SextInst(Value from, Type to, BasicBlock belong) {
+        SextInst(Value from, IRType.Type to, BasicBlock belong) {
             super("M", to, belong);
             addOperand(from);
             this.to = to;
@@ -212,9 +220,9 @@ public class IRInst {
     }
 
     public static class TruncInst extends Instruction {
-        Type to;
+        IRType.Type to;
 
-        TruncInst(Value from, Type to, BasicBlock belong) {
+        TruncInst(Value from, IRType.Type to, BasicBlock belong) {
             super("M", to, belong);
             addOperand(from);
             this.to = to;
@@ -228,17 +236,20 @@ public class IRInst {
 
     public static class PhiInst extends Instruction {
 
-        public PhiInst(String name, Type t, BasicBlock belong) {
-            super(name, t, belong);
+        List<BasicBlock> inBlock = new ArrayList<>();
+
+        public PhiInst(String name, IRType.Type t, BasicBlock belong) {
+            super(name, t, belong, true);
         }
 
-        public void addIncoming(Value v) {
+        public void addIncoming(Value v, BasicBlock b) {
             addOperand(v);
+            inBlock.add(b);
         }
 
         @Override
         public Object accept(IRVisitor visitor) {
-            return super.accept(visitor);
+            return visitor.visit(this);
         }
     }
 }

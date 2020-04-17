@@ -9,7 +9,7 @@ public class Value {
 
     String originalName;
     String name;
-    Type type;
+    IRType.Type type;
     Use user;
 
     static String labelAllocator() {
@@ -31,7 +31,7 @@ public class Value {
         return (this instanceof IRConstant.ConstInteger);
     }
 
-    public Value(String originalName, Type type) {
+    public Value(String originalName, IRType.Type type) {
         this.originalName = originalName;
         this.type = type;
         this.name = noName() ? "" : gen(originalName);
@@ -77,7 +77,7 @@ public class Value {
         return user;
     }
 
-    public Type getType() {
+    public IRType.Type getType() {
         return type;
     }
 }

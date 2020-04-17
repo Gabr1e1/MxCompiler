@@ -1,44 +1,49 @@
 package com.gabriel.compiler.optimization;
 
-import com.gabriel.compiler.IR.BasicBlock;
-import com.gabriel.compiler.IR.IRConstant;
-import com.gabriel.compiler.IR.IRInst;
-import com.gabriel.compiler.IR.Value;
+import com.gabriel.compiler.IR.*;
 
 import java.util.*;
 
 public class Mem2Reg extends Optimizer.runOnFunction {
 
-    private boolean isPromotable(IRInst.Instruction inst) {
+    private List<IRInst.Instruction> getDef(IRInst.Instruction inst) {
+        var ret = new ArrayList<IRInst.Instruction>();
+        ret.add(inst);
         for (var use : inst.getUser().user) {
             if (use instanceof IRInst.LoadInst) {
                 continue;
-            }
-            if (use instanceof IRInst.StoreInst && use.getOperand(1) == inst) {
+            } else if (use instanceof IRInst.StoreInst && use.getOperand(0) == inst) {
+                ret.add((IRInst.StoreInst) use);
                 continue;
             }
-            return false;
+            return new ArrayList<>();
         }
-        return true;
+        return ret;
     }
 
-    private Map<String, Stack<Value>> varDef;
+    private Map<String, Stack<Value>> varDef = new HashMap<>();
+    private Map<String, List<IRInst.Instruction>> workList = new HashMap<>();
 
     private void rename(DomTree.Node cur) {
+        List<IRInst.Instruction> delList = new ArrayList<>();
+
         //Rename current block
         var curBlock = cur.block;
         for (var inst : curBlock.instructions) {
-            if (inst instanceof IRInst.PhiInst) {
-                varDef.putIfAbsent(inst.getName(), new Stack<>());
-                inst.changeName(inst.getName());
-            }
             if (inst instanceof IRInst.LoadInst) {
-                var t = inst.getOperand(0);
-                t.replaceAllUsesWith(varDef.get(t.getName()).lastElement());
-            } else if (inst instanceof IRInst.StoreInst) {
-                var name = inst.getOperand(1).getName();
+                var name = inst.getOperand(0).getName();
+                if (varDef.get(name) != null && !varDef.get(name).isEmpty()) {
+                    inst.replaceAllUsesWith(varDef.get(name).lastElement());
+                }
+                if (workList.get(name) != null) delList.add(inst);
+            } else if (inst instanceof IRInst.PhiInst || inst instanceof IRInst.StoreInst) {
+                var name = (inst instanceof IRInst.StoreInst) ? inst.getOperand(0).getName() : inst.getOriginalName();
+                if (workList.get(name) == null) continue;
                 varDef.putIfAbsent(name, new Stack<>());
-                inst.getOperand(1).changeName(name);
+                varDef.get(name).add((inst instanceof IRInst.StoreInst) ? inst.getOperand(1) : inst);
+                if (inst instanceof IRInst.StoreInst) delList.add(inst);
+            } else if (inst instanceof IRInst.AllocaInst) {
+                if (workList.get(inst.getName()) != null) delList.add(inst);
             }
         }
 
@@ -47,7 +52,10 @@ public class Mem2Reg extends Optimizer.runOnFunction {
         for (var succ : successors) {
             for (var inst : succ.instructions) {
                 if (!(inst instanceof IRInst.PhiInst)) continue;
-                ((IRInst.PhiInst) inst).addIncoming(varDef.get(inst.getName()).lastElement());
+                var tmp = varDef.get(inst.getOriginalName());
+                //TODO: Tmp could only be null because it could be a local variable promoted upward to func_init
+                if (tmp != null && tmp.size() > 0) ((IRInst.PhiInst) inst).addIncoming(tmp.lastElement(), curBlock);
+                else ((IRInst.PhiInst) inst).addIncoming(null, curBlock);
             }
         }
 
@@ -56,8 +64,16 @@ public class Mem2Reg extends Optimizer.runOnFunction {
         //Delete info on stack
         for (var inst : curBlock.instructions) {
             if (inst instanceof IRInst.PhiInst || inst instanceof IRInst.StoreInst) {
-                varDef.get(inst.getName()).pop();
+                var name = (inst instanceof IRInst.StoreInst) ? inst.getOperand(0).getName() : inst.getOriginalName();
+                if (workList.get(name) == null) continue;
+                varDef.get(name).pop();
             }
+        }
+
+        //Delete unnecessary instructions
+        for (var d : delList) {
+            assert d.getUser().user.size() == 0;
+            d.belong.delInst(d);
         }
     }
 
@@ -67,31 +83,32 @@ public class Mem2Reg extends Optimizer.runOnFunction {
         domTree.calcDominanceFrontier();
 
         //Find Allocas whose uses are only constituted of loads and stores
-        List<IRInst.Instruction> workList = new ArrayList<>();
         for (var block : func.blocks) {
             for (var inst : block.instructions) {
                 if (inst instanceof IRInst.AllocaInst) {
-                    if (isPromotable(inst)) workList.add(inst);
+                    workList.putIfAbsent(inst.getName(), new ArrayList<>());
+                    workList.get(inst.getName()).addAll(getDef(inst));
                 }
             }
         }
 
         //Insert phi-nodes
-        for (var alloca : workList) {
+        for (var defs : workList.values()) {
             var blocks = new ArrayList<BasicBlock>();
+            defs.forEach((d) -> blocks.add(d.belong));
             var vis = new HashSet<BasicBlock>();
-            blocks.add(alloca.belong);
             while (!blocks.isEmpty()) {
                 var block = blocks.get(0);
-                vis.add(block);
                 blocks.remove(0);
                 var curDF = domTree.getDominanceFrontier(block);
                 for (var frontier : curDF) {
                     if (vis.contains(frontier)) continue;
                     //Insert in frontier block
-                    new IRInst.PhiInst(alloca.getName(), alloca.getType(), frontier);
+                    System.out.printf("Added Phi Noode in %s for %s\n", frontier, defs.get(0).getName());
+                    new IRInst.PhiInst(defs.get(0).getName(), IRType.dePointer(defs.get(0).getType()), frontier);
                     //Iterative Dominance Frontier
                     blocks.add(frontier);
+                    vis.add(frontier);
                 }
             }
         }

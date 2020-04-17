@@ -5,23 +5,23 @@ import com.gabriel.compiler.util.Pair;
 import java.util.List;
 import java.util.Map;
 
-abstract class Type {
-    public String baseType;
-    public int bitLen;
-
-    public int getByteNum() {
-        return bitLen / 8 + (bitLen % 8 != 0 ? 1 : 0);
-    }
-
-    public abstract Object accept(IRVisitor visitor);
-
-    public String toString() {
-        IRPrinter t = new IRPrinter();
-        return (String) this.accept(t);
-    }
-}
-
 public class IRType {
+    public abstract static class Type {
+        public String baseType;
+        public int bitLen;
+
+        public int getByteNum() {
+            return bitLen / 8 + (bitLen % 8 != 0 ? 1 : 0);
+        }
+
+        public abstract Object accept(IRVisitor visitor);
+
+        public String toString() {
+            IRPrinter t = new IRPrinter();
+            return (String) this.accept(t);
+        }
+    }
+
     public static Value getDefaultValue(Type type) {
         if (type instanceof IntegerType)
             return new IRConstant.ConstInteger(0, type);
@@ -64,6 +64,11 @@ public class IRType {
         } else {
             return new PointerType(module.getClass("struct." + type.baseType));
         }
+    }
+
+    public static Type dePointer(Type type) {
+        if (type instanceof PointerType) return ((PointerType) type).pointer;
+        else return type;
     }
 
     public static class VoidType extends Type {

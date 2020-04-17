@@ -7,6 +7,7 @@
       <w>bitcast</w>
       <w>corres</w>
       <w>getelementptr</w>
+      <w>mycode</w>
       <w>optim</w>
       <w>optims</w>
       <w>preds</w>

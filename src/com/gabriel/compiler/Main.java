@@ -56,11 +56,16 @@ public class Main {
 
         IRBuilder ir = new IRBuilder();
         var module = ir.visit(root);
-        IRPrinter irCodeGen = new IRPrinter("mycode.ll");
+
+        IRPrinter irCodeGen = new IRPrinter("./testcases/mycode.ll");
         irCodeGen.visit((Module) module);
         System.out.println("IR Successfully generated");
 
         Optimizer optimizer = new Optimizer((Module) module);
         optimizer.optimize();
+
+        IRPrinter irCodeGen2 = new IRPrinter("./testcases/mycode_opt.ll");
+        irCodeGen2.visit((Module) module);
+        System.out.println("Optimized IR Successfully generated");
     }
 }

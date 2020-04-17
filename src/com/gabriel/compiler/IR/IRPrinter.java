@@ -34,7 +34,7 @@ public class IRPrinter implements IRVisitor {
         try {
             var str = (String) obj;
             codeWriter.write(str + "\n");
-            System.out.print(str + "\n");
+//            System.out.print(str + "\n");
         } catch (Exception e) {
             System.out.println(e.toString());
         }
@@ -186,9 +186,11 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.PhiInst inst) {
-        String ret = String.format("%s = phi %s", inst.getPrintName(), inst.type);
-        for (var op : inst.operands) {
-            ret = ret + String.format("[%s, %s],", op.getPrintName(), ((IRInst.Instruction) op).belong);
+        String ret = String.format("%s = phi %s ", inst.getPrintName(), inst.type);
+        for (int i = 0; i < inst.operands.size(); i++) {
+            var v = inst.operands.get(i);
+            var b = inst.inBlock.get(i);
+            ret = ret + String.format("[%s, %%%s], ", v == null ? "undef" : v.getPrintName(), b.getName());
         }
         ret = ret.substring(0, ret.length() - 2);
         return ret;

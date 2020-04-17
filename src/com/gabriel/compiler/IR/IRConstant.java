@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class Constant extends User {
-    Constant(String name, Type type) {
+    Constant(String name, IRType.Type type) {
         super(name, type);
     }
 }
@@ -13,17 +13,17 @@ public class IRConstant {
     public static class ConstInteger extends Constant {
         int num;
 
-        ConstInteger(int num) {
+        public ConstInteger(int num) {
             super("const", new IRType.IntegerType("int"));
             this.num = num;
         }
 
-        ConstInteger(int num, String type) {
+        public ConstInteger(int num, String type) {
             super("const", new IRType.IntegerType(type));
             this.num = num;
         }
 
-        ConstInteger(int num, Type type) {
+        public ConstInteger(int num, IRType.Type type) {
             super("const", type);
             this.num = num;
         }
@@ -46,10 +46,10 @@ public class IRConstant {
     }
 
     public static class ConstString extends Constant {
-        Type type;
+        IRType.Type type;
         String str;
 
-        ConstString(String str, Type type) {
+        ConstString(String str, IRType.Type type) {
             super(".conststr", new IRType.PointerType(type));
             this.str = str;
             this.type = type;
@@ -74,9 +74,9 @@ public class IRConstant {
 
     //Probably don't need this
     public static class Null extends Constant {
-        Type type;
+        IRType.Type type;
 
-        Null(Type type) {
+        Null(IRType.Type type) {
             super("_", type);
             this.type = type;
         }
@@ -115,7 +115,7 @@ public class IRConstant {
     }
 
     public static class GlobalVariable extends Constant {
-        GlobalVariable(String name, Type type, Value init) {
+        GlobalVariable(String name, IRType.Type type, Value init) {
             super(name, new IRType.PointerType(type));
             addOperand(init);
         }
@@ -140,12 +140,16 @@ public class IRConstant {
     public static class Function extends Constant {
         public List<BasicBlock> blocks = new ArrayList<>();
 
-        Function(String name, Type type) {
+        Function(String name, IRType.Type type) {
             super(name, type);
         }
 
-        void addBlock(BasicBlock block) {
+        public void addBlock(BasicBlock block) {
             blocks.add(block);
+        }
+
+        public void delBlock(BasicBlock block) {
+            blocks.remove(block);
         }
 
         Value getParam(int i) {

@@ -1,6 +1,7 @@
 package com.gabriel.compiler.optimization;
 
 import com.gabriel.compiler.IR.BasicBlock;
+import com.gabriel.compiler.IR.IRConstant;
 
 import java.util.*;
 
@@ -26,6 +27,7 @@ public class CFG {
     private Node build(BasicBlock block) {
         Node ret = new Node(block);
         corres.put(block, ret);
+        System.out.printf("BUILD: %s\n", block);
         var successors = block.getSuccessors();
         for (var succ : successors) {
             if (corres.get(succ) == null) corres.put(succ, build(succ));
@@ -34,8 +36,17 @@ public class CFG {
         return ret;
     }
 
+    private void cleanUselessBlocks(IRConstant.Function func) {
+        for (int i = 1; i < func.blocks.size(); i++) {
+            if (!func.blocks.get(i).getOriginalName().equals("retBlock") && getPredecessors(func.blocks.get(i)).isEmpty()) {
+                func.delBlock(func.blocks.get(i));
+            }
+        }
+    }
+
     public CFG(BasicBlock entryBlock) {
         entry = build(entryBlock);
+        cleanUselessBlocks(entryBlock.belong);
     }
 
     private Set<BasicBlock> visited;

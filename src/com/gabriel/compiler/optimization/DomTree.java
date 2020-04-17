@@ -58,6 +58,8 @@ public class DomTree {
             }
         }
         root = corres.get(entryBlock);
+        for (var block : rpo)
+            if (block != entryBlock) corres.get(block).father.children.add(corres.get(block));
     }
 
     private Node getLCA(Node u, Node v) {
@@ -105,6 +107,7 @@ public class DomTree {
     }
 
     public Set<BasicBlock> getDominanceFrontier(BasicBlock block) {
+        DF.putIfAbsent(block, new HashSet<>());
         return DF.get(block);
     }
 }

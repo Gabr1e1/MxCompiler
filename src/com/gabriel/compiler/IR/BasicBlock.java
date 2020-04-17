@@ -5,9 +5,11 @@ import java.util.List;
 
 public class BasicBlock extends Value {
     public List<IRInst.Instruction> instructions = new ArrayList<>();
+    public IRConstant.Function belong;
 
     BasicBlock(String name, IRConstant.Function function) {
         super(name, new IRType.LabelType());
+        this.belong = function;
         function.addBlock(this);
     }
 
@@ -18,6 +20,14 @@ public class BasicBlock extends Value {
 
     void addInst(IRInst.Instruction inst) {
         instructions.add(inst);
+    }
+
+    void addInstToFront(IRInst.Instruction inst) {
+        instructions.add(0, inst);
+    }
+
+    public void delInst(IRInst.Instruction inst) {
+        instructions.remove(inst);
     }
 
     boolean hasTerminator() {
