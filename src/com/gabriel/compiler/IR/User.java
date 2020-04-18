@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class User extends Value {
-    List<Value> operands = new ArrayList<>();
+    public List<Value> operands = new ArrayList<>();
 
     User(String name, IRType.Type type) {
         super(name, type);

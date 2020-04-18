@@ -17,8 +17,11 @@ public class Optimizer {
     }
 
     public void optimize() {
-        var optims = new ArrayList<Object>();
+        var optims = new ArrayList<>();
+
         optims.add(new Mem2Reg());
+        optims.add(new MSDCE());
+
         for (var optim : optims) {
             if (optim instanceof runOnFunction) {
                 module.functions.forEach(((runOnFunction) optim)::exec);

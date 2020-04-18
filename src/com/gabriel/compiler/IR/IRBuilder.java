@@ -322,6 +322,28 @@ public class IRBuilder implements ASTVisitor {
                     new IRInst.BranchInst(retBlock, block);
                 }
             });
+
+
+            //Put return block to the end
+            for (var block : curFunc.blocks) {
+                if (block.getOriginalName().equals("retBlock")) {
+                    curFunc.blocks.remove(block);
+                    curFunc.blocks.add(block);
+                    break;
+                }
+            }
+
+            //Clean up
+            curFunc.blocks.removeIf((b) -> b.instructions.size() == 0);
+            for (var block : curFunc.blocks) {
+                for (int i = 0; i < block.instructions.size(); i++) {
+                    var inst = block.instructions.get(i);
+                    if (IRInst.isTerminator(inst)) {
+                        block.instructions = block.instructions.subList(0, i + 1);
+                        break;
+                    }
+                }
+            }
         }
         return null;
     }

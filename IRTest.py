@@ -44,6 +44,8 @@ wrong = []
 init()
 for i in l:
     t = test("./testcases/codegen/" + i[2:-4])
+    if t == 0:
+        break
     ans += t
     if t == 0:
         wrong.append(i)

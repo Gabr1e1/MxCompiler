@@ -92,10 +92,6 @@ public class IRPrinter implements IRVisitor {
         for (int i = 0; i < block.instructions.size(); i++) {
             var inst = block.instructions.get(i);
             writeCode(inst.accept(this));
-            if (IRInst.isTerminator(inst)) {
-                block.instructions = block.instructions.subList(0, i + 1);
-                break;
-            }
         }
         writeCode("");
         return null;

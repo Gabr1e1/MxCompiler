@@ -79,8 +79,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
 
     @Override
     void exec(IRConstant.Function func) {
-        var domTree = new DomTree(func.blocks.get(0));
-        domTree.calcDominanceFrontier();
+        var domTree = new DomTree(func.blocks.get(0), false);
 
         //Find Allocas whose uses are only constituted of loads and stores
         for (var block : func.blocks) {

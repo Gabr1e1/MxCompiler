@@ -22,8 +22,8 @@ public class DomTree {
     private final List<BasicBlock> rpo;
     private final Map<BasicBlock, Integer> rpoNum = new HashMap<>();
 
-    public DomTree(BasicBlock entryBlock) {
-        cfg = new CFG(entryBlock);
+    public DomTree(BasicBlock entryBlock, boolean reverse) {
+        cfg = new CFG(entryBlock, reverse);
         rpo = cfg.getRPO();
         int cnt = 0;
         for (var b : rpo) {
@@ -60,6 +60,8 @@ public class DomTree {
         root = corres.get(entryBlock);
         for (var block : rpo)
             if (block != entryBlock) corres.get(block).father.children.add(corres.get(block));
+
+        calcDominanceFrontier();
     }
 
     private Node getLCA(Node u, Node v) {
@@ -75,6 +77,10 @@ public class DomTree {
             }
         }
         return u;
+    }
+
+    public Node getDomNode(BasicBlock block) {
+        return corres.get(block);
     }
 
     public void print() {

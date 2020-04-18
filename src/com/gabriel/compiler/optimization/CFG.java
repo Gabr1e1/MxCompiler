@@ -38,14 +38,22 @@ public class CFG {
 
     private void cleanUselessBlocks(IRConstant.Function func) {
         for (int i = 1; i < func.blocks.size(); i++) {
-            if (!func.blocks.get(i).getOriginalName().equals("retBlock") && getPredecessors(func.blocks.get(i)).isEmpty()) {
+            if (func.blocks.get(i) != entry.block && getPredecessors(func.blocks.get(i)).isEmpty()) {
                 func.delBlock(func.blocks.get(i));
             }
         }
     }
 
-    public CFG(BasicBlock entryBlock) {
-        entry = build(entryBlock);
+    public CFG(BasicBlock entryBlock, boolean reverse) {
+        build(entryBlock.belong.blocks.get(0));
+        entry = corres.get(entryBlock);
+        if (reverse) {
+            for (var node : corres.values()) {
+                var tmp = node.out;
+                node.out = node.in;
+                node.in = tmp;
+            }
+        }
         cleanUselessBlocks(entryBlock.belong);
     }
 

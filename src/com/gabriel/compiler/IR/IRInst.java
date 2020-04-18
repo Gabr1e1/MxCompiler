@@ -27,6 +27,14 @@ public class IRInst {
         return i instanceof BranchInst || i instanceof ReturnInst;
     }
 
+    public static boolean mayHaveSideEffects(Instruction i) {
+        return i instanceof CallInst || i instanceof StoreInst;
+    }
+
+    public static boolean isCritical(Instruction i) {
+        return i instanceof ReturnInst || mayHaveSideEffects(i);
+    }
+
     public static class AllocaInst extends Instruction {
         AllocaInst(String id, IRType.Type type, BasicBlock belong) {
             super(id, new IRType.PointerType(type), belong);
@@ -44,7 +52,7 @@ public class IRInst {
             addOperand(cond, taken, notTaken);
         }
 
-        BranchInst(BasicBlock jump, BasicBlock belong) {
+        public BranchInst(BasicBlock jump, BasicBlock belong) {
             super("", new IRType.VoidType(), belong);
             addOperand(jump);
         }
@@ -236,7 +244,7 @@ public class IRInst {
 
     public static class PhiInst extends Instruction {
 
-        List<BasicBlock> inBlock = new ArrayList<>();
+        public List<BasicBlock> inBlock = new ArrayList<>();
 
         public PhiInst(String name, IRType.Type t, BasicBlock belong) {
             super(name, t, belong, true);

@@ -1,4 +1,6 @@
+./t12.mx
 ./t18.mx
+./sorting/quick_sort.mx
 ./t57.mx
 ./std/queue.mx
 ./sorting/bubble_sort.mx
@@ -6,7 +8,6 @@
 ./shortest_path/spfa.mx
 ./shortest_path/floyd.mx
 ./sorting/merge_sort.mx
-./sorting/quick_sort.mx
 ./sorting/selection_sort.mx
 ./t64.mx
 ./e8.mx
@@ -65,7 +66,6 @@
 ./t36.mx
 ./t26.mx
 ./t43.mx
-./t12.mx
 ./t32.mx
 ./t63.mx
 ./e5.mx
