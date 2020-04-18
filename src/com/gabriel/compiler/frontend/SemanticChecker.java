@@ -193,6 +193,8 @@ public class SemanticChecker implements ASTVisitor {
             if (node.type.typeKind == TypeKind.VARIABLE) node.type.setLeftValue();
             if (node.type.typeKind == TypeKind.VARIABLE && node.isFunc)
                 throw new SemanticError.NotDeclared(node.id, node.scope.name);
+            if (node.type.typeKind != TypeKind.VARIABLE && !node.isFunc)
+                throw new SemanticError.NotDeclared(node.id, node.scope.name);
         } else node.type = new Type("int", false);
         return null;
     }
