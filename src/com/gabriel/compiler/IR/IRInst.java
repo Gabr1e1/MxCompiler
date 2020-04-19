@@ -21,6 +21,11 @@ public class IRInst {
             if (!front) basicBlock.addInst(this);
             else basicBlock.addInstToFront(this);
         }
+
+        public String print() {
+            IRPrinter t = new IRPrinter();
+            return (String)this.accept(t);
+        }
     }
 
     public static boolean isTerminator(Instruction i) {
@@ -47,7 +52,7 @@ public class IRInst {
     }
 
     public static class BranchInst extends Instruction {
-        BranchInst(Value cond, BasicBlock taken, BasicBlock notTaken, BasicBlock belong) {
+        public BranchInst(Value cond, BasicBlock taken, BasicBlock notTaken, BasicBlock belong) {
             super("", new IRType.VoidType(), belong);
             addOperand(cond, taken, notTaken);
         }
@@ -244,15 +249,19 @@ public class IRInst {
 
     public static class PhiInst extends Instruction {
 
-        public List<BasicBlock> inBlock = new ArrayList<>();
-
         public PhiInst(String name, IRType.Type t, BasicBlock belong) {
             super(name, t, belong, true);
         }
 
         public void addIncoming(Value v, BasicBlock b) {
             addOperand(v);
-            inBlock.add(b);
+            addOperand(b);
+        }
+
+        public List<BasicBlock> getIncomingBlocks() {
+            var ret = new ArrayList<BasicBlock>();
+            for (int i = 1; i < operands.size(); i += 2) ret.add((BasicBlock) operands.get(i));
+            return ret;
         }
 
         @Override

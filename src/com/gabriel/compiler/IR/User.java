@@ -18,6 +18,18 @@ public class User extends Value {
         });
     }
 
+    public void delOperand(Value... v) {
+        (Arrays.asList(v)).forEach((i) -> {
+            if (i != null) i.user.delUser(this);
+            operands.remove(i);
+        });
+    }
+
+    public void delOperand(int kth) {
+        if (operands.get(kth) != null) operands.get(kth).user.delUser(this);
+        operands.remove(kth);
+    }
+
     public void addOperand(List<Value> v) {
         operands.addAll(v);
         v.forEach((i) -> i.user.addUser(this));

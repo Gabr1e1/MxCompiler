@@ -27,7 +27,7 @@ public class CFG {
     private Node build(BasicBlock block) {
         Node ret = new Node(block);
         corres.put(block, ret);
-        System.out.printf("BUILD: %s\n", block);
+//        System.out.printf("BUILD: %s\n", block);
         var successors = block.getSuccessors();
         for (var succ : successors) {
             if (corres.get(succ) == null) corres.put(succ, build(succ));
@@ -67,10 +67,15 @@ public class CFG {
         rpo.add(cur.block);
     }
 
-    List<BasicBlock> getRPO() {
+    List<BasicBlock> getPostOrder() {
         var ret = new ArrayList<BasicBlock>();
         visited = new HashSet<>();
         visit(entry, ret);
+        return ret;
+    }
+
+    List<BasicBlock> getRPO() {
+        var ret = getPostOrder();
         Collections.reverse(ret);
         return ret;
     }
@@ -79,6 +84,14 @@ public class CFG {
         var ret = new ArrayList<BasicBlock>();
         if (corres.get(block) != null) {
             corres.get(block).in.forEach((n) -> ret.add(n.block));
+        }
+        return ret;
+    }
+
+    List<BasicBlock> getSuccessors(BasicBlock block) {
+        var ret = new ArrayList<BasicBlock>();
+        if (corres.get(block) != null) {
+            corres.get(block).out.forEach((n) -> ret.add(n.block));
         }
         return ret;
     }

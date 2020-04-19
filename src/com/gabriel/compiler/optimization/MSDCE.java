@@ -36,7 +36,7 @@ public class MSDCE extends Optimizer.runOnFunction {
 
             //mark preds of phi
             if (cur instanceof IRInst.PhiInst) {
-                for (var block : ((IRInst.PhiInst) cur).inBlock) {
+                for (var block : ((IRInst.PhiInst) cur).getIncomingBlocks()) {
                     var last = block.instructions.get(block.instructions.size() - 1);
                     if (!marked.contains(last)) {
                         marked.add(last);

@@ -70,7 +70,9 @@ public class Value {
         for (var u : user.user) {
             var index = u.findOperand(this);
             u.operands.set(index, other);
+            other.user.addUser(u);
         }
+        user = new Use();
     }
 
     public Use getUser() {

@@ -7,6 +7,9 @@ import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
 import com.gabriel.compiler.frontend.SemanticChecker;
+import com.gabriel.compiler.optimization.CFGSimplifier;
+import com.gabriel.compiler.optimization.MSDCE;
+import com.gabriel.compiler.optimization.Mem2Reg;
 import com.gabriel.compiler.optimization.Optimizer;
 import com.gabriel.compiler.parser.MxGrammarLexer;
 import com.gabriel.compiler.parser.MxGrammarParser;
@@ -62,6 +65,7 @@ public class Main {
         System.out.println("IR Successfully generated");
 
         Optimizer optimizer = new Optimizer((Module) module);
+        optimizer.addPass(new Mem2Reg(), new CFGSimplifier(), new MSDCE(), new CFGSimplifier());
         optimizer.optimize();
 
         IRPrinter irCodeGen2 = new IRPrinter("./testcases/mycode_opt.ll");

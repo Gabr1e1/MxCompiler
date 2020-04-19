@@ -183,9 +183,9 @@ public class IRPrinter implements IRVisitor {
     @Override
     public Object visit(IRInst.PhiInst inst) {
         String ret = String.format("%s = phi %s ", inst.getPrintName(), inst.type);
-        for (int i = 0; i < inst.operands.size(); i++) {
+        for (int i = 0; i < inst.operands.size(); i += 2) {
             var v = inst.operands.get(i);
-            var b = inst.inBlock.get(i);
+            var b = inst.operands.get(i + 1);
             ret = ret + String.format("[%s, %%%s], ", v == null ? "undef" : v.getPrintName(), b.getName());
         }
         ret = ret.substring(0, ret.length() - 2);

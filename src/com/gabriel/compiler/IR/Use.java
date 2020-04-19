@@ -10,7 +10,7 @@ public class Use {
         user.add(u);
     }
 
-    void deleteUser(Value u) {
+    void delUser(User u) {
         user.remove(u);
     }
 }

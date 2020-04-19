@@ -1,10 +1,10 @@
-./t12.mx
-./t18.mx
 ./sorting/quick_sort.mx
+./shortest_path/dijkstra.mx
+./t18.mx
+./t12.mx
 ./t57.mx
 ./std/queue.mx
 ./sorting/bubble_sort.mx
-./shortest_path/dijkstra.mx
 ./shortest_path/spfa.mx
 ./shortest_path/floyd.mx
 ./sorting/merge_sort.mx

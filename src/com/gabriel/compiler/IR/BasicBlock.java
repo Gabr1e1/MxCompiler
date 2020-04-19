@@ -18,11 +18,11 @@ public class BasicBlock extends Value {
         return visitor.visit(this);
     }
 
-    void addInst(IRInst.Instruction inst) {
+    public void addInst(IRInst.Instruction inst) {
         instructions.add(inst);
     }
 
-    void addInstToFront(IRInst.Instruction inst) {
+    public void addInstToFront(IRInst.Instruction inst) {
         instructions.add(0, inst);
     }
 
@@ -50,5 +50,18 @@ public class BasicBlock extends Value {
             }
         }
         return successors;
+    }
+
+    public void hoistPhiInst() {
+        boolean start = true;
+        var hoistList = new ArrayList<IRInst.Instruction>();
+        for (var inst : instructions) {
+            if (!(inst instanceof IRInst.PhiInst)) start = false;
+            if (inst instanceof IRInst.PhiInst && !start) {
+                hoistList.add(inst);
+            }
+        }
+        hoistList.forEach(this::delInst);
+        hoistList.forEach(this::addInstToFront);
     }
 }
