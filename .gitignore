@@ -20,3 +20,5 @@
 /my.out
 /test.in
 2
+testcases/mycode.ll
+testcases/mycode_opt.ll
