@@ -27,7 +27,7 @@ def test(filename, input = "./testcases/test.in", output = "./testcases/test.out
         getInput(filename + '.mx')
     os.system("cat " + filename + '.mx' + " > " + "code.mx")
     os.system("./semantic.sh >/dev/null 2>&1")
-    os.system("llvm-link ./testcases/mycode_opt.ll ./src/com/gabriel/compiler/builtin/builtin.ll ./src/com/gabriel/compiler/builtin/string_builtin.ll  ./src/com/gabriel/compiler/builtin/string_utility.ll -o code.ll; llc code.ll -o code.s; clang code.s -o code")
+    os.system("llvm-link-9 ./testcases/mycode_opt.ll ./src/com/gabriel/compiler/builtin/builtin_all.ll -o code.ll; llc-9 code.ll -o code.s; clang code.s -o code")
     os.system("./code < " + input + " > ./testcases/my.out")
     os.system("diff -wBEZb " + output + " ./testcases/my.out")
     if os.system("diff -wBEZb " + output + " ./testcases/my.out > /dev/null 2>&1"):

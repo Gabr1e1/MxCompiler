@@ -72,13 +72,13 @@ public class IRConstant {
         }
     }
 
-    //Probably don't need this
     public static class Null extends Constant {
         IRType.Type type;
 
         Null(IRType.Type type) {
             super("_", type);
             this.type = type;
+            if (this.type == null) this.type = new IRType.IntegerType("int");
         }
 
         @Override
@@ -144,11 +144,19 @@ public class IRConstant {
             super(name, type);
         }
 
+        //TODO: abnormal functions could also be optimized
+        public boolean isNormal() {
+            if (!blocks.get(0).getName().equals("func_init")) return false;
+            if (!blocks.get(blocks.size() - 1).getName().equals("ret_block")) return false;
+            return true;
+        }
+
         public void addBlock(BasicBlock block) {
             blocks.add(block);
         }
 
         public void delBlock(BasicBlock block) {
+            if (block.getOriginalName().equals("retBlock")) return;
             blocks.remove(block);
         }
 

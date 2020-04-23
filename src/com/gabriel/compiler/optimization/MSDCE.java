@@ -30,7 +30,7 @@ public class MSDCE extends Optimizer.runOnFunction {
 
         while (!workList.isEmpty()) {
             var cur = workList.get(0);
-//            System.out.println("BLOCK: "+ cur.belong.getName());
+//            System.err.println("BLOCK: "+ cur.belong.getName());
             workList.remove(0);
             markedBlocks.add(cur.belong);
 
@@ -74,7 +74,7 @@ public class MSDCE extends Optimizer.runOnFunction {
                 if (inst instanceof IRInst.BranchInst) {
                     if (inst.operands.size() == 1) continue;
                     //Jump to nearest marked postdominator
-                    for (var node = rdf.getDomNode(block).father; node != node.father; node = node.father) {
+                    for (var node = rdf.getDomNode(block).father; node != null && node != node.father; node = node.father) {
                         if (markedBlocks.contains(node.block)) {
                             originalInst = inst;
                             newInstBlock = node.block;

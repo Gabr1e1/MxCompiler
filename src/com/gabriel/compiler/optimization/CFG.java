@@ -36,15 +36,10 @@ public class CFG {
         return ret;
     }
 
-    private void cleanUselessBlocks(IRConstant.Function func) {
-        for (int i = 1; i < func.blocks.size(); i++) {
-            if (func.blocks.get(i) != entry.block && getPredecessors(func.blocks.get(i)).isEmpty()) {
-                func.delBlock(func.blocks.get(i));
-            }
-        }
-    }
-
     public CFG(BasicBlock entryBlock, boolean reverse) {
+//        for (var block : entryBlock.belong.blocks) {
+//            if (corres.get(block) == null) build(block);
+//        }
         build(entryBlock.belong.blocks.get(0));
         entry = corres.get(entryBlock);
         if (reverse) {
@@ -54,7 +49,6 @@ public class CFG {
                 node.in = tmp;
             }
         }
-        cleanUselessBlocks(entryBlock.belong);
     }
 
     private Set<BasicBlock> visited;

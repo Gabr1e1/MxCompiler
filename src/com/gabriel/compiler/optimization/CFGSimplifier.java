@@ -24,6 +24,8 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
     private boolean removeEmptyBlock(IRConstant.Function func, BasicBlock block) {
         var last = block.instructions.get(block.instructions.size() - 1);
         var succ = (BasicBlock) last.operands.get(0);
+        if (block == succ) return false;
+
         if (block.instructions.size() == 1) {
             var pred = cfg.getPredecessors(block);
             //special case: entry block
@@ -36,7 +38,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
 
             for (var inst : succ.instructions) {
                 if (inst instanceof IRInst.PhiInst) {
-                    System.out.printf("Before: %s\n", inst.print());
+                    System.err.printf("Before: %s\n", inst.print());
 
                     int i = inst.operands.indexOf(block);
                     var v = inst.operands.get(i - 1);
@@ -47,7 +49,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
                         inst.delOperand(block);
                     }
 
-                    System.out.printf("After: %s\n", inst.print());
+                    System.err.printf("After: %s\n", inst.print());
                 }
             }
             block.replaceAllUsesWith(succ);
@@ -60,6 +62,8 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
     private boolean mergeBlocks(IRConstant.Function func, BasicBlock block) {
         var last = block.instructions.get(block.instructions.size() - 1);
         var succ = (BasicBlock) last.operands.get(0);
+        if (block == succ) return false;
+
         if (cfg.getPredecessors(succ).size() == 1) {
             block.replaceAllUsesWith(succ);
             for (int i = block.instructions.size() - 1; i >= 0; i--) {
@@ -78,6 +82,8 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
     private boolean hoistBranch(IRConstant.Function func, BasicBlock block) {
         var last = block.instructions.get(block.instructions.size() - 1);
         var succ = (BasicBlock) last.operands.get(0);
+        if (block == succ) return false;
+
         if (succ.instructions.size() == 1) {
             var succInst = succ.instructions.get(0);
             if (succInst instanceof IRInst.BranchInst) {
@@ -121,6 +127,6 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
         //Iterate till no change
 
         //noinspection StatementWithEmptyBody
-        while (onePass(func)) ;
+        while (onePass(func) && func.isNormal()) ;
     }
 }

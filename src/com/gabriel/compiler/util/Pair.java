@@ -10,7 +10,6 @@ public class Pair<U, V> {
     }
 
     public boolean equals(Object obj) {
-        System.out.println("AAA");
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Pair<?,?> p = (Pair<?,?>) obj;

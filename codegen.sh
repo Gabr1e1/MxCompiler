@@ -4,4 +4,7 @@
 # if you would like to print some debug information, please go to stderr.
 set -e
 cd "$(dirname "$0")"
+cat > code.mx
 java -cp ./lib/antlr-4.8-complete.jar:./bin com.gabriel.compiler.Main code.mx
+llc-9 --march=riscv32 -mattr=+m ./testcases/mycode_opt.ll -o code.s
+# cat ./code.s

@@ -67,6 +67,7 @@ public class Value {
     }
 
     public void replaceAllUsesWith(Value other) {
+        if (this == other) return;
         for (var u : user.user) {
             var index = u.findOperand(this);
             u.operands.set(index, other);

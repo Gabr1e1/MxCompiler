@@ -72,6 +72,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
 
         //Delete unnecessary instructions
         for (var d : delList) {
+//            System.out.printf("DELETE: %s\n", d.print());
             assert d.getUser().user.size() == 0;
             d.belong.delInst(d);
         }
@@ -103,7 +104,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
                 for (var frontier : curDF) {
                     if (vis.contains(frontier)) continue;
                     //Insert in frontier block
-                    System.out.printf("Added Phi Noode in %s for %s\n", frontier, defs.get(0).getName());
+                    System.err.printf("Added Phi Node in %s for %s\n", frontier, defs.get(0).getName());
                     new IRInst.PhiInst(defs.get(0).getName(), IRType.dePointer(defs.get(0).getType()), frontier);
                     //Iterative Dominance Frontier
                     blocks.add(frontier);

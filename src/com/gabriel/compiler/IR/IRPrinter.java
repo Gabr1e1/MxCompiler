@@ -13,7 +13,7 @@ public class IRPrinter implements IRVisitor {
         try {
             this.filename = filename;
             this.codeWriter = new FileWriter(filename);
-            System.out.println("Starting IR Code Gen");
+//            System.out.println("Starting IR Code Gen");
         } catch (IOException e) {
             System.out.println("Can't even create a fucking file");
         }

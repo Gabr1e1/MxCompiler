@@ -25,6 +25,11 @@ public class DomTree {
     public DomTree(BasicBlock entryBlock, boolean reverse) {
         cfg = new CFG(entryBlock, reverse);
         rpo = cfg.getRPO();
+
+//        System.out.printf("DomTree: %s\n", entryBlock.getName());
+//        for (var x: rpo) System.out.print(x + " ");
+//        System.out.println();
+
         int cnt = 0;
         for (var b : rpo) {
             corres.put(b, new Node(b));
@@ -42,6 +47,12 @@ public class DomTree {
                 var preds = cfg.getPredecessors(block);
                 boolean first = true;
                 Node newIDom = null;
+
+//                System.out.printf("Preds of %s: ", block);
+//                for (var pred : preds)
+//                    System.out.printf("%s ",pred.getName());
+//                System.out.println();
+
                 for (var pred : preds) {
                     if (corres.get(pred).father == null) continue;
                     if (first) {
@@ -80,6 +91,7 @@ public class DomTree {
     }
 
     public Node getDomNode(BasicBlock block) {
+        corres.putIfAbsent(block, new Node(block));
         return corres.get(block);
     }
 

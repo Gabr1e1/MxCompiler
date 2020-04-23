@@ -23,7 +23,7 @@ import static java.lang.System.exit;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String path = "./code.mx";
+        String path = "./testcases/codegen/t2.mx";
 
         //        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);
@@ -43,7 +43,7 @@ public class Main {
             // Build AST from CST created above
             ASTBuilder builder = new ASTBuilder();
             root = (ASTNode.Program) builder.visit(CST);
-            System.out.println("AST successfully created");
+            System.err.println("AST successfully created");
 
             //Print AST
 //            ASTPrinter printer = new ASTPrinter();
@@ -53,7 +53,7 @@ public class Main {
             SemanticChecker checker = new SemanticChecker();
             checker.visit(root);
         } catch (Error err) {
-            System.out.println(err.toString());
+            System.err.println(err.toString());
             exit(1);
         }
 
@@ -62,7 +62,7 @@ public class Main {
 
         IRPrinter irCodeGen = new IRPrinter("./testcases/mycode.ll");
         irCodeGen.visit((Module) module);
-        System.out.println("IR Successfully generated");
+        System.err.println("IR Successfully generated");
 
         Optimizer optimizer = new Optimizer((Module) module);
         optimizer.addPass(new Mem2Reg(), new CFGSimplifier(), new MSDCE(), new CFGSimplifier());
@@ -70,6 +70,6 @@ public class Main {
 
         IRPrinter irCodeGen2 = new IRPrinter("./testcases/mycode_opt.ll");
         irCodeGen2.visit((Module) module);
-        System.out.println("Optimized IR Successfully generated");
+        System.err.println("Optimized IR Successfully generated");
     }
 }

@@ -397,7 +397,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public Object visit(ASTNode.Block node) {
         for (var stmt : node.statements) {
-            stmt.accept(this);
+            if (stmt != null) stmt.accept(this);
         }
         return null;
     }
@@ -451,7 +451,7 @@ public class IRBuilder implements ASTVisitor {
 
         controlBlock.add(new Pair<>(checkCond, after));
         curBlock = body;
-        node.statement.accept(this);
+        if (node.statement != null) node.statement.accept(this);
         new IRInst.BranchInst(checkCond, curBlock);
         controlBlock.remove(controlBlock.size() - 1);
 
