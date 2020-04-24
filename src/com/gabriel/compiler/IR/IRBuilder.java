@@ -471,12 +471,12 @@ public class IRBuilder implements ASTVisitor {
         new IRInst.BranchInst(cond, taken, notTaken, curBlock);
 
         curBlock = taken;
-        node.if_statement.accept(this);
+        if (node.if_statement != null) node.if_statement.accept(this);
         new IRInst.BranchInst(after, curBlock);
 
         if (notTaken != after) {
             curBlock = notTaken;
-            node.else_statement.accept(this);
+            if (node.else_statement != null) node.else_statement.accept(this);
             new IRInst.BranchInst(after, curBlock);
         }
 

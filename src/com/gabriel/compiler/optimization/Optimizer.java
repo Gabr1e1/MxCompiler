@@ -23,10 +23,17 @@ public class Optimizer {
         optims.addAll(Arrays.asList(pass));
     }
 
+    public void useDefaultPass() {
+        addPass(new Mem2Reg(), new CFGSimplifier(), new MSDCE(), new CFGSimplifier());
+    }
+
     public void optimize() {
         for (var optim : optims) {
             if (optim instanceof runOnFunction) {
-                module.functions.forEach(((runOnFunction) optim)::exec);
+                module.functions.forEach((func) -> {
+                    if (func.isNormal())
+                        ((runOnFunction) optim).exec(func);
+                });
             }
         }
     }
