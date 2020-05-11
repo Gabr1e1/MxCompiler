@@ -36,12 +36,18 @@ public class CFG {
         return ret;
     }
 
+    public void cleanUnreachableBlocks(IRConstant.Function func) {
+        var delList = new ArrayList<BasicBlock>();
+        func.blocks.forEach((block) -> {
+            if (corres.get(block) == null) delList.add(block);
+        });
+        delList.forEach(func::delBlock);
+    }
+
     public CFG(BasicBlock entryBlock, boolean reverse) {
-//        for (var block : entryBlock.belong.blocks) {
-//            if (corres.get(block) == null) build(block);
-//        }
         build(entryBlock.belong.blocks.get(0));
         entry = corres.get(entryBlock);
+        cleanUnreachableBlocks(entryBlock.belong);
         if (reverse) {
             for (var node : corres.values()) {
                 var tmp = node.out;
@@ -54,6 +60,7 @@ public class CFG {
     private Set<BasicBlock> visited;
 
     private void visit(Node cur, List<BasicBlock> rpo) {
+        if (cur == null) return;
         visited.add(cur.block);
         for (var succ : cur.out) {
             if (!visited.contains(succ.block)) visit(succ, rpo);

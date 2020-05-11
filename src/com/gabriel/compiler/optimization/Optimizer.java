@@ -17,6 +17,7 @@ public class Optimizer {
 
     public abstract static class runOnFunction {
         abstract void exec(IRConstant.Function func);
+        abstract String print();
     }
 
     public void addPass(runOnFunction... pass) {
@@ -31,8 +32,10 @@ public class Optimizer {
         for (var optim : optims) {
             if (optim instanceof runOnFunction) {
                 module.functions.forEach((func) -> {
-                    if (func.isNormal())
+                    if (func.isNormal()) {
+                        System.err.printf("Optimize Pass %s for %s\n", ((runOnFunction) optim).print(), func.getName());
                         ((runOnFunction) optim).exec(func);
+                    }
                 });
             }
         }

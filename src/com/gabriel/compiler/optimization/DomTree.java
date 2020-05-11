@@ -37,6 +37,7 @@ public class DomTree {
         }
 
         //Initialize
+        if (corres.get(entryBlock) == null) return;
         corres.get(entryBlock).father = corres.get(entryBlock);
 
         //Iterative Algorithm

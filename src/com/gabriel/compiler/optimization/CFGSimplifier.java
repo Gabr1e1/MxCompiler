@@ -7,6 +7,10 @@ import com.gabriel.compiler.IR.IRInst;
 import static java.lang.System.exit;
 
 public class CFGSimplifier extends Optimizer.runOnFunction {
+    @Override
+    String print() {
+        return "CFGSimplifier";
+    }
 
     private CFG cfg;
 
@@ -87,14 +91,15 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
         if (succ.instructions.size() == 1) {
             var succInst = succ.instructions.get(0);
             if (succInst instanceof IRInst.BranchInst) {
-                block.delInst(last);
-                if (succInst.operands.size() == 1)
-                    new IRInst.BranchInst((BasicBlock) succInst.operands.get(0), block);
-                else
+                for (var op : succInst.operands) {
+                    if (op == succ) return false;
+                }
+                if (succInst.operands.size() == 2) {
+                    block.delInst(last);
                     new IRInst.BranchInst(succInst.operands.get(0), (BasicBlock) succInst.operands.get(1),
                             (BasicBlock) succInst.operands.get(2), block);
-                exit(0);
-                return true;
+                    return true;
+                }
             }
         }
         return false;
@@ -126,7 +131,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
     void exec(IRConstant.Function func) {
         //Iterate till no change
 
-        //noinspection StatementWithEmptyBody
-        while (onePass(func) && func.isNormal()) ;
+        while (func.isNormal())
+            if (!onePass(func)) break;
     }
 }

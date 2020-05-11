@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Set;
 
 public class MSDCE extends Optimizer.runOnFunction {
+    @Override
+    String print() {
+        return "MSDCE";
+    }
 
     private final List<IRInst.Instruction> workList = new ArrayList<>();
     private final Set<IRInst.Instruction> marked = new HashSet<>();

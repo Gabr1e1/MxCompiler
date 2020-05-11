@@ -27,6 +27,7 @@ public class BasicBlock extends Value {
     }
 
     public void delInst(IRInst.Instruction inst) {
+//        System.err.println("DELETED: " + inst.print());
         instructions.remove(inst);
     }
 

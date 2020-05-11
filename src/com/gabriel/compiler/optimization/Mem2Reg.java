@@ -5,6 +5,10 @@ import com.gabriel.compiler.IR.*;
 import java.util.*;
 
 public class Mem2Reg extends Optimizer.runOnFunction {
+    @Override
+    String print() {
+        return "Mem2Reg";
+    }
 
     private List<IRInst.Instruction> getDef(IRInst.Instruction inst) {
         var ret = new ArrayList<IRInst.Instruction>();
