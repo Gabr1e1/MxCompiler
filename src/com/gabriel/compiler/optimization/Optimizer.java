@@ -17,6 +17,7 @@ public class Optimizer {
 
     public abstract static class runOnFunction {
         abstract void exec(IRConstant.Function func);
+
         abstract String print();
     }
 
@@ -25,7 +26,9 @@ public class Optimizer {
     }
 
     public void useDefaultPass() {
-        addPass(new Mem2Reg(), new CFGSimplifier(), new MSDCE(), new CFGSimplifier());
+        addPass(new Mem2Reg());
+        addPass(new CFGSimplifier(), new MSDCE());
+        addPass(new CFGSimplifier());
     }
 
     public void optimize() {

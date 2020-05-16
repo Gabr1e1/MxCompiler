@@ -81,7 +81,7 @@ public class CFG {
         return ret;
     }
 
-    List<BasicBlock> getPredecessors(BasicBlock block) {
+    public List<BasicBlock> getPredecessors(BasicBlock block) {
         var ret = new ArrayList<BasicBlock>();
         if (corres.get(block) != null) {
             corres.get(block).in.forEach((n) -> ret.add(n.block));
@@ -89,7 +89,7 @@ public class CFG {
         return ret;
     }
 
-    List<BasicBlock> getSuccessors(BasicBlock block) {
+    public List<BasicBlock> getSuccessors(BasicBlock block) {
         var ret = new ArrayList<BasicBlock>();
         if (corres.get(block) != null) {
             corres.get(block).out.forEach((n) -> ret.add(n.block));

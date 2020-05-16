@@ -18,6 +18,11 @@ public class User extends Value {
         });
     }
 
+    public void addOperand(List<Value> v) {
+        operands.addAll(v);
+        v.forEach((i) -> i.user.addUser(this));
+    }
+
     public void delOperand(Value... v) {
         (Arrays.asList(v)).forEach((i) -> {
             if (i != null) i.user.delUser(this);
@@ -30,9 +35,10 @@ public class User extends Value {
         operands.remove(kth);
     }
 
-    public void addOperand(List<Value> v) {
-        operands.addAll(v);
-        v.forEach((i) -> i.user.addUser(this));
+    public void replaceOperand(Value oldValue, Value newValue) {
+        if (oldValue != null) oldValue.user.delUser(this);
+        if (newValue != null) newValue.user.addUser(this);
+        operands.set(findOperand(oldValue), newValue);
     }
 
     public Value getOperand(int i) {

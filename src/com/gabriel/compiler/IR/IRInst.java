@@ -1,5 +1,7 @@
 package com.gabriel.compiler.IR;
 
+import com.gabriel.compiler.util.Pair;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +26,12 @@ public class IRInst {
 
         public String print() {
             IRPrinter t = new IRPrinter();
-            return (String)this.accept(t);
+            return (String) this.accept(t);
+        }
+
+        public void delete() {
+            delOperand(operands.toArray(new Value[0]));
+            delOperand(this);
         }
     }
 
@@ -262,6 +269,35 @@ public class IRInst {
             var ret = new ArrayList<BasicBlock>();
             for (int i = 1; i < operands.size(); i += 2) ret.add((BasicBlock) operands.get(i));
             return ret;
+        }
+
+        @Override
+        public Object accept(IRVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
+
+    public static class ParallelCopy extends Instruction {
+        public List<Pair<Value, Value>> pcopy = new ArrayList<>();
+
+        public ParallelCopy(BasicBlock belong) {
+            super("_Parallel_Copy", null, belong);
+        }
+
+        public void addCopy(Value src, Value dest) {
+            pcopy.add(new Pair<>(src, dest));
+        }
+    }
+
+    public static class CopyInst extends Instruction {
+
+        public CopyInst(Value template, BasicBlock belong) {
+            super(template.getOriginalName(), template.type, belong);
+        }
+
+        public void addSrc(Value src) {
+            addOperand(this);
+            addOperand(src);
         }
 
         @Override

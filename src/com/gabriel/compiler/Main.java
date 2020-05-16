@@ -3,6 +3,7 @@ package com.gabriel.compiler;
 import com.gabriel.compiler.IR.IRBuilder;
 import com.gabriel.compiler.IR.IRPrinter;
 import com.gabriel.compiler.IR.Module;
+import com.gabriel.compiler.backend.AsmCodeGenerator;
 import com.gabriel.compiler.error.SyntaxErrorListener;
 import com.gabriel.compiler.frontend.ASTBuilder;
 import com.gabriel.compiler.frontend.ASTNode;
@@ -68,5 +69,10 @@ public class Main {
         IRPrinter irCodeGen2 = new IRPrinter("./testcases/mycode_opt.ll");
         irCodeGen2.visit((Module) module);
         System.err.println("Optimized IR Successfully generated");
+
+        new AsmCodeGenerator((Module) module);
+
+        IRPrinter irCodeGen3 = new IRPrinter("./testcases/mycode_opt_2.ll");
+        irCodeGen3.visit((Module) module);
     }
 }

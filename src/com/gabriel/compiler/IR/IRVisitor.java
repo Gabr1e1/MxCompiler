@@ -24,6 +24,7 @@ public interface IRVisitor {
     Object visit(IRInst.SextInst inst);
     Object visit(IRInst.TruncInst inst);
     Object visit(IRInst.PhiInst inst);
+    Object visit(IRInst.CopyInst inst);
 
     //Constant
     Object visit(IRConstant.ConstInteger constant);

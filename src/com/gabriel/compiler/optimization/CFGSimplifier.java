@@ -4,8 +4,6 @@ import com.gabriel.compiler.IR.BasicBlock;
 import com.gabriel.compiler.IR.IRConstant;
 import com.gabriel.compiler.IR.IRInst;
 
-import static java.lang.System.exit;
-
 public class CFGSimplifier extends Optimizer.runOnFunction {
     @Override
     String print() {
@@ -35,6 +33,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
             //special case: entry block
             if (pred.size() == 0 && cfg.getPredecessors(succ).size() != 1) return false;
             //PhiInst contains already one of pred, merging these two blocks introduces ambiguity
+
             //TODO: Might be able to remove after all
             for (var inst : succ.instructions)
                 if (inst instanceof IRInst.PhiInst)

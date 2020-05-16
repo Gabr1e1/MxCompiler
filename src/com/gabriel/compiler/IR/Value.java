@@ -28,7 +28,7 @@ public class Value {
     }
 
     private boolean noName() {
-        return (this instanceof IRConstant.ConstInteger);
+        return this instanceof IRConstant.ConstInteger;
     }
 
     public Value(String originalName, IRType.Type type) {
@@ -36,6 +36,20 @@ public class Value {
         this.type = type;
         this.name = noName() ? "" : gen(originalName);
         this.user = new Use();
+    }
+
+    public Value(Value other) {
+        this.originalName = other.originalName;
+        this.type = other.type;
+        this.name = noName() ? "" : gen(originalName);
+        this.user = new Use();
+    }
+
+    public void duplicate(Value other) {
+        this.originalName = other.originalName;
+        this.type = other.type;
+        this.name = other.name;
+        this.user = other.user;
     }
 
     public void changeName(String newName) {

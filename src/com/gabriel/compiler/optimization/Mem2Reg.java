@@ -57,7 +57,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
             for (var inst : succ.instructions) {
                 if (!(inst instanceof IRInst.PhiInst)) continue;
                 var tmp = varDef.get(inst.getOriginalName());
-                //TODO: Tmp could only be null because it could be a local variable promoted upward to func_init
+                //tmp could only be null because it could be a local variable promoted upward to func_init
                 if (tmp != null && tmp.size() > 0) ((IRInst.PhiInst) inst).addIncoming(tmp.lastElement(), curBlock);
                 else ((IRInst.PhiInst) inst).addIncoming(null, curBlock);
             }

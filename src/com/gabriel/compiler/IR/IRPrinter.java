@@ -193,6 +193,12 @@ public class IRPrinter implements IRVisitor {
     }
 
     @Override
+    public Object visit(IRInst.CopyInst inst) {
+        String ret = String.format("%s = copy %s", inst.getPrintName(), inst.getOperand(1));
+        return ret;
+    }
+
+    @Override
     public Object visit(IRConstant.ConstInteger constant) {
         return String.format("%s %d", constant.type.accept(this), constant.num);
     }

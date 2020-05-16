@@ -7,7 +7,7 @@ public class BasicBlock extends Value {
     public List<IRInst.Instruction> instructions = new ArrayList<>();
     public IRConstant.Function belong;
 
-    BasicBlock(String name, IRConstant.Function function) {
+    public BasicBlock(String name, IRConstant.Function function) {
         super(name, new IRType.LabelType());
         this.belong = function;
         function.addBlock(this);
@@ -28,6 +28,7 @@ public class BasicBlock extends Value {
 
     public void delInst(IRInst.Instruction inst) {
 //        System.err.println("DELETED: " + inst.print());
+        inst.delete();
         instructions.remove(inst);
     }
 
@@ -36,6 +37,25 @@ public class BasicBlock extends Value {
             if (IRInst.isTerminator(inst)) return true;
         }
         return false;
+    }
+
+    public boolean hasPhiInst() {
+        for (var inst : instructions) {
+            if (inst instanceof IRInst.PhiInst) return true;
+        }
+        return false;
+    }
+
+    public void reorder() {
+        //Put terminator at the end
+        for (int i = 0; i < instructions.size(); i++) {
+            var inst = instructions.get(i);
+            if (IRInst.isTerminator(inst) && i != instructions.size() - 1) {
+                instructions.remove(i);
+                instructions.add(inst);
+                break;
+            }
+        }
     }
 
     public List<BasicBlock> getSuccessors() {
@@ -64,5 +84,35 @@ public class BasicBlock extends Value {
         }
         hoistList.forEach(this::delInst);
         hoistList.forEach(this::addInstToFront);
+    }
+
+    public void redirectJump(BasicBlock oldTarget, BasicBlock newTarget) {
+        if (oldTarget == null) {
+            new IRInst.BranchInst(newTarget, this);
+            return;
+        }
+
+        for (var inst : instructions) {
+            if (!IRInst.isTerminator(inst)) continue;
+            assert inst instanceof IRInst.BranchInst;
+            inst.replaceOperand(oldTarget, newTarget);
+            break;
+        }
+    }
+
+    public void delAllPhiInst() {
+        for (var iter = instructions.iterator(); iter.hasNext(); ) {
+            var inst = iter.next();
+            if (inst instanceof IRInst.PhiInst) {
+                //Stupid Java only supports this method of removal?
+                inst.delete();
+                iter.remove();
+            }
+        }
+    }
+
+    public IRInst.Instruction getParallelCopy() {
+        return instructions.stream().filter(inst -> inst instanceof IRInst.ParallelCopy)
+                .findFirst().orElse(null);
     }
 }
