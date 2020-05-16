@@ -9,7 +9,6 @@ import com.gabriel.compiler.util.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class SSADestructor {
@@ -39,12 +38,9 @@ public class SSADestructor {
                 for (int i = 0; i < inst.operands.size(); i += 2) {
                     var v = inst.operands.get(i);
                     var b = (BasicBlock) inst.operands.get(i + 1);
-//                    var newV = new Value(v);
-                    var newV = new IRInst.CopyInst(v, b);
+                    var newV = new Value(v);
                     pc.get(b).addCopy(v, newV);
                     inst.replaceOperand(v, newV);
-                    //Shouldn't add copy inst right now
-                    b.delInst(newV);
                 }
             }
         }
@@ -103,7 +99,8 @@ public class SSADestructor {
         //Coalesce all variables in the same phi web, using the root as the representative
         for (int i = 0; i < father.length; i++) {
             if (father[i] == i) continue;
-            index2value.get(i).replaceAllUsesWith(index2value.get(father[i]));
+//            System.err.printf("Replace %s with %s\n", index2value.get(i), index2value.get(findParent(i)));
+            index2value.get(i).replaceAllUsesWith(index2value.get(findParent(i)));
         }
 
         //Delete all PhiInst
@@ -115,7 +112,6 @@ public class SSADestructor {
         if (block.getParallelCopy() == null) return;
 
         var pcopy = ((IRInst.ParallelCopy) block.getParallelCopy()).pcopy;
-        List<IRInst.CopyInst> seq = new ArrayList<>();
 
         Map<Value, Integer> outDeg;
         while (pcopy.size() != 0) {
@@ -128,9 +124,8 @@ public class SSADestructor {
             boolean flg = false;
             for (var copy : pcopy) {
                 if (!outDeg.containsKey(copy.second)) {
-                    assert copy.second instanceof IRInst.CopyInst;
-                    ((IRInst.CopyInst) copy.second).addSrc(copy.first);
-                    seq.add((IRInst.CopyInst) copy.second);
+                    var c = new IRInst.CopyInst(copy.second, block);
+                    c.add(copy.first, copy.second);
                     pcopy.remove(copy);
                     flg = true;
                     break;
@@ -141,12 +136,11 @@ public class SSADestructor {
             //Only constituted of cycles
             var copy = pcopy.get(0);
             var c = new IRInst.CopyInst(copy.first, block);
-            c.addSrc(copy.first);
+            c.add(copy.first, copy.second);
             pcopy.set(0, new Pair<>(c, copy.second));
         }
 
         block.delInst(block.getParallelCopy());
-        seq.forEach(block::addInst);
     }
 
     public void exec(IRConstant.Function func) {

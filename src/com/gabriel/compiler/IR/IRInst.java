@@ -295,8 +295,8 @@ public class IRInst {
             super(template.getOriginalName(), template.type, belong);
         }
 
-        public void addSrc(Value src) {
-            addOperand(this);
+        public void add(Value src, Value dest) {
+            addOperand(dest);
             addOperand(src);
         }
 

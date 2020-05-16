@@ -194,7 +194,7 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.CopyInst inst) {
-        String ret = String.format("%s = copy %s", inst.getPrintName(), inst.getOperand(1));
+        String ret = String.format("%s = copy %s", inst.getOperand(0).getPrintName(), inst.getOperand(1));
         return ret;
     }
 
