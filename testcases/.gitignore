@@ -345,3 +345,6 @@ DerivedData/
 /*.gcno
 ## Important!!
 ConfigDeploy.py
+/code.ll
+/code.s
+/mycode_opt_2.ll

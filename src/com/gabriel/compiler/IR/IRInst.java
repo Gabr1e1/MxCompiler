@@ -93,6 +93,12 @@ public class IRInst {
                 Map.entry("<<", "shl"), Map.entry(">>", "ashr"),
                 Map.entry("&", "and"), Map.entry("|", "or"), Map.entry("^", "xor"),
                 Map.entry("&&", "and"), Map.entry("||", "or"));
+        private static Map<String, String> AsmMap = Map.ofEntries(Map.entry("+", "add"), Map.entry("-", "sub"),
+                Map.entry("*", "mul"), Map.entry("/", "div"), Map.entry("%", "rem"),
+                Map.entry("<<", "sll"), Map.entry(">>", "sra"),
+                Map.entry("&", "and"), Map.entry("|", "or"), Map.entry("^", "xor"),
+                Map.entry("&&", "and"), Map.entry("||", "or"));
+
         String op;
 
         BinaryOpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
@@ -103,6 +109,10 @@ public class IRInst {
 
         String getCorresOp() {
             return OpMap.get(op);
+        }
+
+        public String getCorresAsmOp() {
+            return AsmMap.get(op);
         }
 
         @Override
@@ -126,7 +136,7 @@ public class IRInst {
     public static class CmpInst extends Instruction {
         static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
                 "==", "eq", "!=", "ne");
-        String op;
+        public String op;
 
         CmpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
             super("T", new IRType.IntegerType(1), belong);
@@ -136,6 +146,10 @@ public class IRInst {
 
         String getCorresOp() {
             return OpMap.get(op);
+        }
+
+        public Pair<String, Boolean> getCorresAsmOp() {
+            if (op.equals("<") || op.equals(">") || op.equals("!="))
         }
 
         @Override

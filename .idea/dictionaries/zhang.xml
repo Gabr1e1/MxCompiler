@@ -18,7 +18,9 @@
       <w>preds</w>
       <w>sdiv</w>
       <w>sema</w>
+      <w>seqz</w>
       <w>sext</w>
+      <w>snez</w>
       <w>srem</w>
       <w>succ</w>
       <w>testcases</w>

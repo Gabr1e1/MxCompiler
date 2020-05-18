@@ -11,7 +11,7 @@ abstract class Constant extends User {
 
 public class IRConstant {
     public static class ConstInteger extends Constant {
-        int num;
+        public int num;
 
         public ConstInteger(int num) {
             super("const", new IRType.IntegerType("int"));

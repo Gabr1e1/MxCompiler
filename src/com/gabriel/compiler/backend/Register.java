@@ -1,5 +1,7 @@
 package com.gabriel.compiler.backend;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Register {
@@ -25,17 +27,27 @@ public class Register {
         static Map<String, Integer> callerSave = Map.of("ra", 1);
         static Map<String, Integer> calleeSave = Map.of("s0", 8, "s1", 9);
 
+        static Map<String, Machine> regs = new HashMap<>();
+
         static void init() {
             /* MUST CALL BEFORE INSTANTIATION */
             for (int i = 0; i < 3; i++) callerSave.put("t" + i, 5 + i);
             for (int i = 0; i < 8; i++) calleeSave.put("a" + i, 10 + i);
             for (int i = 2; i <= 11; i++) calleeSave.put("s" + i, 16 + i);
             for (int i = 3; i <= 6; i++) callerSave.put("t" + i, 25 + i);
+
+            Arrays.asList(specialReg, calleeSave, callerSave).forEach(
+                    l -> l.forEach(
+                            (s, i) -> regs.put(s, new Machine(s))));
+        }
+
+        static Machine get(String name) {
+            return regs.get(name);
         }
 
         String name;
 
-        private int find(String name) {
+        public int find(String name) {
             if (specialReg.containsKey(name)) return specialReg.get(name);
             if (callerSave.containsKey(name)) return callerSave.get(name);
             if (calleeSave.containsKey(name)) return calleeSave.get(name);
