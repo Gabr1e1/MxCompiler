@@ -3,11 +3,13 @@
     <words>
       <w>alloca</w>
       <w>allocas</w>
+      <w>asciz</w>
       <w>ashr</w>
       <w>bitcast</w>
       <w>corres</w>
       <w>funct</w>
       <w>getelementptr</w>
+      <w>globl</w>
       <w>kths</w>
       <w>msdce</w>
       <w>mycode</w>

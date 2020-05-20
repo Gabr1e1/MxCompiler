@@ -47,7 +47,7 @@ public class IRConstant {
 
     public static class ConstString extends Constant {
         IRType.Type type;
-        String str;
+        public String str;
 
         ConstString(String str, IRType.Type type) {
             super(".conststr", new IRType.PointerType(type));
@@ -160,7 +160,11 @@ public class IRConstant {
             blocks.remove(block);
         }
 
-        Value getParam(int i) {
+        public int getParamNum() {
+            return ((IRType.FunctionType) type).params.size();
+        }
+
+        public Value getParam(int i) {
             return ((IRType.FunctionType) type).params.get(i);
         }
 

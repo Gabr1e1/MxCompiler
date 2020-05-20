@@ -135,6 +135,16 @@ public class IRType {
         void addConstructor(IRConstant.Function f) {
             constructor = f;
         }
+
+        public int getOffset(int kth) {
+            int ret = 0;
+            for (int i = 0; i < kth - 1; i++) {
+                var t = members.get(i);
+                ret += (t.bitLen - (ret % t.bitLen)) % t.bitLen;
+                ret += t.bitLen;
+            }
+            return ret;
+        }
     }
 
     public static class PointerType extends Type {

@@ -42,30 +42,63 @@ public class InstSelection implements IRVisitor {
 
     @Override
     public Object visit(Module module) {
+        var program = new AsmStruct.Program();
         init();
         for (var gv : module.globalVariables) {
             gv.accept(this);
         }
         for (var func : module.functions) {
-
-            func.accept(this);
+            program.addFunc((AsmStruct.Function) func.accept(this));
         }
-        return null;
+        return program;
     }
 
     @Override
     public Object visit(IRConstant.GlobalVariable globalVariable) {
-        return null;
+        return new AsmStruct.GlobalVariable(globalVariable.getName(),
+                globalVariable.getType().bitLen);
+    }
+
+
+    @Override
+    public Object visit(IRConstant.ConstString constant) {
+        return new AsmStruct.GlobalVariable(constant.getName(), constant.getType().bitLen, constant.str);
     }
 
     @Override
     public Object visit(IRConstant.Function function) {
-        //TODO: Save all callee-save registers
-
         curFunc = getFunction(function);
-        for (var block : function.blocks) {
-            curFunc.addBlock((AsmStruct.Block) block.accept(this));
+        curBlock = getBlock(function.blocks.get(0));
+
+        //Placeholder for sp
+        new AsmInst.ComputeRegImm("sub", Register.Machine.get("sp"), curFunc.stack.size, Register.Machine.get("sp"), curBlock);
+
+        //Save callee-save registers
+        for (var reg : Register.Machine.callerSave.keySet()) {
+            Register.save(reg, curBlock);
         }
+
+        //Read args
+        for (int i = 0; i < function.getParamNum(); i++) {
+            var cur = function.getParam(i);
+            if (i < 8) {
+                new AsmInst.mv(getRegister(cur), Register.Machine.get("a" + i), curBlock);
+            } else {
+                new AsmInst.load(Register.Machine.get("sp"), (i - 8) * 4, 32, getRegister(cur), curBlock);
+            }
+        }
+        for (int i = 0; i < function.blocks.size(); i++) {
+            var block = function.blocks.get(i);
+            var cur = (AsmStruct.Block) block.accept(this);
+            if (i == 0) cur.setFirst();
+            curFunc.addBlock(cur);
+        }
+
+        //Restore callee-save registers
+        for (var reg : Register.Machine.callerSave.keySet()) {
+            new AsmInst.mv(Register.Machine.get(reg), Register.callerTmpSave.get(reg), curBlock);
+        }
+
         return curFunc;
     }
 
@@ -91,15 +124,29 @@ public class InstSelection implements IRVisitor {
 
     @Override
     public Object visit(IRInst.BranchInst inst) {
+        if (inst.isConditional()) {
+            new AsmInst.jump(getBlock((BasicBlock) inst.getOperand(0)), curBlock);
+        } else {
+            new AsmInst.branch("blt", Register.Machine.get("zero"),
+                    getRegister(inst.getOperand(0)), getBlock((BasicBlock) inst.getOperand(1)), curBlock);
+            new AsmInst.jump(getBlock((BasicBlock) inst.getOperand(2)), curBlock);
+        }
         return null;
     }
 
     @Override
     public Object visit(IRInst.ReturnInst inst) {
-        return null;
+        for (var reg : Register.Machine.calleeSave.keySet()) {
+            new AsmInst.mv(Register.Machine.get(reg), Register.callerTmpSave.get(reg), curBlock);
+        }
+        new AsmInst.ComputeRegImm("add", Register.Machine.get("sp"),
+                curFunc.stack.size, Register.Machine.get("sp"), curBlock);
+        if (!(inst.getType() instanceof IRType.VoidType))
+            new AsmInst.mv(Register.Machine.get("a0"), getRegister(inst.getOperand(0)), curBlock);
+        return new AsmInst.ret(curBlock);
     }
 
-    //TODO: PEEPHOLE to eliminate unnecessary register holding a constant value
+    //TODO: Eliminate unnecessary register holding a constant value
 
     @Override
     public Object visit(IRInst.BinaryOpInst inst) {
@@ -108,6 +155,8 @@ public class InstSelection implements IRVisitor {
         var op = inst.getCorresAsmOp();
         return new AsmInst.ComputeRegReg(op, lhs, rhs, getRegister(inst), curBlock);
     }
+
+    //TODO: Eliminate cmp inst whose result determines a branch
 
     @Override
     public Object visit(IRInst.CmpInst inst) {
@@ -137,13 +186,39 @@ public class InstSelection implements IRVisitor {
 
     @Override
     public Object visit(IRInst.GEPInst inst) {
-        return null;
+        var base = inst.getOperand(0);
+        var offset = new Register.Virtual();
+        if (inst.valueType instanceof IRType.ClassType) {
+            assert inst.zeroPad;
+            loadImm(offset, ((IRType.ClassType) inst.valueType).getOffset(((IRConstant.ConstInteger) inst.getOperand(2)).num));
+        } else {
+            assert inst.valueType instanceof IRType.ArrayType && !inst.zeroPad;
+            loadImm(offset, ((IRConstant.ConstInteger) inst.getOperand(1)).num);
+            new AsmInst.ComputeRegImm("mul", offset, base.getType().bitLen, offset, curBlock);
+        }
+        return new AsmInst.ComputeRegReg("add", getRegister(base), offset, getRegister(inst), curBlock);
     }
 
     @Override
     public Object visit(IRInst.CallInst inst) {
-        
-        return null;
+        var func = getFunction((IRConstant.Function) inst.operands.get(0));
+        for (int i = inst.operands.size() - 1; i > 0; i--) {
+            if (i <= 8) {
+                new AsmInst.mv(Register.Machine.get("a" + (i - 1)), getRegister(inst.operands.get(i)), curBlock);
+            } else {
+//                new AsmInst.stackPush(4, curBlock);
+                func.pushStack(4);
+                new AsmInst.store(getRegister(inst.operands.get(i)), Register.Machine.get("sp"), (i - 9) * 4,
+                        inst.operands.get(i).getType().bitLen, curBlock);
+            }
+        }
+        new AsmInst.call(func, curBlock);
+
+        //Get Return Value
+        var ret = getRegister(inst);
+        if (inst.getType() instanceof IRType.VoidType) return ret;
+        new AsmInst.mv(ret, Register.Machine.get("a0"), curBlock);
+        return ret;
     }
 
     @Override
@@ -194,13 +269,9 @@ public class InstSelection implements IRVisitor {
                 getRegister(inst.operands.get(1)), curBlock);
     }
 
+    /* !!! The following are meaningless... !!! */
     @Override
     public Object visit(IRConstant.ConstInteger constant) {
-        return null;
-    }
-
-    @Override
-    public Object visit(IRConstant.ConstString constant) {
         return null;
     }
 

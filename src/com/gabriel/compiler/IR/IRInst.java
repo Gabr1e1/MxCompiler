@@ -73,6 +73,10 @@ public class IRInst {
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
         }
+
+        public boolean isConditional() {
+            return operands.size() > 1;
+        }
     }
 
     public static class ReturnInst extends Instruction {
@@ -148,10 +152,6 @@ public class IRInst {
             return OpMap.get(op);
         }
 
-        public Pair<String, Boolean> getCorresAsmOp() {
-            if (op.equals("<") || op.equals(">") || op.equals("!="))
-        }
-
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
@@ -171,13 +171,15 @@ public class IRInst {
     }
 
     public static class GEPInst extends Instruction {
-        IRType.Type valueType;
+        public IRType.Type valueType;
+        public boolean zeroPad;
 
         GEPInst(IRType.Type valueType, Value base, BasicBlock belong) {
             super("T", new IRType.PointerType(valueType), belong);
             addOperand(base);
             this.valueType = valueType;
             operands.add(new IRConstant.ConstInteger(0));
+            this.zeroPad = true;
         }
 
         GEPInst(IRType.Type valueType, Value base, BasicBlock belong, boolean zeroPad) {
@@ -185,6 +187,7 @@ public class IRInst {
             addOperand(base);
             this.valueType = valueType;
             if (zeroPad) operands.add(new IRConstant.ConstInteger(0));
+            this.zeroPad = zeroPad;
         }
 
         @Override

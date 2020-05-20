@@ -65,4 +65,12 @@ public class Register {
             return name;
         }
     }
+
+    static Map<String, Virtual> callerTmpSave = new HashMap<>();
+
+    static void save(String reg, AsmStruct.Block curBlock) {
+        var t = new Virtual();
+        new AsmInst.mv(t, Machine.get(reg), curBlock);
+        callerTmpSave.put(reg, t);
+    }
 }
