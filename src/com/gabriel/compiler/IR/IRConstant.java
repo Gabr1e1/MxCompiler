@@ -146,6 +146,7 @@ public class IRConstant {
 
         //TODO: abnormal functions could also be optimized
         public boolean isNormal() {
+            if (blocks.size() == 1) return true;
             if (!blocks.get(0).getOriginalName().equals("func_init")) return false;
             if (!blocks.get(blocks.size() - 1).getOriginalName().equals("retBlock")) return false;
             return true;

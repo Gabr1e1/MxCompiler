@@ -152,7 +152,7 @@ public class IRType {
 
         PointerType(Type pointer) {
             this.pointer = pointer;
-            this.bitLen = 64;
+            this.bitLen = 32;
         }
 
         Type getBase() {

@@ -23,9 +23,9 @@ public class Register {
     }
 
     static class Machine extends base {
-        static Map<String, Integer> specialReg = Map.of("zero", 0, "sp", 2, "gp", 3, "tp", 4);
-        static Map<String, Integer> callerSave = Map.of("ra", 1);
-        static Map<String, Integer> calleeSave = Map.of("s0", 8, "s1", 9);
+        static Map<String, Integer> specialReg = new HashMap<>(Map.of("zero", 0, "sp", 2, "gp", 3, "tp", 4));
+        static Map<String, Integer> callerSave = new HashMap<>(Map.of("ra", 1));
+        static Map<String, Integer> calleeSave = new HashMap<>(Map.of("s0", 8, "s1", 9));
 
         static Map<String, Machine> regs = new HashMap<>();
 
@@ -66,11 +66,11 @@ public class Register {
         }
     }
 
-    static Map<String, Virtual> callerTmpSave = new HashMap<>();
+    static Map<String, Virtual> calleeTmpSave = new HashMap<>();
 
     static void save(String reg, AsmStruct.Block curBlock) {
         var t = new Virtual();
         new AsmInst.mv(t, Machine.get(reg), curBlock);
-        callerTmpSave.put(reg, t);
+        calleeTmpSave.put(reg, t);
     }
 }

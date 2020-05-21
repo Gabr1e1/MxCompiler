@@ -42,22 +42,23 @@ public class AsmPrinter implements AsmVisitor {
         for (var func : program.functions) {
             func.accept(this);
         }
-        writeCode(".section .sdata,\"aw\",@progbits", true);
+        writeCode(".section .sdata,\"aw\",@progbits\n", true);
         for (var gv : program.globalVariables) {
             gv.accept(this);
         }
+        finish();
         return null;
     }
 
     @Override
     public Object visit(AsmStruct.GlobalVariable globalVariable) {
         writeCode(String.format(".globl %s", globalVariable.name), true);
-        if (globalVariable.init == null) writeCode(".p2align" + globalVariable.getAlign(), true);
-        writeCode(globalVariable.name + ":", true);
+        if (globalVariable.init == null) writeCode(".p2align " + globalVariable.getAlign(), true);
+        writeCode(globalVariable.name + ":", false);
         if (globalVariable.init == null) { //Init to 0
-            writeCode(".word 0", true);
+            writeCode(".word " + globalVariable.initNum, true);
         } else {
-            writeCode(".asciz " + globalVariable.init, true);
+            writeCode(String.format(".asciz \"%s\"", globalVariable.init), true);
         }
         writeCode("", false);
         return null;
@@ -65,9 +66,10 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmStruct.Function func) {
-        writeCode(".globl:" + func.label, true);
+        writeCode(".globl " + func.label, true);
         writeCode(".p2align	2", true);
         writeCode(".type " + func.label + ", @function", true);
+        writeCode(func.label + ":", false);
         for (var block : func.blocks) {
             block.accept(this);
             writeCode("", false);
@@ -86,6 +88,8 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.Instruction inst) {
+        System.err.println("Missing overrode method for " + inst);
+        assert false;
         return null;
     }
 
@@ -96,7 +100,11 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.ComputeRegImm inst) {
-        return String.format("%s %s, %s, %d", inst.opcode, inst.rd, inst.rs1, inst.imm);
+        if (inst.opcode.equals("subi")) {
+            inst.opcode = "addi";
+            inst.imm = -(Integer) inst.imm;
+        }
+        return String.format("%s %s, %s, %s", inst.opcode, inst.rd, inst.rs1, inst.imm);
     }
 
     @Override
@@ -106,18 +114,28 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.li inst) {
-        return String.format("li %s, %d", inst.rd, inst.imm);
+        return String.format("li %s, %s", inst.rd, inst.imm);
     }
 
     @Override
     public Object visit(AsmInst.load inst) {
-        return String.format("%s %s, (%d)%s", inst.opcode, inst.rd, inst.imm, inst.rs1);
+        return String.format("%s %s, %s(%s)", inst.opcode, inst.rd, inst.imm, inst.rs1);
     }
+
+//    @Override
+//    public Object visit(AsmInst.load_global inst) {
+//        return String.format("%s %s, %s", inst.opcode, inst.rd, inst.symbol);
+//    }
 
     @Override
     public Object visit(AsmInst.store inst) {
-        return String.format("%s %s, (%d)%s", inst.opcode, inst.rs2, inst.imm, inst.rs1);
+        return String.format("%s %s, %s(%s)", inst.opcode, inst.rs2, inst.imm, inst.rs1);
     }
+
+//    @Override
+//    public Object visit(AsmInst.store_global inst) {
+//        return String.format("%s %s, %s", inst.opcode, inst.rd, inst.symbol);
+//    }
 
     @Override
     public Object visit(AsmInst.call inst) {
@@ -137,5 +155,15 @@ public class AsmPrinter implements AsmVisitor {
     @Override
     public Object visit(AsmInst.branch inst) {
         return String.format("%s %s, %s, %s", inst.opcode, inst.rs1, inst.rs2, inst.target);
+    }
+
+    @Override
+    public Object visit(AsmInst.lui inst) {
+        return String.format("lui %s %s", inst.rd, inst.imm);
+    }
+
+    @Override
+    public Object visit(AsmInst.la inst) {
+        return String.format("la %s, %s", inst.rd, inst.name);
     }
 }

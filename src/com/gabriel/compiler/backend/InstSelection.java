@@ -11,6 +11,7 @@ public class InstSelection implements IRVisitor {
     private final Map<IRConstant.Function, AsmStruct.Function> funcMap = new HashMap<>();
     private final Map<BasicBlock, AsmStruct.Block> blockMap = new HashMap<>();
     private final Map<Value, Register.base> regMap = new HashMap<>();
+    private final Map<Value, Register.base> globalMap = new HashMap<>();
     private AsmStruct.Function curFunc = null;
     private AsmStruct.Block curBlock = null;
 
@@ -29,6 +30,7 @@ public class InstSelection implements IRVisitor {
         regMap.putIfAbsent(v, new Register.Virtual());
         var ret = regMap.get(v);
         if (v instanceof IRConstant.ConstInteger) loadImm(ret, ((IRConstant.ConstInteger) v).num);
+        if (v instanceof IRConstant.GlobalVariable) new AsmInst.la(ret, v.getName(), curBlock);
         return ret;
     }
 
@@ -45,7 +47,7 @@ public class InstSelection implements IRVisitor {
         var program = new AsmStruct.Program();
         init();
         for (var gv : module.globalVariables) {
-            gv.accept(this);
+            program.addGlobalVariable((AsmStruct.GlobalVariable) gv.accept(this));
         }
         for (var func : module.functions) {
             program.addFunc((AsmStruct.Function) func.accept(this));
@@ -53,10 +55,15 @@ public class InstSelection implements IRVisitor {
         return program;
     }
 
+    //TODO: GET RID OF GLOBAL_INIT
+
     @Override
     public Object visit(IRConstant.GlobalVariable globalVariable) {
+        var init = globalVariable.getOperand(0);
+        var num = 0;
+        if (init instanceof IRConstant.ConstInteger) num = ((IRConstant.ConstInteger) init).num;
         return new AsmStruct.GlobalVariable(globalVariable.getName(),
-                globalVariable.getType().bitLen);
+                globalVariable.getType().bitLen, num);
     }
 
 
@@ -71,10 +78,10 @@ public class InstSelection implements IRVisitor {
         curBlock = getBlock(function.blocks.get(0));
 
         //Placeholder for sp
-        new AsmInst.ComputeRegImm("sub", Register.Machine.get("sp"), curFunc.stack.size, Register.Machine.get("sp"), curBlock);
+        var sp = new AsmInst.ComputeRegImm("sub", Register.Machine.get("sp"), curFunc.stack.size, Register.Machine.get("sp"), curBlock);
 
         //Save callee-save registers
-        for (var reg : Register.Machine.callerSave.keySet()) {
+        for (var reg : Register.Machine.calleeSave.keySet()) {
             Register.save(reg, curBlock);
         }
 
@@ -95,9 +102,11 @@ public class InstSelection implements IRVisitor {
         }
 
         //Restore callee-save registers
-        for (var reg : Register.Machine.callerSave.keySet()) {
-            new AsmInst.mv(Register.Machine.get(reg), Register.callerTmpSave.get(reg), curBlock);
+        for (var reg : Register.Machine.calleeSave.keySet()) {
+            new AsmInst.mv(Register.Machine.get(reg), Register.calleeTmpSave.get(reg), curBlock);
         }
+        new AsmInst.ret(curBlock);
+        sp.imm = curFunc.stack.size;
 
         return curFunc;
     }
@@ -124,7 +133,7 @@ public class InstSelection implements IRVisitor {
 
     @Override
     public Object visit(IRInst.BranchInst inst) {
-        if (inst.isConditional()) {
+        if (!inst.isConditional()) {
             new AsmInst.jump(getBlock((BasicBlock) inst.getOperand(0)), curBlock);
         } else {
             new AsmInst.branch("blt", Register.Machine.get("zero"),
@@ -137,13 +146,13 @@ public class InstSelection implements IRVisitor {
     @Override
     public Object visit(IRInst.ReturnInst inst) {
         for (var reg : Register.Machine.calleeSave.keySet()) {
-            new AsmInst.mv(Register.Machine.get(reg), Register.callerTmpSave.get(reg), curBlock);
+            new AsmInst.mv(Register.Machine.get(reg), Register.calleeTmpSave.get(reg), curBlock);
         }
         new AsmInst.ComputeRegImm("add", Register.Machine.get("sp"),
                 curFunc.stack.size, Register.Machine.get("sp"), curBlock);
         if (!(inst.getType() instanceof IRType.VoidType))
             new AsmInst.mv(Register.Machine.get("a0"), getRegister(inst.getOperand(0)), curBlock);
-        return new AsmInst.ret(curBlock);
+        return null;
     }
 
     //TODO: Eliminate unnecessary register holding a constant value
@@ -187,14 +196,18 @@ public class InstSelection implements IRVisitor {
     @Override
     public Object visit(IRInst.GEPInst inst) {
         var base = inst.getOperand(0);
+        if (base instanceof IRConstant.ConstString || base instanceof IRConstant.GlobalVariable) {
+            return new AsmInst.la(getRegister(inst), base.getName(), curBlock);
+        }
+
         var offset = new Register.Virtual();
-        if (inst.valueType instanceof IRType.ClassType) {
+        if (inst.getType() instanceof IRType.ClassType) {
             assert inst.zeroPad;
             loadImm(offset, ((IRType.ClassType) inst.valueType).getOffset(((IRConstant.ConstInteger) inst.getOperand(2)).num));
         } else {
-            assert inst.valueType instanceof IRType.ArrayType && !inst.zeroPad;
-            loadImm(offset, ((IRConstant.ConstInteger) inst.getOperand(1)).num);
-            new AsmInst.ComputeRegImm("mul", offset, base.getType().bitLen, offset, curBlock);
+            assert inst.getType() instanceof IRType.PointerType;
+            loadImm(offset, ((IRConstant.ConstInteger) inst.getOperand(inst.zeroPad ? 2 : 1)).num);
+            new AsmInst.ComputeRegImm("mul", offset, base.getType().bitLen / 8, offset, curBlock);
         }
         return new AsmInst.ComputeRegReg("add", getRegister(base), offset, getRegister(inst), curBlock);
     }
@@ -207,7 +220,7 @@ public class InstSelection implements IRVisitor {
                 new AsmInst.mv(Register.Machine.get("a" + (i - 1)), getRegister(inst.operands.get(i)), curBlock);
             } else {
 //                new AsmInst.stackPush(4, curBlock);
-                func.pushStack(4);
+                curFunc.pushStack(4);
                 new AsmInst.store(getRegister(inst.operands.get(i)), Register.Machine.get("sp"), (i - 9) * 4,
                         inst.operands.get(i).getType().bitLen, curBlock);
             }
@@ -221,19 +234,38 @@ public class InstSelection implements IRVisitor {
         return ret;
     }
 
+    private AsmInst.Instruction loadGlobal(Register.base rd, int bitLen, IRConstant.GlobalVariable variable) {
+        new AsmInst.lui(rd, "%hi(" + variable.getName() + ")", curBlock);
+        return new AsmInst.load(rd, "%lo(" + variable.getName() + ")", bitLen, rd, curBlock);
+    }
+
+    private AsmInst.Instruction storeGlobal(Register.base src, int bitLen, IRConstant.GlobalVariable variable) {
+        var rt = new Register.Virtual();
+        new AsmInst.lui(rt, "%hi(" + variable.getName() + ")", curBlock);
+        return new AsmInst.store(src, rt, "%lo(" + variable.getName() + ")", bitLen, curBlock);
+    }
+
     @Override
     public Object visit(IRInst.LoadInst inst) {
         var ptr = inst.operands.get(0);
-        var base = getRegister(ptr);
-        return new AsmInst.load(base, 0, ptr.getType().bitLen, getRegister(inst), curBlock);
+        if (ptr instanceof IRConstant.GlobalVariable) {
+            return loadGlobal(getRegister(inst), inst.getType().bitLen, (IRConstant.GlobalVariable) ptr);
+        } else {
+            var base = getRegister(ptr);
+            return new AsmInst.load(base, 0, inst.getType().bitLen, getRegister(inst), curBlock);
+        }
     }
 
     @Override
     public Object visit(IRInst.StoreInst inst) {
         var dest = inst.operands.get(0);
         var src = inst.operands.get(1);
-        return new AsmInst.store(getRegister(src), getRegister(dest),
-                0, dest.getType().bitLen, curBlock);
+        if (dest instanceof IRConstant.GlobalVariable) {
+            return storeGlobal(getRegister(src), dest.getType().bitLen, (IRConstant.GlobalVariable) dest);
+        } else {
+            return new AsmInst.store(getRegister(src), getRegister(dest),
+                    0, dest.getType().bitLen, curBlock);
+        }
     }
 
     //Cast, Sext, Trunc is just copy...

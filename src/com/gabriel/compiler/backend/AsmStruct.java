@@ -30,10 +30,12 @@ public class AsmStruct {
         int bitLen;
         String name;
         String init = null;
+        int initNum = 0;
 
-        public GlobalVariable(String name, int bitLen) {
+        public GlobalVariable(String name, int bitLen, int initNum) {
             this.bitLen = bitLen;
             this.name = name;
+            this.initNum = initNum;
         }
 
         public GlobalVariable(String name, int bitLen, String init) {
@@ -43,7 +45,7 @@ public class AsmStruct {
         }
 
         public int getAlign() {
-            return (int) Math.log(bitLen / 8);
+            return (int) (Math.log(bitLen / 8) / Math.log(2));
         }
 
         public Object accept(AsmVisitor visitor) {
@@ -65,7 +67,7 @@ public class AsmStruct {
         }
 
         public void pushStack(int alloc) {
-            stack.size += alloc;
+            this.stack.size += alloc;
         }
 
         @Override

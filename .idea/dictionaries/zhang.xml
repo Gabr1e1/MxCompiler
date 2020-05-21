@@ -18,12 +18,15 @@
       <w>pcopy</w>
       <w>postdominator</w>
       <w>preds</w>
+      <w>progbits</w>
+      <w>sdata</w>
       <w>sdiv</w>
       <w>sema</w>
       <w>seqz</w>
       <w>sext</w>
       <w>snez</w>
       <w>srem</w>
+      <w>subi</w>
       <w>succ</w>
       <w>testcases</w>
       <w>usee</w>

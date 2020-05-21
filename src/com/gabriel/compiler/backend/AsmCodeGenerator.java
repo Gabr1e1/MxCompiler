@@ -9,7 +9,8 @@ public class AsmCodeGenerator {
         module.functions.forEach(ssaDestructor::exec);
         System.err.println("SSA Destructed");
 
-        //TODO: Instruction Selection
+        var program = (AsmStruct.Program) (new InstSelection()).visit(module);
+        (new AsmPrinter("./testcases/mycode.s")).visit(program);
 
         //TODO: Register Allocation
     }

@@ -77,7 +77,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
         //Delete unnecessary instructions
         for (var d : delList) {
 //            System.out.printf("DELETE: %s\n", d.print());
-            assert d.getUser().user.size() == 0;
+            assert d instanceof IRInst.AllocaInst || d.getUser().user.size() == 0;
             d.belong.delInst(d);
         }
     }
