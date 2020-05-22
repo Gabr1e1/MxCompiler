@@ -1,7 +1,9 @@
 package com.gabriel.compiler.backend;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AsmStruct {
 
@@ -70,6 +72,12 @@ public class AsmStruct {
             this.stack.size += alloc;
         }
 
+        public int newVariable() {
+            var ret = stack.size;
+            pushStack(4);
+            return ret;
+        }
+
         @Override
         public String toString() {
             return label;
@@ -83,8 +91,8 @@ public class AsmStruct {
     public static class Block {
         List<AsmInst.Instruction> instructions = new ArrayList<>();
         boolean isFirst = false;
-
         String label;
+        List<AsmStruct.Block> successors = new ArrayList<>();
 
         public Block(String label) {
             this.label = label;
@@ -94,12 +102,37 @@ public class AsmStruct {
             instructions.add(instruction);
         }
 
+        public void moveInst(AsmInst.Instruction inst, int targetIndex) {
+            instructions.remove(inst);
+            instructions.add(targetIndex, inst);
+        }
+
         public boolean isFirst() {
             return isFirst;
         }
 
         public void setFirst() {
             isFirst = true;
+        }
+
+        public void addSuccessor(AsmStruct.Block succ) {
+            successors.add(succ);
+        }
+
+        public List<AsmStruct.Block> getSuccessor() {
+            return this.successors;
+        }
+
+        public List<Register.base> getDef() {
+            Set<Register.base> ret = new HashSet<>();
+            for (var inst : instructions) ret.addAll(inst.getDef());
+            return new ArrayList<>(ret);
+        }
+
+        public List<Register.base> getUse() {
+            Set<Register.base> ret = new HashSet<>();
+            for (var inst : instructions) ret.addAll(inst.getUse());
+            return new ArrayList<>(ret);
         }
 
         @Override

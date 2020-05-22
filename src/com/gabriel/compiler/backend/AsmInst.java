@@ -1,6 +1,8 @@
 package com.gabriel.compiler.backend;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class AsmInst {
 
@@ -9,6 +11,14 @@ public class AsmInst {
         Object imm;    //0 stands for both unneeded and numeric zero
         String opcode;
         AsmStruct.Block belong;
+
+        private void addUse(Register.base r, Instruction inst) {
+            if (r != null) r.addUse(inst);
+        }
+
+        private void addDef(Register.base r, Instruction inst) {
+            if (r != null) r.addDef(inst);
+        }
 
         public Instruction(Register.base rs1, Register.base rs2, Register.base rd,
                            Object imm, String opcode, AsmStruct.Block belong) {
@@ -20,11 +30,28 @@ public class AsmInst {
             this.opcode = opcode;
             this.belong = belong;
             belong.addInst(this);
+
+            addUse(this.rs1, this);
+            addUse(this.rs2, this);
+            addDef(this.rd, this);
         }
 
         public Instruction(AsmStruct.Block belong) {
             this.belong = belong;
             belong.addInst(this);
+        }
+
+        public Set<Register.base> getDef() {
+            Set<Register.base> ret = new HashSet<>();
+            if (this.rd != null) ret.add(this.rd);
+            return ret;
+        }
+
+        public Set<Register.base> getUse() {
+            Set<Register.base> ret = new HashSet<>();
+            if (this.rs1 != null) ret.add(this.rs1);
+            if (this.rs2 != null) ret.add(this.rs2);
+            return ret;
         }
 
         public Object accept(AsmVisitor visitor) {

@@ -12,7 +12,12 @@ public class Pair<U, V> {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        Pair<?,?> p = (Pair<?,?>) obj;
-        return this.first.equals(p.first) && this.second.equals(second);
+        Pair<?, ?> p = (Pair<?, ?>) obj;
+        return this.first.equals(p.first) && this.second.equals(p.second);
+    }
+
+    @Override
+    public int hashCode() {
+        return first.hashCode() ^ second.hashCode();
     }
 }

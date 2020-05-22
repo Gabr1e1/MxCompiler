@@ -115,6 +115,9 @@ public class InstSelection implements IRVisitor {
     public Object visit(BasicBlock block) {
         curBlock = getBlock(block);
         block.instructions.forEach((inst) -> inst.accept(this));
+        for (var succ : block.getSuccessors()) {
+            curBlock.addSuccessor(getBlock(succ));
+        }
         return curBlock;
     }
 

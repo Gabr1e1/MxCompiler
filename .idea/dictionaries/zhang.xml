@@ -11,13 +11,16 @@
       <w>getelementptr</w>
       <w>globl</w>
       <w>kths</w>
+      <w>liveness</w>
       <w>msdce</w>
       <w>mycode</w>
       <w>optim</w>
       <w>optims</w>
       <w>pcopy</w>
       <w>postdominator</w>
+      <w>precolored</w>
       <w>preds</w>
+      <w>prog</w>
       <w>progbits</w>
       <w>sdata</w>
       <w>sdiv</w>
@@ -30,6 +33,8 @@
       <w>succ</w>
       <w>testcases</w>
       <w>usee</w>
+      <w>vregs</w>
+      <w>worklist</w>
     </words>
   </dictionary>
 </component>
