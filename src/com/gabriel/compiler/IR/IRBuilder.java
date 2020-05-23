@@ -254,10 +254,10 @@ public class IRBuilder implements ASTVisitor {
                 var type = IRType.convert(var.type, module);
                 members.add(type);
                 member_name.add(var.id);
-                size += (type.bitLen - (size % type.bitLen)) % type.bitLen;
-                size += type.bitLen;
+                size += (type.getByteNum() - (size % type.getByteNum())) % type.getByteNum();
+                size += type.getByteNum();
             }
-            c.bitLen = size;
+            c.bitLen = size * 8;
             curClass = c;
             work(node.functions, true);
             c.addConstructor(work(node.constructors, true));
@@ -529,6 +529,7 @@ public class IRBuilder implements ASTVisitor {
         IRConstant.ConstString s = constStrings.get(str);
         if (s == null) {
             s = new IRConstant.ConstString(replace2(str), new IRType.ArrayType(IRType.convert("char"), str.length() + 1));
+            s.orig = replace3(replace2(str));
             module.globalVariables.add(s);
         }
         var ret = new IRInst.GEPInst(s.type, s, curBlock, true);
@@ -548,6 +549,13 @@ public class IRBuilder implements ASTVisitor {
         var ret = str.replace("\\", "\\5C");
         ret = ret.replace("\n", "\\0A");
         ret = ret.replace("\"", "\\22");
+        return ret;
+    }
+
+    private String replace3(String str) {
+        var ret = str.replace("\\5C", "\\\\");
+        ret = ret.replace("\\0A", "\\n");
+        ret = ret.replace("\\22", "\\\"");
         return ret;
     }
 

@@ -1,5 +1,6 @@
 package com.gabriel.compiler.backend;
 
+import com.gabriel.compiler.IR.IRPrinter;
 import com.gabriel.compiler.IR.Module;
 
 public class AsmCodeGenerator {
@@ -9,6 +10,10 @@ public class AsmCodeGenerator {
         module.functions.forEach(ssaDestructor::exec);
         System.err.println("SSA Destructed");
 
+        IRPrinter irCodeGen3 = new IRPrinter("./testcases/mycode_opt_2.ll");
+        irCodeGen3.visit(module);
+
+
         //Instruction Selection
         var program = (AsmStruct.Program) (new InstSelection()).visit(module);
         (new AsmPrinter("./testcases/mycode-before.s")).visit(program);
@@ -17,7 +22,7 @@ public class AsmCodeGenerator {
         //Register Allocation
         new RegAllocator(program);
         program.cleanUp();
-        (new AsmPrinter("./testcases/mycode-after.s")).visit(program);
+        (new AsmPrinter("./output.s")).visit(program);
         System.err.println("Register Allocation Done");
     }
 }

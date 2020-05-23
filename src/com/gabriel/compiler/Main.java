@@ -21,7 +21,7 @@ import static java.lang.System.exit;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String path = "./code.mx"; //"./testcases/sema/loop-package/loop-2.mx";
+        String path = "code.mx"; //"./testcases/codegen/t25.mx";
 
         //        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);
@@ -71,8 +71,5 @@ public class Main {
         System.err.println("Optimized IR Successfully generated");
 
         new AsmCodeGenerator((Module) module);
-
-        IRPrinter irCodeGen3 = new IRPrinter("./testcases/mycode_opt_2.ll");
-        irCodeGen3.visit((Module) module);
     }
 }

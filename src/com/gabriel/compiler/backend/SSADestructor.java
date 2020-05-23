@@ -37,6 +37,7 @@ public class SSADestructor {
                 if (!(inst instanceof IRInst.PhiInst)) continue;
                 for (int i = 0; i < inst.operands.size(); i += 2) {
                     var v = inst.operands.get(i);
+                    if (v == null) continue;
                     var b = (BasicBlock) inst.operands.get(i + 1);
                     var newV = new Value(v);
                     pc.get(b).addCopy(v, newV);
@@ -48,11 +49,11 @@ public class SSADestructor {
 
     private int[] father;
 
-    private int findParent(int x) {
-        if (father[x] == x) return x;
+    private int findParent(int u) {
+        if (father[u] == u) return u;
         else {
-            father[x] = findParent(father[x]);
-            return father[x];
+            father[u] = findParent(father[u]);
+            return father[u];
         }
     }
 
@@ -91,6 +92,7 @@ public class SSADestructor {
             for (var inst : block.instructions) {
                 if (!(inst instanceof IRInst.PhiInst)) continue;
                 for (int i = 0; i < inst.operands.size(); i += 2) {
+//                    System.err.printf("Union %s with %s\n", inst, inst.operands.get(i));
                     union(value2index.get(inst), value2index.get(inst.operands.get(i)));
                 }
             }
@@ -100,6 +102,7 @@ public class SSADestructor {
         for (int i = 0; i < father.length; i++) {
             if (father[i] == i) continue;
 //            System.err.printf("Replace %s with %s\n", index2value.get(i), index2value.get(findParent(i)));
+            if (index2value.get(i) == null) continue;
             index2value.get(i).replaceAllUsesWith(index2value.get(findParent(i)));
         }
 
@@ -146,8 +149,8 @@ public class SSADestructor {
     public void exec(IRConstant.Function func) {
         //TODO: maybe shouldn't split all critical edges
         splitCriticalEdge(func);
+        knitPhiWeb(func);
         func.blocks.forEach(this::parallel2seq);
         func.blocks.forEach(BasicBlock::reorder);
-        knitPhiWeb(func);
     }
 }

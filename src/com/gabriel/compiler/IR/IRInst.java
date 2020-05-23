@@ -295,14 +295,25 @@ public class IRInst {
     }
 
     public static class ParallelCopy extends Instruction {
-        public List<Pair<Value, Value>> pcopy = new ArrayList<>();
+        public List<Pair<Value, Value>> pcopy;
 
         public ParallelCopy(BasicBlock belong) {
             super("_Parallel_Copy", null, belong);
         }
 
         public void addCopy(Value src, Value dest) {
-            pcopy.add(new Pair<>(src, dest));
+            addOperand(src);
+            addOperand(dest);
+        }
+
+        public void organize() {
+            if (pcopy != null) return;
+            pcopy = new ArrayList<>();
+            for (int i = 0; i < operands.size(); i += 2) {
+                var src = operands.get(i);
+                var dest = operands.get(i + 1);
+                pcopy.add(new Pair<>(src, dest));
+            }
         }
     }
 

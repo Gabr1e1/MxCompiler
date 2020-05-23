@@ -140,14 +140,14 @@ public class AsmInst {
     public static class load extends Instruction {
         private static final Map<Integer, String> width = Map.of(1, "lb", 2, "lh", 4, "lw");
 
-        public load(Register.base baseAddr, int offset, int bitLen, Register.base rd, AsmStruct.Block belong) {
-            super(baseAddr, null, rd, offset, width.get(bitLen / 8), belong);
-            assert width.containsKey(bitLen / 8);
+        public load(Register.base baseAddr, int offset, int byteNum, Register.base rd, AsmStruct.Block belong) {
+            super(baseAddr, null, rd, offset, width.get(byteNum), belong);
+            assert width.containsKey(byteNum);
         }
 
-        public load(Register.base baseAddr, String offset, int bitLen, Register.base rd, AsmStruct.Block belong) {
-            super(baseAddr, null, rd, offset, width.get(bitLen / 8), belong);
-            assert width.containsKey(bitLen / 8);
+        public load(Register.base baseAddr, String offset, int byteNum, Register.base rd, AsmStruct.Block belong) {
+            super(baseAddr, null, rd, offset, width.get(byteNum), belong);
+            assert width.containsKey(byteNum);
         }
 
         @Override
@@ -155,34 +155,18 @@ public class AsmInst {
             return visitor.visit(this);
         }
     }
-
-//    public static class load_global extends Instruction {
-//        private static final Map<Integer, String> width = Map.of(1, "lb", 2, "lh", 4, "lw");
-//        String symbol;
-//
-//        public load_global(Register.base rd, int bitLen, String symbol, AsmStruct.Block belong) {
-//            super(null, null, rd, 0, width.get(bitLen / 8), belong);
-//            assert width.containsKey(bitLen / 8);
-//            this.symbol = symbol;
-//        }
-//
-//        @Override
-//        public Object accept(AsmVisitor visitor) {
-//            return visitor.visit(this);
-//        }
-//    }
 
     public static class store extends Instruction {
         private static final Map<Integer, String> width = Map.of(1, "sb", 2, "sh", 4, "sw");
 
-        public store(Register.base src, Register.base baseAddr, int offset, int bitLen, AsmStruct.Block belong) {
-            super(baseAddr, src, null, offset, width.get(bitLen / 8), belong);
-            assert width.containsKey(bitLen / 8);
+        public store(Register.base src, Register.base baseAddr, int offset, int byteNum, AsmStruct.Block belong) {
+            super(baseAddr, src, null, offset, width.get(byteNum), belong);
+            assert width.containsKey(byteNum);
         }
 
-        public store(Register.base src, Register.base baseAddr, String offset, int bitLen, AsmStruct.Block belong) {
-            super(baseAddr, src, null, offset, width.get(bitLen / 8), belong);
-            assert width.containsKey(bitLen / 8);
+        public store(Register.base src, Register.base baseAddr, String offset, int byteNum, AsmStruct.Block belong) {
+            super(baseAddr, src, null, offset, width.get(byteNum), belong);
+            assert width.containsKey(byteNum);
         }
 
         @Override
@@ -190,23 +174,6 @@ public class AsmInst {
             return visitor.visit(this);
         }
     }
-
-
-//    public static class store_global extends Instruction {
-//        private static final Map<Integer, String> width = Map.of(1, "sb", 2, "sh", 4, "sw");
-//        String symbol;
-//
-//        public store_global(Register.base src, int bitLen, String symbol, AsmStruct.Block belong) {
-//            super(src, null, null, 0, width.get(bitLen / 8), belong);
-//            assert width.containsKey(bitLen / 8);
-//            this.symbol = symbol;
-//        }
-//
-//        @Override
-//        public Object accept(AsmVisitor visitor) {
-//            return visitor.visit(this);
-//        }
-//    }
 
     public static class call extends Instruction {
         AsmStruct.Function target;

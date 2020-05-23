@@ -6,7 +6,7 @@ import java.util.*;
 
 public class RegAllocator {
 
-    final int MAX_DEGREE = 100000;
+    final int MAX_DEGREE = 1000000;
 
     public RegAllocator(AsmStruct.Program prog) {
         for (var func : prog.functions) {
@@ -67,6 +67,9 @@ public class RegAllocator {
         coloredNodes = new HashSet<>();
         spilledNodes = new HashSet<>();
         alias = new HashMap<>();
+        moveList = new HashMap<>();
+        adjList = new HashMap<>();
+        degree = new HashMap<>();
     }
 
     private void rebuild(AsmStruct.Function func) {
@@ -78,9 +81,9 @@ public class RegAllocator {
         adjSet = new HashSet<>();
 
         initial.forEach((reg) -> ((Register.Virtual) reg).color = null);
-        moveList = new HashMap<>();
-        degree = new HashMap<>();
-        adjList = new HashMap<>();
+        moveList.forEach((k, v) -> moveList.put(k, new HashSet<>()));
+        degree.forEach((k, v) -> degree.put(k, 0));
+        adjList.forEach((k, v) -> adjList.put(k, new HashSet<>()));
 
         setUnion(precolored, initial).forEach((reg) -> moveList.putIfAbsent(reg, new HashSet<>()));
         initial.forEach((reg) -> degree.putIfAbsent(reg, 0));
@@ -101,6 +104,8 @@ public class RegAllocator {
                     worklistMoves.add(inst);
                 }
                 live.addAll(inst.getDef());
+                // Prevent allocation to zero!!
+                live.add(Register.Machine.get("zero"));
                 for (var d : inst.getDef()) {
                     for (var l : live) {
                         addEdge(l, d);
@@ -263,6 +268,7 @@ public class RegAllocator {
     }
 
     private void combine(Register.base u, Register.base v) {
+        assert u != Register.Machine.get("zero");
         if (freezeWorklist.contains(v)) {
             freezeWorklist.remove(v);
         } else {
@@ -348,7 +354,7 @@ public class RegAllocator {
             for (var inst : new HashSet<>(v.def)) {
                 var reg = new Register.Virtual();
                 newTemps.add(reg);
-                var newInst = new AsmInst.store(reg, Register.Machine.get("sp"), p, 32, inst.belong);
+                var newInst = new AsmInst.store(reg, Register.Machine.get("sp"), p, 4, inst.belong);
                 inst.belong.moveInst(newInst, inst.belong.instructions.indexOf(inst) + 1);
                 inst.replaceWith(v, reg);
             }
@@ -356,17 +362,14 @@ public class RegAllocator {
             for (var inst : new HashSet<>(v.use)) {
                 var reg = new Register.Virtual();
                 newTemps.add(reg);
-                var newInst = new AsmInst.load(Register.Machine.get("sp"), p, 32, reg, inst.belong);
+                var newInst = new AsmInst.load(Register.Machine.get("sp"), p, 4, reg, inst.belong);
                 inst.belong.moveInst(newInst, inst.belong.instructions.indexOf(inst));
                 inst.replaceWith(v, reg);
             }
-            assert v.def.size() == 0 && v.use.size() == 0;
         }
 
         spilledNodes = new HashSet<>();
         initial = setUnion(setUnion(coloredNodes, coalescedNodes), newTemps);
-//        System.err.println("Initial: ");
-//        for (var i : initial) System.err.printf("%s ", i);
         coloredNodes = new HashSet<>();
         coalescedNodes = new HashSet<>();
     }

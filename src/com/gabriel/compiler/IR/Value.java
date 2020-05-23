@@ -41,7 +41,7 @@ public class Value {
     public Value(Value other) {
         this.originalName = other.originalName;
         this.type = other.type;
-        this.name = noName() ? "" : gen(originalName);
+        this.name = noName() ? "" : gen(this.originalName);
         this.user = new Use();
     }
 

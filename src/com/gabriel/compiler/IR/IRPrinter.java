@@ -104,7 +104,7 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public Object visit(IRInst.AllocaInst inst) {
-        var t = ((IRType.PointerType) inst.type).getBase();
+        var t = ((IRType.PointerType) inst.type).getPointer();
         return String.format("%s = alloca %s, align %d", inst.getPrintName(),
                 t.accept(this), t.getByteNum());
     }

@@ -7,7 +7,7 @@ public class Register {
         int index;
         Set<AsmInst.Instruction> def = new HashSet<>();
         Set<AsmInst.Instruction> use = new HashSet<>();
-        public Machine color;
+        public Machine color = null;
 
 //        int degree = 0;
 //        Set<base> adjList = new HashSet<>();
@@ -48,12 +48,12 @@ public class Register {
 
         @Override
         void setColor(Machine color) {
-//            System.err.printf("Set %s's color as %s\n", this, color);
             this.color = color;
         }
 
         public void tryReplace() {
             if (color == null) return;
+//            System.err.printf("Set %s's color as %s\n", this, color);
             var all = new HashSet<>(def);
             all.addAll(use);
             all.forEach((inst) -> inst.replaceWith(this, this.color));

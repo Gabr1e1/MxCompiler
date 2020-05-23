@@ -138,10 +138,10 @@ public class IRType {
 
         public int getOffset(int kth) {
             int ret = 0;
-            for (int i = 0; i < kth - 1; i++) {
+            for (int i = 0; i < kth; i++) {
                 var t = members.get(i);
-                ret += (t.bitLen - (ret % t.bitLen)) % t.bitLen;
-                ret += t.bitLen;
+                ret += (t.getByteNum() - (ret % t.getByteNum())) % t.getByteNum();
+                ret += t.getByteNum();
             }
             return ret;
         }
@@ -155,7 +155,7 @@ public class IRType {
             this.bitLen = 32;
         }
 
-        Type getBase() {
+        public Type getPointer() {
             return pointer;
         }
 

@@ -48,6 +48,7 @@ public class IRConstant {
     public static class ConstString extends Constant {
         IRType.Type type;
         public String str;
+        public String orig;
 
         ConstString(String str, IRType.Type type) {
             super(".conststr", new IRType.PointerType(type));

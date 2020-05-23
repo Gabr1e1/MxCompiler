@@ -112,7 +112,9 @@ public class BasicBlock extends Value {
     }
 
     public IRInst.Instruction getParallelCopy() {
-        return instructions.stream().filter(inst -> inst instanceof IRInst.ParallelCopy)
+        var ret = instructions.stream().filter(inst -> inst instanceof IRInst.ParallelCopy)
                 .findFirst().orElse(null);
+        if (ret != null) ((IRInst.ParallelCopy) ret).organize();
+        return ret;
     }
 }

@@ -33,25 +33,25 @@ public class AsmStruct {
     }
 
     public static class GlobalVariable {
-        int bitLen;
+        int byteNum;
         String name;
         String init = null;
         int initNum = 0;
 
-        public GlobalVariable(String name, int bitLen, int initNum) {
-            this.bitLen = bitLen;
+        public GlobalVariable(String name, int byteNum, int initNum) {
+            this.byteNum = byteNum;
             this.name = name;
             this.initNum = initNum;
         }
 
-        public GlobalVariable(String name, int bitLen, String init) {
-            this.bitLen = bitLen;
+        public GlobalVariable(String name, int byteNum, String init) {
+            this.byteNum = byteNum;
             this.name = name;
             this.init = init;
         }
 
         public int getAlign() {
-            return (int) (Math.log(bitLen / 8) / Math.log(2));
+            return (int) (Math.log(byteNum) / Math.log(2));
         }
 
         public Object accept(AsmVisitor visitor) {

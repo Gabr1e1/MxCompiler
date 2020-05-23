@@ -27,6 +27,7 @@ public class InstSelection implements IRVisitor {
     }
 
     private Register.base getRegister(Value v) {
+        if (v == null || v instanceof IRConstant.Null) return Register.Machine.get("zero");
         regMap.putIfAbsent(v, new Register.Virtual());
         var ret = regMap.get(v);
         if (v instanceof IRConstant.ConstInteger) loadImm(ret, ((IRConstant.ConstInteger) v).num);
@@ -63,13 +64,13 @@ public class InstSelection implements IRVisitor {
         var num = 0;
         if (init instanceof IRConstant.ConstInteger) num = ((IRConstant.ConstInteger) init).num;
         return new AsmStruct.GlobalVariable(globalVariable.getName(),
-                globalVariable.getType().bitLen, num);
+                globalVariable.getType().getByteNum(), num);
     }
 
 
     @Override
     public Object visit(IRConstant.ConstString constant) {
-        return new AsmStruct.GlobalVariable(constant.getName(), constant.getType().bitLen, constant.str);
+        return new AsmStruct.GlobalVariable(constant.getName(), constant.getType().getByteNum(), constant.orig);
     }
 
     @Override
@@ -92,7 +93,7 @@ public class InstSelection implements IRVisitor {
             if (i < 8) {
                 new AsmInst.mv(getRegister(cur), Register.Machine.get("a" + i), curBlock);
             } else {
-                new AsmInst.load(Register.Machine.get("sp"), (i - 8) * 4, 32, getRegister(cur), curBlock);
+                new AsmInst.load(Register.Machine.get("sp"), (i - 8) * 4, 4, getRegister(cur), curBlock);
             }
         }
         for (int i = 0; i < function.blocks.size(); i++) {
@@ -145,11 +146,11 @@ public class InstSelection implements IRVisitor {
             assert Register.calleeTmpSave.get(reg) != null;
             new AsmInst.mv(Register.Machine.get(reg), Register.calleeTmpSave.get(reg), curBlock);
         }
+        if (!(inst.getType() instanceof IRType.VoidType))
+            new AsmInst.mv(Register.Machine.get("a0"), getRegister(inst.getOperand(0)), curBlock);
         var sp = new AsmInst.ComputeRegImm("add", Register.Machine.get("sp"),
                 curFunc.stack.size, Register.Machine.get("sp"), curBlock);
         curFunc.setPlaceHolderForSp(sp, 1);
-        if (!(inst.getType() instanceof IRType.VoidType))
-            new AsmInst.mv(Register.Machine.get("a0"), getRegister(inst.getOperand(0)), curBlock);
         return new AsmInst.ret(curBlock);
     }
 
@@ -200,12 +201,15 @@ public class InstSelection implements IRVisitor {
 
         Register.base offset, offset2 = null;
         boolean flg = true;
-        if (inst.getType() instanceof IRType.ClassType) {
+        assert base.getType() instanceof IRType.PointerType;
+        if (((IRType.PointerType) base.getType()).getPointer() instanceof IRType.ClassType) {
             assert inst.zeroPad;
             offset = new Register.Virtual();
-            loadImm(offset, ((IRType.ClassType) inst.valueType).getOffset(((IRConstant.ConstInteger) inst.getOperand(2)).num));
+            loadImm(offset, ((IRType.ClassType) ((IRType.PointerType) base.getType()).getPointer()).getOffset(((IRConstant.ConstInteger)
+                    inst.getOperand(2)).num));
         } else {
             assert inst.getType() instanceof IRType.PointerType;
+            var ptr = ((IRType.PointerType) inst.getType()).getPointer();
             if (inst.getOperand(inst.zeroPad ? 2 : 1) instanceof IRConstant.ConstInteger) {
                 offset = new Register.Virtual();
                 loadImm(offset, ((IRConstant.ConstInteger) inst.getOperand(inst.zeroPad ? 2 : 1)).num);
@@ -215,7 +219,7 @@ public class InstSelection implements IRVisitor {
                 offset2 = new Register.Virtual();
             }
             var tmp = new Register.Virtual();
-            new AsmInst.li(tmp, base.getType().bitLen / 8, curBlock);
+            new AsmInst.li(tmp, ptr.getByteNum(), curBlock);
             new AsmInst.ComputeRegReg("mul", offset, tmp, flg ? offset : offset2, curBlock);
         }
         return new AsmInst.ComputeRegReg("add", getRegister(base), flg ? offset : offset2, getRegister(inst), curBlock);
@@ -231,7 +235,7 @@ public class InstSelection implements IRVisitor {
 //                new AsmInst.stackPush(4, curBlock);
                 curFunc.pushStack(4);
                 new AsmInst.store(getRegister(inst.operands.get(i)), Register.Machine.get("sp"), (i - 9) * 4,
-                        inst.operands.get(i).getType().bitLen, curBlock);
+                        inst.operands.get(i).getType().getByteNum(), curBlock);
             }
         }
         new AsmInst.call(func, curBlock);
@@ -243,25 +247,25 @@ public class InstSelection implements IRVisitor {
         return ret;
     }
 
-    private AsmInst.Instruction loadGlobal(Register.base rd, int bitLen, IRConstant.GlobalVariable variable) {
+    private AsmInst.Instruction loadGlobal(Register.base rd, int byteNum, IRConstant.GlobalVariable variable) {
         new AsmInst.lui(rd, "%hi(" + variable.getName() + ")", curBlock);
-        return new AsmInst.load(rd, "%lo(" + variable.getName() + ")", bitLen, rd, curBlock);
+        return new AsmInst.load(rd, "%lo(" + variable.getName() + ")", byteNum, rd, curBlock);
     }
 
-    private AsmInst.Instruction storeGlobal(Register.base src, int bitLen, IRConstant.GlobalVariable variable) {
+    private AsmInst.Instruction storeGlobal(Register.base src, int byteNum, IRConstant.GlobalVariable variable) {
         var rt = new Register.Virtual();
         new AsmInst.lui(rt, "%hi(" + variable.getName() + ")", curBlock);
-        return new AsmInst.store(src, rt, "%lo(" + variable.getName() + ")", bitLen, curBlock);
+        return new AsmInst.store(src, rt, "%lo(" + variable.getName() + ")", byteNum, curBlock);
     }
 
     @Override
     public Object visit(IRInst.LoadInst inst) {
         var ptr = inst.operands.get(0);
         if (ptr instanceof IRConstant.GlobalVariable) {
-            return loadGlobal(getRegister(inst), inst.getType().bitLen, (IRConstant.GlobalVariable) ptr);
+            return loadGlobal(getRegister(inst), inst.getType().getByteNum(), (IRConstant.GlobalVariable) ptr);
         } else {
             var base = getRegister(ptr);
-            return new AsmInst.load(base, 0, inst.getType().bitLen, getRegister(inst), curBlock);
+            return new AsmInst.load(base, 0, inst.getType().getByteNum(), getRegister(inst), curBlock);
         }
     }
 
@@ -270,10 +274,10 @@ public class InstSelection implements IRVisitor {
         var dest = inst.operands.get(0);
         var src = inst.operands.get(1);
         if (dest instanceof IRConstant.GlobalVariable) {
-            return storeGlobal(getRegister(src), dest.getType().bitLen, (IRConstant.GlobalVariable) dest);
+            return storeGlobal(getRegister(src), src.getType().getByteNum(), (IRConstant.GlobalVariable) dest);
         } else {
             return new AsmInst.store(getRegister(src), getRegister(dest),
-                    0, dest.getType().bitLen, curBlock);
+                    0, src.getType().getByteNum(), curBlock);
         }
     }
 
