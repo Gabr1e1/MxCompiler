@@ -1,6 +1,6 @@
-int a = 10;
-
+int fun() {
+    return 0;
+}
 int main() {
-    a = 3;
-    return a;
+    return fun();
 }

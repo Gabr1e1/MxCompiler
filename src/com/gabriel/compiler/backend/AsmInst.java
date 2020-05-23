@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.Integer.min;
+
 public class AsmInst {
 
     public abstract static class Instruction {
@@ -11,18 +13,32 @@ public class AsmInst {
         Object imm;    //0 stands for both unneeded and numeric zero
         String opcode;
         AsmStruct.Block belong;
+        Set<Register.base> use = new HashSet<>(), def = new HashSet<>();
 
-        private void addUse(Register.base r, Instruction inst) {
-            if (r != null) r.addUse(inst);
+        protected void addUse(Register.base r) {
+            if (r == null) return;
+            r.addUse(this);
+            use.add(r);
         }
 
-        private void addDef(Register.base r, Instruction inst) {
-            if (r != null) r.addDef(inst);
+        protected void delUse(Register.base r) {
+            r.delUse(this);
+            use.remove(r);
+        }
+
+        protected void addDef(Register.base r) {
+            if (r == null) return;
+            r.addDef(this);
+            def.add(r);
+        }
+
+        protected void delDef(Register.base r) {
+            r.delDef(this);
+            def.remove(r);
         }
 
         public Instruction(Register.base rs1, Register.base rs2, Register.base rd,
                            Object imm, String opcode, AsmStruct.Block belong) {
-            //TODO: Maintain a def-use chain
             this.rs1 = rs1;
             this.rs2 = rs2;
             this.rd = rd;
@@ -31,9 +47,9 @@ public class AsmInst {
             this.belong = belong;
             belong.addInst(this);
 
-            addUse(this.rs1, this);
-            addUse(this.rs2, this);
-            addDef(this.rd, this);
+            addUse(this.rs1);
+            addUse(this.rs2);
+            addDef(this.rd);
         }
 
         public Instruction(AsmStruct.Block belong) {
@@ -42,16 +58,22 @@ public class AsmInst {
         }
 
         public Set<Register.base> getDef() {
-            Set<Register.base> ret = new HashSet<>();
-            if (this.rd != null) ret.add(this.rd);
-            return ret;
+            return def;
         }
 
         public Set<Register.base> getUse() {
-            Set<Register.base> ret = new HashSet<>();
-            if (this.rs1 != null) ret.add(this.rs1);
-            if (this.rs2 != null) ret.add(this.rs2);
-            return ret;
+            return use;
+        }
+
+        public void replaceWith(Register.base orig, Register.base now) {
+            if (rs1 == orig || rs2 == orig) {
+                delUse(orig); addUse(now);
+            } else {
+                delDef(orig); addDef(now);
+            }
+            if (rs1 == orig) rs1 = now;
+            if (rs2 == orig) rs2 = now;
+            if (rd == orig) rd = now;
         }
 
         public Object accept(AsmVisitor visitor) {
@@ -73,6 +95,7 @@ public class AsmInst {
     public static class ComputeRegImm extends Instruction {
         public ComputeRegImm(String op, Register.base rs, int imm, Register.base rd, AsmStruct.Block belong) {
             super(rs, null, rd, imm, op + "i", belong);
+            assert !(op.equals("mul") || op.equals("div"));
         }
 
         @Override
@@ -84,6 +107,17 @@ public class AsmInst {
     public static class ComputeRegReg extends Instruction {
         public ComputeRegReg(String op, Register.base rs1, Register.base rs2, Register.base rd, AsmStruct.Block belong) {
             super(rs1, rs2, rd, 0, op, belong);
+        }
+
+        @Override
+        public Object accept(AsmVisitor visitor) {
+            return visitor.visit(this);
+        }
+    }
+
+    public static class ComputeReg extends Instruction {
+        public ComputeReg(String op, Register.base rs1, Register.base rd, AsmStruct.Block belong) {
+            super(rs1, null, rd, 0, op, belong);
         }
 
         @Override
@@ -180,6 +214,14 @@ public class AsmInst {
         public call(AsmStruct.Function func, AsmStruct.Block belong) {
             super(belong);
             this.target = func;
+            //Implicit use for arg registers and def for all caller-save registers
+//            System.err.printf("%s's arg num: %d\n", func.label, func.getArgCount());
+            for (int i = 0; i < min(8, func.getArgCount()); i++) {
+                addUse(Register.Machine.get("a" + i));
+            }
+            for (var arg : Register.Machine.callerSave.keySet()) {
+                addDef(Register.Machine.get(arg));
+            }
         }
 
         @Override
@@ -191,6 +233,9 @@ public class AsmInst {
     public static class ret extends Instruction {
         public ret(AsmStruct.Block belong) {
             super(belong);
+            //Implicit use for a0 and ra
+            addUse(Register.Machine.get("a0"));
+            addUse(Register.Machine.get("ra"));
         }
 
         @Override
@@ -253,15 +298,6 @@ public class AsmInst {
         @Override
         public Object accept(AsmVisitor visitor) {
             return visitor.visit(this);
-        }
-    }
-
-    static class stackPush extends Instruction {
-        int alloc;
-
-        public stackPush(int b, AsmStruct.Block belong) {
-            super(belong);
-            this.alloc = b;
         }
     }
 }

@@ -100,16 +100,23 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.ComputeRegImm inst) {
+        var opcode = inst.opcode;
+        var imm = inst.imm;
         if (inst.opcode.equals("subi")) {
-            inst.opcode = "addi";
-            inst.imm = -(Integer) inst.imm;
+            opcode = "addi";
+            imm = -(Integer) inst.imm;
         }
-        return String.format("%s %s, %s, %s", inst.opcode, inst.rd, inst.rs1, inst.imm);
+        return String.format("%s %s, %s, %s", opcode, inst.rd, inst.rs1, imm);
     }
 
     @Override
     public Object visit(AsmInst.ComputeRegReg inst) {
         return String.format("%s %s, %s, %s", inst.opcode, inst.rd, inst.rs1, inst.rs2);
+    }
+
+    @Override
+    public Object visit(AsmInst.ComputeReg inst) {
+        return String.format("%s %s, %s", inst.opcode, inst.rd, inst.rs1);
     }
 
     @Override

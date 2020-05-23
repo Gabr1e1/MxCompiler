@@ -26,6 +26,10 @@ public class AsmStruct {
         public Object accept(AsmVisitor visitor) {
             return visitor.visit(this);
         }
+
+        public void cleanUp() {
+            functions.forEach(Function::cleanUp);
+        }
     }
 
     public static class GlobalVariable {
@@ -59,9 +63,16 @@ public class AsmStruct {
         List<AsmStruct.Block> blocks = new ArrayList<>();
         String label;
         Stack stack = new Stack();
+        int argCount = 0;
+        AsmInst.Instruction[] placeHolderForSp = new AsmInst.Instruction[2];
 
-        public Function(String label) {
+        public Function(String label, int argCount) {
             this.label = label;
+            this.argCount = argCount;
+        }
+
+        public int getArgCount() {
+            return argCount;
         }
 
         public void addBlock(Block block) {
@@ -76,6 +87,24 @@ public class AsmStruct {
             var ret = stack.size;
             pushStack(4);
             return ret;
+        }
+
+        public void setPlaceHolderForSp(AsmInst.Instruction inst, int i) {
+            this.placeHolderForSp[i] = inst;
+        }
+
+        public Set<Register.base> getAllVregs() {
+            var ret = new HashSet<Register.base>();
+            blocks.forEach(b -> ret.addAll(b.getAllVregs()));
+            return ret;
+        }
+
+        public void cleanUp() {
+            blocks.forEach(Block::cleanUp);
+            for (var inst : placeHolderForSp) {
+                assert inst instanceof AsmInst.ComputeRegImm;
+                inst.imm = stack.size;
+            }
         }
 
         @Override
@@ -123,16 +152,34 @@ public class AsmStruct {
             return this.successors;
         }
 
-        public List<Register.base> getDef() {
+        public Set<Register.base> getDef() {
             Set<Register.base> ret = new HashSet<>();
             for (var inst : instructions) ret.addAll(inst.getDef());
-            return new ArrayList<>(ret);
+            return ret;
         }
 
-        public List<Register.base> getUse() {
+        public Set<Register.base> getUse() {
             Set<Register.base> ret = new HashSet<>();
             for (var inst : instructions) ret.addAll(inst.getUse());
-            return new ArrayList<>(ret);
+            return ret;
+        }
+
+
+        public Set<Register.base> getAllVregs() {
+            var ret = new HashSet<>(getDef());
+            ret.addAll(getUse());
+            ret.removeAll(Register.Machine.regs.values());
+            return ret;
+        }
+
+        public void cleanUp() {
+            var delList = new ArrayList<AsmInst.Instruction>();
+            for (var inst : instructions) {
+                if (inst instanceof AsmInst.mv) {
+                    if (inst.rd == inst.rs1) delList.add(inst);
+                }
+            }
+            instructions.removeAll(delList);
         }
 
         @Override

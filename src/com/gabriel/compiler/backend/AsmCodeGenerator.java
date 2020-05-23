@@ -12,10 +12,12 @@ public class AsmCodeGenerator {
         //Instruction Selection
         var program = (AsmStruct.Program) (new InstSelection()).visit(module);
         (new AsmPrinter("./testcases/mycode-before.s")).visit(program);
+        System.err.println("Instruction Selection Done");
 
         //Register Allocation
-        var regAllocator = new RegAllocator(program);
+        new RegAllocator(program);
+        program.cleanUp();
         (new AsmPrinter("./testcases/mycode-after.s")).visit(program);
-
+        System.err.println("Register Allocation Done");
     }
 }

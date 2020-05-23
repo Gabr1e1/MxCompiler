@@ -12,6 +12,7 @@ public interface AsmVisitor {
     Object visit(AsmInst.mv inst);
     Object visit(AsmInst.ComputeRegImm inst);
     Object visit(AsmInst.ComputeRegReg inst);
+    Object visit(AsmInst.ComputeReg inst);
     Object visit(AsmInst.li inst);
     Object visit(AsmInst.load inst);
 //    Object visit(AsmInst.load_global inst);
