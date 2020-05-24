@@ -32,7 +32,6 @@ public class Main {
         lexer.addErrorListener(errorListener);
         parser.addErrorListener(errorListener);
 
-
         ASTNode.Program root = null;
         try {
             // syntax check and build CST
@@ -54,6 +53,7 @@ public class Main {
             System.err.println(err.toString());
             exit(1);
         }
+        if (args.length > 1 && args[1].equals("--semantics")) return;
 
         IRBuilder ir = new IRBuilder();
         var module = ir.visit(root);

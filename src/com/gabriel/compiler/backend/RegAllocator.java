@@ -356,7 +356,7 @@ public class RegAllocator {
                 newTemps.add(reg);
                 var newInst = new AsmInst.store(reg, Register.Machine.get("sp"), p, 4, inst.belong);
                 inst.belong.moveInst(newInst, inst.belong.instructions.indexOf(inst) + 1);
-                inst.replaceWith(v, reg);
+                inst.replaceDefWith(v, reg);
             }
 
             for (var inst : new HashSet<>(v.use)) {
@@ -364,7 +364,7 @@ public class RegAllocator {
                 newTemps.add(reg);
                 var newInst = new AsmInst.load(Register.Machine.get("sp"), p, 4, reg, inst.belong);
                 inst.belong.moveInst(newInst, inst.belong.instructions.indexOf(inst));
-                inst.replaceWith(v, reg);
+                inst.replaceUseWith(v, reg);
             }
         }
 

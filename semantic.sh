@@ -5,4 +5,4 @@
 set -e
 cd "$(dirname "$0")"
 cat > code.mx
-java -cp ./lib/antlr-4.8-complete.jar:./bin com.gabriel.compiler.Main code.mx
+java -cp ./lib/antlr-4.8-complete.jar:./bin com.gabriel.compiler.Main code.mx --semantics

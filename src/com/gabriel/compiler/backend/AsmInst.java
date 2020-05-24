@@ -65,15 +65,25 @@ public class AsmInst {
             return use;
         }
 
-        public void replaceWith(Register.base orig, Register.base now) {
+        public void replaceDefWith(Register.base orig, Register.base now) {
+            if (rd == orig) {
+                delDef(orig);
+                addDef(now);
+                rd = now;
+            }
+        }
+
+        public void replaceUseWith(Register.base orig, Register.base now) {
             if (rs1 == orig || rs2 == orig) {
                 delUse(orig); addUse(now);
-            } else {
-                delDef(orig); addDef(now);
+                if (rs1 == orig) rs1 = now;
+                if (rs2 == orig) rs2 = now;
             }
-            if (rs1 == orig) rs1 = now;
-            if (rs2 == orig) rs2 = now;
-            if (rd == orig) rd = now;
+        }
+
+        public void replaceWith(Register.base orig, Register.base now) {
+            replaceDefWith(orig, now);
+            replaceUseWith(orig, now);
         }
 
         public Object accept(AsmVisitor visitor) {
