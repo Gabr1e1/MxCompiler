@@ -166,7 +166,7 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.lui inst) {
-        return String.format("lui %s %s", inst.rd, inst.imm);
+        return String.format("lui %s, %s", inst.rd, inst.imm);
     }
 
     @Override
