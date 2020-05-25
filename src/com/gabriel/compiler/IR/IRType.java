@@ -181,8 +181,8 @@ public class IRType {
     }
 
     public static class FunctionType extends Type {
-        List<Value> params;
-        Type returnType;
+        public List<Value> params;
+        public Type returnType;
         String funcName;
 
         FunctionType(List<Value> params, Type returnType, String funcName) {

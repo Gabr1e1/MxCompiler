@@ -84,7 +84,8 @@ public class Mem2Reg extends Optimizer.runOnFunction {
 
     @Override
     void exec(IRConstant.Function func) {
-        var domTree = new DomTree(func.blocks.get(0), false);
+        workList.clear();
+        var domTree = new DomTree(func.getEntryBlock(), false);
 
         //Find Allocas whose uses are only constituted of loads and stores
         for (var block : func.blocks) {

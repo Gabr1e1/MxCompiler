@@ -32,11 +32,12 @@ public class Optimizer {
     }
 
     public void useDefaultPass() {
-//        addPass(new Global2Local());
+        addPass(new Global2Local());
         addPass(new Mem2Reg());
-//        addPass(new InlineFunction());
-        addPass(new CFGSimplifier(), new MSDCE());
+        addPass(new MSDCE());
         addPass(new CFGSimplifier());
+        addPass(new InlineFunction(), new MSDCE(), new CFGSimplifier());
+        addPass(new InlineFunction(), new MSDCE(), new CFGSimplifier());
     }
 
     public void optimize() {
@@ -53,6 +54,9 @@ public class Optimizer {
                 });
             } else {
                 assert false;
+            }
+            for (var func : module.functions) {
+                func.getEntryBlock();
             }
         }
     }

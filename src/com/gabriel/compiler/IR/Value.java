@@ -8,17 +8,21 @@ public class Value {
     static Map<String, Integer> counter = new HashMap<>();
     static int label = 0;
 
-    String originalName;
-    String name;
-    IRType.Type type;
-    Use user;
+    public String originalName;
+    public String name;
+    public IRType.Type type;
+    public Use user;
 
     static String labelAllocator() {
         return "label_" + (++label);
     }
 
-    private String gen(String name) {
+    public String gen(String name) {
         int cnt = 0;
+        if (name.lastIndexOf(".") != -1) {
+            name = name.substring(0, name.lastIndexOf("."));
+        }
+
         if (counter.get(name) != null) {
             cnt = counter.get(name) + 1;
             counter.put(name, cnt);
@@ -86,7 +90,7 @@ public class Value {
         for (var u : user.user) {
             var index = u.findOperand(this);
             u.operands.set(index, other);
-            other.user.addUser(u);
+            if (other != null) other.user.addUser(u);
         }
         user = new Use();
     }

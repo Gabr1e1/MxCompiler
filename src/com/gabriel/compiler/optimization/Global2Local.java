@@ -1,15 +1,13 @@
 package com.gabriel.compiler.optimization;
 
-import com.gabriel.compiler.IR.IRConstant;
-import com.gabriel.compiler.IR.IRInst;
-import com.gabriel.compiler.IR.IRType;
 import com.gabriel.compiler.IR.Module;
+import com.gabriel.compiler.IR.*;
 
 public class Global2Local extends Optimizer.runOnModule {
 
     Module module;
 
-    private boolean isDowngradable(IRConstant.Function func, IRConstant.GlobalVariable variable) {
+    private boolean isDowngradable(IRConstant.Function func, Value variable) {
         boolean flg = false;
         for (var block : func.blocks) {
             for (var inst : block.instructions) {
@@ -31,12 +29,12 @@ public class Global2Local extends Optimizer.runOnModule {
             if (!(variable instanceof IRConstant.GlobalVariable)) continue;
 
             for (var func : module.functions) {
-                if (!isDowngradable(func, (IRConstant.GlobalVariable) variable)) continue;
+                if (!isDowngradable(func, variable)) continue;
                 System.err.printf("Downgrading %s in %s\n", variable.getName(), func.getName());
-                var load = new IRInst.LoadInst(variable, func.blocks.get(0));
-                var proxy = new IRInst.AllocaInst(variable.getName() + ".proxy", IRType.dePointer(variable.getType()), func.blocks.get(0));
-                var store = new IRInst.StoreInst(proxy, load, func.blocks.get(0));
-                func.blocks.get(0).moveToFront(load, proxy, store);
+                var load = new IRInst.LoadInst(variable, func.getEntryBlock());
+                var proxy = new IRInst.AllocaInst(variable.getName() + "_proxy", IRType.dePointer(variable.getType()), func.getEntryBlock());
+                var store = new IRInst.StoreInst(proxy, load, func.getEntryBlock());
+                func.getEntryBlock().moveToFront(load, proxy, store);
 
                 for (var block : func.blocks) {
                     for (var inst : block.instructions) {
@@ -45,10 +43,10 @@ public class Global2Local extends Optimizer.runOnModule {
                     }
                 }
 
-                var lastBlock = func.blocks.get(func.blocks.size() - 1);
+                var lastBlock = func.getExitBlock();
                 new IRInst.StoreInst(variable, new IRInst.LoadInst(proxy, lastBlock), lastBlock);
                 lastBlock.reorder();
-                func.blocks.get(0).reorder();
+                func.getEntryBlock().reorder();
             }
         }
     }

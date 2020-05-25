@@ -21,7 +21,7 @@ public class MSDCE extends Optimizer.runOnFunction {
     private DomTree rdf;
 
     private void mark(IRConstant.Function func) {
-        rdf = new DomTree(func.blocks.get(func.blocks.size() - 1), true);
+        rdf = new DomTree(func.getExitBlock(), true);
 
         for (var block : func.blocks) {
             for (var inst : block.instructions) {
@@ -34,7 +34,8 @@ public class MSDCE extends Optimizer.runOnFunction {
 
         while (!workList.isEmpty()) {
             var cur = workList.get(0);
-//            System.err.println("BLOCK: "+ cur.belong.getName());
+//            System.err.println("MSDCE WORKLIST: "+ cur.print());
+
             workList.remove(0);
             markedBlocks.add(cur.belong);
 
@@ -78,13 +79,16 @@ public class MSDCE extends Optimizer.runOnFunction {
                 if (inst instanceof IRInst.BranchInst) {
                     if (inst.operands.size() == 1) continue;
                     //Jump to nearest marked postdominator
+                    boolean found = false;
                     for (var node = rdf.getDomNode(block).father; node != null && node != node.father; node = node.father) {
                         if (markedBlocks.contains(node.block)) {
                             originalInst = inst;
                             newInstBlock = node.block;
+                            found = true;
                             break;
                         }
                     }
+                    assert found;
                 } else {
                     //Not really necessary to delete its user & usee, if deletion is correct
                     delList.add(inst);

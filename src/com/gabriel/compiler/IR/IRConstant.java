@@ -3,13 +3,13 @@ package com.gabriel.compiler.IR;
 import java.util.ArrayList;
 import java.util.List;
 
-abstract class Constant extends User {
-    Constant(String name, IRType.Type type) {
-        super(name, type);
-    }
-}
-
 public class IRConstant {
+    public abstract static class Constant extends User {
+        Constant(String name, IRType.Type type) {
+            super(name, type);
+        }
+    }
+
     public static class ConstInteger extends Constant {
         public int num;
 
@@ -145,7 +145,7 @@ public class IRConstant {
             super(name, type);
         }
 
-        //TODO: abnormal functions could also be optimized
+        // abnormal functions could also be optimized
         public boolean isNormal() {
 //            if (blocks.size() == 1) return true;
 //            if (!blocks.get(0).getOriginalName().equals("func_init")) return false;
@@ -154,12 +154,14 @@ public class IRConstant {
         }
 
         public void addBlock(BasicBlock block) {
+            if (blocks.isEmpty()) block.setAsEntry();
             blocks.add(block);
+            getEntryBlock();
         }
 
         public void delBlock(BasicBlock block) {
-            if (block.getOriginalName().equals("retBlock")) return;
             blocks.remove(block);
+            getEntryBlock();
         }
 
         public int getParamNum() {
@@ -171,13 +173,35 @@ public class IRConstant {
         }
 
         public boolean ableToInline() {
-            return isNormal();
+            return isNormal() && !getName().equals("main");
         }
 
         public int getInstCount() {
             int sum = 0;
             for (var block : blocks) sum += block.instructions.size();
             return sum;
+        }
+
+        public BasicBlock getEntryBlock() {
+            if (blocks.size() == 1) blocks.get(0).setAsEntry();
+            BasicBlock ret = null;
+            for (var block : blocks)
+                if (block.isEntry()) {
+                    ret = block; break;
+                }
+            assert ret != null;
+            blocks.remove(ret); blocks.add(0, ret);
+            return ret;
+        }
+
+        public BasicBlock getExitBlock() {
+            for (var block : blocks) {
+                for (var inst : block.instructions) {
+                    if (inst instanceof IRInst.ReturnInst) return block;
+                }
+            }
+            assert false;
+            return null;
         }
 
         @Override

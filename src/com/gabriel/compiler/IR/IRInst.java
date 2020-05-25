@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IRInst {
-    public abstract static class Instruction extends User {
+    public abstract static class Instruction extends User implements Cloneable {
         //    enum OpType {ADD, SUB, MUL, DIV}
         public BasicBlock belong;
 
@@ -22,6 +22,11 @@ public class IRInst {
             belong = basicBlock;
             if (!front) basicBlock.addInst(this);
             else basicBlock.addInstToFront(this);
+        }
+
+        @Override
+        public Object clone() throws CloneNotSupportedException {
+            return super.clone();
         }
 
         public String print() {

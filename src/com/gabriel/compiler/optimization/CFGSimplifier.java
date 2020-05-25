@@ -27,6 +27,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
         var last = block.instructions.get(block.instructions.size() - 1);
         var succ = (BasicBlock) last.operands.get(0);
         if (block == succ) return false;
+        if (block.isEntry()) return false;
 
         if (block.instructions.size() == 1) {
             var pred = cfg.getPredecessors(block);
@@ -75,6 +76,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
                 inst.belong = succ;
                 succ.addInstToFront(inst);
             }
+            if (block.isEntry()) succ.setAsEntry();
             func.delBlock(block);
             succ.hoistPhiInst();
             return true;
@@ -105,22 +107,22 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
     }
 
     private boolean onePass(IRConstant.Function func) {
-        cfg = new CFG(func.blocks.get(0), false);
+        cfg = new CFG(func.getEntryBlock(), false);
         for (var block : cfg.getPostOrder()) {
             //Conditional Branch with same target
-            if (foldBranch(block)) return true;
+//            if (foldBranch(block)) return true;
 
             //Ends in a direct jump
             var last = block.instructions.get(block.instructions.size() - 1);
             if (last instanceof IRInst.BranchInst && last.operands.size() == 1) {
                 //block with only a branch
-                if (removeEmptyBlock(func, block)) return true;
+//                if (removeEmptyBlock(func, block)) return true;
 
                 //merge two blocks
                 if (mergeBlocks(func, block)) return true;
 
                 //hoist Branch
-                if (hoistBranch(func, block)) return true;
+//                if (hoistBranch(func, block)) return true;
             }
         }
         return false;
@@ -128,8 +130,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
 
     @Override
     void exec(IRConstant.Function func) {
-        //Iterate till no change
-
+        // Iterate till no change
         while (func.isNormal())
             if (!onePass(func)) break;
     }

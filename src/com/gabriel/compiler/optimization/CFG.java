@@ -45,7 +45,7 @@ public class CFG {
     }
 
     public CFG(BasicBlock entryBlock, boolean reverse) {
-        build(entryBlock.belong.blocks.get(0));
+        build(entryBlock.belong.getEntryBlock());
         entry = corres.get(entryBlock);
         cleanUnreachableBlocks(entryBlock.belong);
         if (reverse) {

@@ -23,6 +23,10 @@ public class Module {
         functions.add(function);
     }
 
+    public void delFunction(IRConstant.Function function) {
+        functions.remove(function);
+    }
+
     void addGlobalVariable(IRConstant.GlobalVariable globalVariable) {
         globalVariables.add(globalVariable);
     }

@@ -6,11 +6,21 @@ import java.util.List;
 public class BasicBlock extends Value {
     public List<IRInst.Instruction> instructions = new ArrayList<>();
     public IRConstant.Function belong;
+    boolean entry = false;
 
     public BasicBlock(String name, IRConstant.Function function) {
         super(name, new IRType.LabelType());
         this.belong = function;
         function.addBlock(this);
+    }
+
+    public void setAsEntry() {
+//        System.err.println("SET AS ENTRY: " + this.getName());
+        this.entry = true;
+    }
+
+    public boolean isEntry() {
+        return entry;
     }
 
     @Override

@@ -183,6 +183,7 @@ public class InstSelection implements IRVisitor {
     }
 
     static Set<String> abel = Set.of("add", "and", "or", "xor");
+    static Set<String> mustReg = Set.of("sll", "sra", "rem", "mul", "div");
 
     private boolean abel(String op) {
         for (var a : abel) {
@@ -191,24 +192,42 @@ public class InstSelection implements IRVisitor {
         return false;
     }
 
+    private boolean mustReg(String op) {
+        for (var a : mustReg) {
+            if (op.equals(a)) return true;
+        }
+        return false;
+    }
+
     private AsmInst.Instruction compute(String op, Value lhs, Value rhs, Register.base dest) {
         if (op.equals("mul")) {
             if (lhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) lhs).num)) {
-                int p = (int) (Math.log(((IRConstant.ConstInteger) lhs).num) / Math.log(2));
+                var p = (int) (Math.log(((IRConstant.ConstInteger) lhs).num) / Math.log(2));
                 return new AsmInst.ComputeRegImm("sll", getRegister(rhs), p, dest, curBlock);
             }
             if (rhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) rhs).num)) {
-                int p = (int) (Math.log(((IRConstant.ConstInteger) rhs).num) / Math.log(2));
+                var p = (int) (Math.log(((IRConstant.ConstInteger) rhs).num) / Math.log(2));
                 return new AsmInst.ComputeRegImm("sll", getRegister(lhs), p, dest, curBlock);
             }
             return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
         }
+        if (op.equals("div")) {
+            if (rhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) rhs).num)) {
+                var p = (int) (Math.log(((IRConstant.ConstInteger) rhs).num) / Math.log(2));
+                return new AsmInst.ComputeRegImm("sra", getRegister(lhs), p, dest, curBlock);
+            }
+            return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
+        }
+
+        if (mustReg(op))
+            return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
+
+        if (rhs instanceof IRConstant.ConstInteger && isFit(((IRConstant.ConstInteger) rhs).num))
+            return new AsmInst.ComputeRegImm(op, getRegister(lhs), ((IRConstant.ConstInteger) rhs).num, dest, curBlock);
         if (!abel(op))
             return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
         if (lhs instanceof IRConstant.ConstInteger && isFit(((IRConstant.ConstInteger) lhs).num))
             return new AsmInst.ComputeRegImm(op, getRegister(rhs), ((IRConstant.ConstInteger) lhs).num, dest, curBlock);
-        if (rhs instanceof IRConstant.ConstInteger && isFit(((IRConstant.ConstInteger) rhs).num))
-            return new AsmInst.ComputeRegImm(op, getRegister(lhs), ((IRConstant.ConstInteger) rhs).num, dest, curBlock);
         return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
     }
 

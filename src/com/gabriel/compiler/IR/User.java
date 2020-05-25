@@ -20,7 +20,9 @@ public class User extends Value {
 
     public void addOperand(List<Value> v) {
         operands.addAll(v);
-        v.forEach((i) -> i.user.addUser(this));
+        v.forEach((i) -> {
+            if (i != null) i.user.addUser(this);
+        });
     }
 
     public void delOperand(Value... v) {
