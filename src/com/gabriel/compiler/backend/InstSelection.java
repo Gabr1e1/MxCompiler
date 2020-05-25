@@ -5,6 +5,7 @@ import com.gabriel.compiler.IR.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class InstSelection implements IRVisitor {
 
@@ -32,7 +33,7 @@ public class InstSelection implements IRVisitor {
         var ret = regMap.get(v);
         if (v instanceof IRConstant.ConstInteger) {
             if (((IRConstant.ConstInteger) v).num == 0) return Register.Machine.get("zero");
-            else loadImm(ret, ((IRConstant.ConstInteger) v).num);
+            loadImm(ret, ((IRConstant.ConstInteger) v).num);
         }
         if (v instanceof IRConstant.GlobalVariable) new AsmInst.la(ret, v.getName(), curBlock);
         return ret;
@@ -133,8 +134,9 @@ public class InstSelection implements IRVisitor {
         if (inst instanceof IRInst.CmpInst) {
             for (var user : inst.getUser())
                 if (!(user instanceof IRInst.BranchInst)) return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -180,6 +182,15 @@ public class InstSelection implements IRVisitor {
         return (int) (Math.ceil(v)) == (int) (Math.floor(v));
     }
 
+    static Set<String> abel = Set.of("add", "and", "or", "xor");
+
+    private boolean abel(String op) {
+        for (var a : abel) {
+            if (op.equals(a)) return true;
+        }
+        return false;
+    }
+
     private AsmInst.Instruction compute(String op, Value lhs, Value rhs, Register.base dest) {
         if (op.equals("mul")) {
             if (lhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) lhs).num)) {
@@ -192,7 +203,7 @@ public class InstSelection implements IRVisitor {
             }
             return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
         }
-        if (op.equals("div") || op.equals("slt") || op.equals("sub"))
+        if (!abel(op))
             return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
         if (lhs instanceof IRConstant.ConstInteger && isFit(((IRConstant.ConstInteger) lhs).num))
             return new AsmInst.ComputeRegImm(op, getRegister(rhs), ((IRConstant.ConstInteger) lhs).num, dest, curBlock);
@@ -261,8 +272,8 @@ public class InstSelection implements IRVisitor {
                 var offset = getRegister(inst.getOperand(inst.zeroPad ? 2 : 1));
                 var tmp = new Register.Virtual();
 //                new AsmInst.li(tmp, ptr.getByteNum(), curBlock);
-                compute("mul", inst.getOperand(inst.zeroPad ? 2 : 1), new IRConstant.ConstInteger(ptr.getByteNum()), tmp);
 //                new AsmInst.ComputeRegReg("mul", tmp, offset, tmp, curBlock);
+                compute("mul", inst.getOperand(inst.zeroPad ? 2 : 1), new IRConstant.ConstInteger(ptr.getByteNum()), tmp);
                 return new AsmInst.ComputeRegReg("add", getRegister(base), tmp, getRegister(inst), curBlock);
             }
         }

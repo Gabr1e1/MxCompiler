@@ -41,7 +41,7 @@ public class SSADestructor {
                     var b = (BasicBlock) inst.operands.get(i + 1);
                     var newV = new Value(v);
                     pc.get(b).addCopy(v, newV);
-                    inst.replaceAllOperand(v, newV);
+                    inst.replaceOperand(v, newV);
                 }
             }
         }

@@ -331,7 +331,7 @@ public class RegAllocator {
 
         Register.base m = t.get(0);
         while (t.size() > 0 && newTemps.contains(t.get(0))) t.remove(0);
-        if (spillWorklist.size() > 0) m = t.get(0);
+        if (t.size() > 0) m = t.get(0);
 
         spillWorklist.remove(m);
         simplifyWorklist.add(m);
