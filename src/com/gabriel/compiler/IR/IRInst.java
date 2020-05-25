@@ -48,7 +48,7 @@ public class IRInst {
     }
 
     public static class AllocaInst extends Instruction {
-        AllocaInst(String id, IRType.Type type, BasicBlock belong) {
+        public AllocaInst(String id, IRType.Type type, BasicBlock belong) {
             super(id, new IRType.PointerType(type), belong);
         }
 
@@ -165,7 +165,7 @@ public class IRInst {
     }
 
     public static class StoreInst extends Instruction {
-        StoreInst(Value dest, Value from, BasicBlock belong) {
+        public StoreInst(Value dest, Value from, BasicBlock belong) {
             super("", dest.type, belong);
             addOperand(dest, from);
         }
@@ -221,7 +221,7 @@ public class IRInst {
     }
 
     public static class LoadInst extends Instruction {
-        LoadInst(Value ptr, BasicBlock belong) {
+        public LoadInst(Value ptr, BasicBlock belong) {
             super("load_" + ptr.getOriginalName(), ((IRType.PointerType) ptr.type).pointer, belong);
             addOperand(ptr);
         }

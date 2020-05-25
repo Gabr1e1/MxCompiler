@@ -32,6 +32,7 @@ public class Optimizer {
     }
 
     public void useDefaultPass() {
+//        addPass(new Global2Local());
         addPass(new Mem2Reg());
 //        addPass(new InlineFunction());
         addPass(new CFGSimplifier(), new MSDCE());

@@ -269,10 +269,7 @@ public class InstSelection implements IRVisitor {
                 offset *= ptr.getByteNum();
                 return new AsmInst.ComputeRegImm("add", getRegister(base), offset, getRegister(inst), curBlock);
             } else {
-                var offset = getRegister(inst.getOperand(inst.zeroPad ? 2 : 1));
                 var tmp = new Register.Virtual();
-//                new AsmInst.li(tmp, ptr.getByteNum(), curBlock);
-//                new AsmInst.ComputeRegReg("mul", tmp, offset, tmp, curBlock);
                 compute("mul", inst.getOperand(inst.zeroPad ? 2 : 1), new IRConstant.ConstInteger(ptr.getByteNum()), tmp);
                 return new AsmInst.ComputeRegReg("add", getRegister(base), tmp, getRegister(inst), curBlock);
             }

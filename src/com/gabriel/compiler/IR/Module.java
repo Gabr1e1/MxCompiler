@@ -36,4 +36,19 @@ public class Module {
             return classes.get("struct." + className);
         } else return classes.get(className);
     }
+
+    public IRConstant.Function getFunction(String funcName) {
+        for (var func : functions) {
+            if (func.getName().equals(funcName)) return func;
+        }
+        return null;
+    }
+
+    public List<IRConstant.Function> getAllBuiltinFunctions() {
+        var ret = new ArrayList<IRConstant.Function>();
+        builtin.forEach(function -> ret.add(function.first));
+        return ret;
+    }
 }
+
+

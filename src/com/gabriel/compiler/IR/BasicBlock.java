@@ -27,6 +27,14 @@ public class BasicBlock extends Value {
         instructions.add(0, inst);
     }
 
+    public void moveToFront(IRInst.Instruction... inst) {
+        for (var i = inst.length - 1; i >= 0; i--) {
+            var cur = inst[i];
+            instructions.remove(cur);
+            addInstToFront(cur);
+        }
+    }
+
     public void delInst(IRInst.Instruction inst) {
 //        System.err.println("DELETED: " + inst.print());
         inst.delete();
@@ -48,6 +56,16 @@ public class BasicBlock extends Value {
     }
 
     public void reorder() {
+        //Put call to __global_init at the top
+        for (int i = 0; i < instructions.size(); i++) {
+            var inst = instructions.get(i);
+            if (inst instanceof IRInst.CallInst && inst.operands.get(0).getName().equals("__global_init")) {
+                instructions.remove(i);
+                instructions.add(0, inst);
+                break;
+            }
+        }
+
         //Put terminator at the end
         for (int i = 0; i < instructions.size(); i++) {
             var inst = instructions.get(i);
