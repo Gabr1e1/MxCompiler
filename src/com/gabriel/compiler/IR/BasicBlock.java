@@ -20,6 +20,7 @@ public class BasicBlock extends Value {
 
     public void addInst(IRInst.Instruction inst) {
         instructions.add(inst);
+        inst.belong = this;
     }
 
     public void addInstToFront(IRInst.Instruction inst) {

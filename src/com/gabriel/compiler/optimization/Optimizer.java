@@ -15,31 +15,43 @@ public class Optimizer {
         this.module = module;
     }
 
+    public abstract static class runOnModule {
+        abstract void exec(Module module);
+
+        abstract String print();
+    }
+
     public abstract static class runOnFunction {
         abstract void exec(IRConstant.Function func);
 
         abstract String print();
     }
 
-    public void addPass(runOnFunction... pass) {
+    public void addPass(Object... pass) {
         optims.addAll(Arrays.asList(pass));
     }
 
     public void useDefaultPass() {
         addPass(new Mem2Reg());
+//        addPass(new InlineFunction());
         addPass(new CFGSimplifier(), new MSDCE());
         addPass(new CFGSimplifier());
     }
 
     public void optimize() {
         for (var optim : optims) {
-            if (optim instanceof runOnFunction) {
+            if (optim instanceof runOnModule) {
+                System.err.printf("Optimize Pass %s\n", ((runOnModule) optim).print());
+                ((runOnModule) optim).exec(module);
+            } else if (optim instanceof runOnFunction) {
                 module.functions.forEach((func) -> {
                     if (func.isNormal()) {
                         System.err.printf("Optimize Pass %s for %s\n", ((runOnFunction) optim).print(), func.getName());
                         ((runOnFunction) optim).exec(func);
                     }
                 });
+            } else {
+                assert false;
             }
         }
     }

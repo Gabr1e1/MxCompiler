@@ -30,6 +30,8 @@ public class RegAllocator {
     Set<Register.base> spillWorklist, freezeWorklist, simplifyWorklist;
     Stack<Register.base> selectStack;
     Set<Register.base> coloredNodes, spilledNodes;
+    Set<Register.base> newTemps;
+    Random rand = new Random();
 
     private void exec(AsmStruct.Function func) {
         rebuild(func);
@@ -70,6 +72,7 @@ public class RegAllocator {
         moveList = new HashMap<>();
         adjList = new HashMap<>();
         degree = new HashMap<>();
+        newTemps = new HashSet<>();
     }
 
     private void rebuild(AsmStruct.Function func) {
@@ -314,9 +317,22 @@ public class RegAllocator {
         freezeMoves(u);
     }
 
+    class degreeComparator implements Comparator<Register.base> {
+        @Override
+        public int compare(Register.base o1, Register.base o2) {
+            return -degree.get(o1).compareTo(degree.get(o2));
+        }
+    }
+
     private void selectSpill() {
         //TODO: using better heuristic
-        var m = new ArrayList<>(spillWorklist).get(0);
+        var t = new ArrayList<>(spillWorklist);
+        t.sort(new degreeComparator());
+
+        Register.base m = t.get(0);
+        while (t.size() > 0 && newTemps.contains(t.get(0))) t.remove(0);
+        if (spillWorklist.size() > 0) m = t.get(0);
+
         spillWorklist.remove(m);
         simplifyWorklist.add(m);
         freezeMoves(m);
@@ -367,6 +383,7 @@ public class RegAllocator {
                 inst.replaceUseWith(v, reg);
             }
         }
+        this.newTemps.addAll(newTemps);
 
         spilledNodes = new HashSet<>();
         initial = setUnion(setUnion(coloredNodes, coalescedNodes), newTemps);

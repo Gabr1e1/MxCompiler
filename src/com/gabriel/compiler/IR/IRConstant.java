@@ -170,6 +170,16 @@ public class IRConstant {
             return ((IRType.FunctionType) type).params.get(i);
         }
 
+        public boolean ableToInline() {
+            return isNormal();
+        }
+
+        public int getInstCount() {
+            int sum = 0;
+            for (var block : blocks) sum += block.instructions.size();
+            return sum;
+        }
+
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);

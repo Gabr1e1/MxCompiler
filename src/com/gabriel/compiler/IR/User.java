@@ -41,6 +41,11 @@ public class User extends Value {
         operands.set(findOperand(oldValue), newValue);
     }
 
+    public void replaceAllOperand(Value oldValue, Value newValue) {
+        while (findOperand(oldValue) != -1)
+            replaceOperand(oldValue, newValue);
+    }
+
     public Value getOperand(int i) {
         return operands.get(i);
     }

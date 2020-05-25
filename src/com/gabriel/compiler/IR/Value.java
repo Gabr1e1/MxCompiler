@@ -1,6 +1,7 @@
 package com.gabriel.compiler.IR;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Value {
@@ -90,8 +91,8 @@ public class Value {
         user = new Use();
     }
 
-    public Use getUser() {
-        return user;
+    public List<User> getUser() {
+        return user.user;
     }
 
     public IRType.Type getType() {

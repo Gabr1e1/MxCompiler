@@ -140,6 +140,8 @@ public class IRInst {
     public static class CmpInst extends Instruction {
         static Map<String, String> OpMap = Map.of("<", "slt", "<=", "sle", ">", "sgt", ">=", "sge",
                 "==", "eq", "!=", "ne");
+        static Map<String, String> AsmMap = Map.of("<", "blt", "<=", "ble", ">", "bgt", ">=", "bge",
+                "==", "beq", "!=", "bne");
         public String op;
 
         CmpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
@@ -150,6 +152,10 @@ public class IRInst {
 
         String getCorresOp() {
             return OpMap.get(op);
+        }
+
+        public String getCorresAsmOp() {
+            return AsmMap.get(op);
         }
 
         @Override

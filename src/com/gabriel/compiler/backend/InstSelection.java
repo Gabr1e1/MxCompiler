@@ -30,7 +30,10 @@ public class InstSelection implements IRVisitor {
         if (v == null || v instanceof IRConstant.Null) return Register.Machine.get("zero");
         regMap.putIfAbsent(v, new Register.Virtual());
         var ret = regMap.get(v);
-        if (v instanceof IRConstant.ConstInteger) loadImm(ret, ((IRConstant.ConstInteger) v).num);
+        if (v instanceof IRConstant.ConstInteger) {
+            if (((IRConstant.ConstInteger) v).num == 0) return Register.Machine.get("zero");
+            else loadImm(ret, ((IRConstant.ConstInteger) v).num);
+        }
         if (v instanceof IRConstant.GlobalVariable) new AsmInst.la(ret, v.getName(), curBlock);
         return ret;
     }
@@ -55,8 +58,6 @@ public class InstSelection implements IRVisitor {
         }
         return program;
     }
-
-    //TODO: GET RID OF GLOBAL_INIT
 
     @Override
     public Object visit(IRConstant.GlobalVariable globalVariable) {
@@ -128,13 +129,28 @@ public class InstSelection implements IRVisitor {
         return null;
     }
 
+    private boolean isOnlyForBranch(Value inst) {
+        if (inst instanceof IRInst.CmpInst) {
+            for (var user : inst.getUser())
+                if (!(user instanceof IRInst.BranchInst)) return false;
+        }
+        return true;
+    }
+
     @Override
     public Object visit(IRInst.BranchInst inst) {
         if (!inst.isConditional()) {
             new AsmInst.jump(getBlock((BasicBlock) inst.getOperand(0)), curBlock);
         } else {
-            new AsmInst.branch("blt", Register.Machine.get("zero"),
-                    getRegister(inst.getOperand(0)), getBlock((BasicBlock) inst.getOperand(1)), curBlock);
+            var cond = inst.getOperand(0);
+            if (isOnlyForBranch(cond)) {
+                var cast = (IRInst.CmpInst) cond;
+                new AsmInst.branch(cast.getCorresAsmOp(), getRegister(cast.getOperand(0)), getRegister(cast.getOperand(1)),
+                        getBlock((BasicBlock) inst.getOperand(1)), curBlock);
+            } else {
+                new AsmInst.branch("blt", Register.Machine.get("zero"),
+                        getRegister(inst.getOperand(0)), getBlock((BasicBlock) inst.getOperand(1)), curBlock);
+            }
             new AsmInst.jump(getBlock((BasicBlock) inst.getOperand(2)), curBlock);
         }
         return null;
@@ -154,39 +170,68 @@ public class InstSelection implements IRVisitor {
         return new AsmInst.ret(curBlock);
     }
 
-    //TODO: Eliminate unnecessary register holding a constant value
+    private boolean isFit(int num) {
+        return num >= -2048 && num < 2048;
+    }
+
+    private boolean isPowerOfTwo(int num) {
+        if (num == 0) return false;
+        double v = Math.log(num) / Math.log(2);
+        return (int) (Math.ceil(v)) == (int) (Math.floor(v));
+    }
+
+    private AsmInst.Instruction compute(String op, Value lhs, Value rhs, Register.base dest) {
+        if (op.equals("mul")) {
+            if (lhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) lhs).num)) {
+                int p = (int) (Math.log(((IRConstant.ConstInteger) lhs).num) / Math.log(2));
+                return new AsmInst.ComputeRegImm("sll", getRegister(rhs), p, dest, curBlock);
+            }
+            if (rhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) rhs).num)) {
+                int p = (int) (Math.log(((IRConstant.ConstInteger) rhs).num) / Math.log(2));
+                return new AsmInst.ComputeRegImm("sll", getRegister(lhs), p, dest, curBlock);
+            }
+            return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
+        }
+        if (op.equals("div") || op.equals("slt") || op.equals("sub"))
+            return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
+        if (lhs instanceof IRConstant.ConstInteger && isFit(((IRConstant.ConstInteger) lhs).num))
+            return new AsmInst.ComputeRegImm(op, getRegister(rhs), ((IRConstant.ConstInteger) lhs).num, dest, curBlock);
+        if (rhs instanceof IRConstant.ConstInteger && isFit(((IRConstant.ConstInteger) rhs).num))
+            return new AsmInst.ComputeRegImm(op, getRegister(lhs), ((IRConstant.ConstInteger) rhs).num, dest, curBlock);
+        return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
+    }
 
     @Override
     public Object visit(IRInst.BinaryOpInst inst) {
-        var lhs = getRegister(inst.operands.get(0));
-        var rhs = getRegister(inst.operands.get(1));
+        var lhs = inst.operands.get(0);
+        var rhs = inst.operands.get(1);
         var op = inst.getCorresAsmOp();
-        return new AsmInst.ComputeRegReg(op, lhs, rhs, getRegister(inst), curBlock);
+        return compute(op, lhs, rhs, getRegister(inst));
     }
-
-    //TODO: Eliminate cmp inst whose result determines a branch
 
     @Override
     public Object visit(IRInst.CmpInst inst) {
-        var lhs = getRegister(inst.operands.get(0));
-        var rhs = getRegister(inst.operands.get(1));
+        if (isOnlyForBranch(inst)) return null;
+
+        var lhs = inst.operands.get(0);
+        var rhs = inst.operands.get(1);
         var op = inst.op;
 
         if (op.equals(">") || op.equals("<=")) {
             //Swap lhs and rhs
-            lhs = getRegister(inst.operands.get(1));
-            rhs = getRegister(inst.operands.get(0));
+            lhs = inst.operands.get(1);
+            rhs = inst.operands.get(0);
             op = op.equals(">") ? "<" : ">=";
         }
 
         AsmInst.Instruction ret;
         if (op.equals("<") || op.equals("!=")) {
             var op2 = op.equals("<") ? "slt" : "xor";
-            var t = new AsmInst.ComputeRegReg(op2, lhs, rhs, new Register.Virtual(), curBlock);
+            var t = compute(op2, lhs, rhs, new Register.Virtual()); // new AsmInst.ComputeRegReg(op2, lhs, rhs, new Register.Virtual(), curBlock);
             ret = new AsmInst.ComputeReg("snez", t.rd, getRegister(inst), curBlock);
         } else {
             var op2 = op.equals(">=") ? "slt" : "xor";
-            var t = new AsmInst.ComputeRegReg(op2, lhs, rhs, new Register.Virtual(), curBlock);
+            var t = compute(op2, lhs, rhs, new Register.Virtual()); //new AsmInst.ComputeRegReg(op2, lhs, rhs, new Register.Virtual(), curBlock);
             ret = new AsmInst.ComputeReg("seqz", t.rd, getRegister(inst), curBlock);
         }
         return ret;
@@ -199,30 +244,28 @@ public class InstSelection implements IRVisitor {
             return new AsmInst.la(getRegister(inst), base.getName(), curBlock);
         }
 
-        Register.base offset, offset2 = null;
-        boolean flg = true;
         assert base.getType() instanceof IRType.PointerType;
         if (((IRType.PointerType) base.getType()).getPointer() instanceof IRType.ClassType) {
             assert inst.zeroPad;
-            offset = new Register.Virtual();
-            loadImm(offset, ((IRType.ClassType) ((IRType.PointerType) base.getType()).getPointer()).getOffset(((IRConstant.ConstInteger)
-                    inst.getOperand(2)).num));
+            int offset = ((IRType.ClassType) ((IRType.PointerType) base.getType()).getPointer()).getOffset(((IRConstant.ConstInteger)
+                    inst.getOperand(2)).num);
+            return new AsmInst.ComputeRegImm("add", getRegister(base), offset, getRegister(inst), curBlock);
         } else {
             assert inst.getType() instanceof IRType.PointerType;
             var ptr = ((IRType.PointerType) inst.getType()).getPointer();
             if (inst.getOperand(inst.zeroPad ? 2 : 1) instanceof IRConstant.ConstInteger) {
-                offset = new Register.Virtual();
-                loadImm(offset, ((IRConstant.ConstInteger) inst.getOperand(inst.zeroPad ? 2 : 1)).num);
+                int offset = ((IRConstant.ConstInteger) inst.getOperand(inst.zeroPad ? 2 : 1)).num;
+                offset *= ptr.getByteNum();
+                return new AsmInst.ComputeRegImm("add", getRegister(base), offset, getRegister(inst), curBlock);
             } else {
-                flg = false;
-                offset = getRegister(inst.getOperand(inst.zeroPad ? 2 : 1));
-                offset2 = new Register.Virtual();
+                var offset = getRegister(inst.getOperand(inst.zeroPad ? 2 : 1));
+                var tmp = new Register.Virtual();
+//                new AsmInst.li(tmp, ptr.getByteNum(), curBlock);
+                compute("mul", inst.getOperand(inst.zeroPad ? 2 : 1), new IRConstant.ConstInteger(ptr.getByteNum()), tmp);
+//                new AsmInst.ComputeRegReg("mul", tmp, offset, tmp, curBlock);
+                return new AsmInst.ComputeRegReg("add", getRegister(base), tmp, getRegister(inst), curBlock);
             }
-            var tmp = new Register.Virtual();
-            new AsmInst.li(tmp, ptr.getByteNum(), curBlock);
-            new AsmInst.ComputeRegReg("mul", offset, tmp, flg ? offset : offset2, curBlock);
         }
-        return new AsmInst.ComputeRegReg("add", getRegister(base), flg ? offset : offset2, getRegister(inst), curBlock);
     }
 
     @Override
@@ -232,7 +275,6 @@ public class InstSelection implements IRVisitor {
             if (i <= 8) {
                 new AsmInst.mv(Register.Machine.get("a" + (i - 1)), getRegister(inst.operands.get(i)), curBlock);
             } else {
-//                new AsmInst.stackPush(4, curBlock);
                 curFunc.pushStack(4);
                 new AsmInst.store(getRegister(inst.operands.get(i)), Register.Machine.get("sp"), (i - 9) * 4,
                         inst.operands.get(i).getType().getByteNum(), curBlock);

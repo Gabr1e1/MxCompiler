@@ -13,7 +13,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
     private List<IRInst.Instruction> getDef(IRInst.Instruction inst) {
         var ret = new ArrayList<IRInst.Instruction>();
         ret.add(inst);
-        for (var use : inst.getUser().user) {
+        for (var use : inst.getUser()) {
             if (use instanceof IRInst.LoadInst) {
                 continue;
             } else if (use instanceof IRInst.StoreInst && use.getOperand(0) == inst) {
@@ -77,7 +77,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
         //Delete unnecessary instructions
         for (var d : delList) {
 //            System.out.printf("DELETE: %s\n", d.print());
-            assert d instanceof IRInst.AllocaInst || d.getUser().user.size() == 0;
+            assert d instanceof IRInst.AllocaInst || d.getUser().size() == 0;
             d.belong.delInst(d);
         }
     }

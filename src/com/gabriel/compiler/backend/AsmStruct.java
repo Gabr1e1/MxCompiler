@@ -105,6 +105,9 @@ public class AsmStruct {
                 assert inst instanceof AsmInst.ComputeRegImm;
                 inst.imm = stack.size;
             }
+
+            placeHolderForSp[1].belong.moveInst(placeHolderForSp[1],
+                    placeHolderForSp[1].belong.instructions.size() - 2);
         }
 
         @Override
