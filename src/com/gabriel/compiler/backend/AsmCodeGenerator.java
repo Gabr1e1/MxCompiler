@@ -13,10 +13,9 @@ public class AsmCodeGenerator {
         IRPrinter irCodeGen3 = new IRPrinter("./testcases/mycode_opt_2.ll");
         irCodeGen3.visit(module);
 
-
         //Instruction Selection
         var program = (AsmStruct.Program) (new InstSelection()).visit(module);
-        (new AsmPrinter("./testcases/mycode-before.s")).visit(program);
+//        (new AsmPrinter("./testcases/mycode-before.s")).visit(program);
         System.err.println("Instruction Selection Done");
 
         //Register Allocation

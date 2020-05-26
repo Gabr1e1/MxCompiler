@@ -7,8 +7,8 @@ import com.gabriel.compiler.util.Pair;
 import java.util.*;
 
 public class InlineFunction extends Optimizer.runOnModule {
-    final int DEPTH = 2;
-    final int THRESHOLD = 100;
+    final int DEPTH = 1;
+    final int THRESHOLD = 50;
 
     private Set<IRConstant.Function> find(Module module) {
         var ret = new HashSet<IRConstant.Function>();
