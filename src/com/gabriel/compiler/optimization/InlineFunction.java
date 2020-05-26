@@ -7,8 +7,9 @@ import com.gabriel.compiler.util.Pair;
 import java.util.*;
 
 public class InlineFunction extends Optimizer.runOnModule {
-    final int DEPTH = 1;
-    final int THRESHOLD = 50;
+    final int DEPTH = 2;
+    final int THRESHOLD = 100;
+    final int LIMIT = 40;
 
     private Set<IRConstant.Function> find(Module module) {
         var ret = new HashSet<IRConstant.Function>();
@@ -125,6 +126,7 @@ public class InlineFunction extends Optimizer.runOnModule {
     private void inline(IRConstant.Function inlineTarget) {
         System.err.printf("Inlining Function %s\n", inlineTarget.getName());
         var callSites = inlineTarget.getUser();
+        int cnt = 0;
         for (var callSite : new HashSet<>(callSites)) {
             corres.clear();
             assert callSite instanceof IRInst.CallInst;
@@ -132,6 +134,7 @@ public class InlineFunction extends Optimizer.runOnModule {
             if (((IRInst.CallInst) callSite).belong.belong == inlineTarget) continue;
             rewrite((IRInst.CallInst) callSite, inlineTarget);
             ((IRInst.CallInst) callSite).belong.delInst((IRInst.CallInst) callSite);
+            if (++cnt > LIMIT) break;
         }
     }
 
