@@ -13,13 +13,9 @@ public class Value {
     public IRType.Type type;
     public Use user;
 
-    static String labelAllocator() {
-        return "label_" + (++label);
-    }
-
     public String gen(String name) {
         int cnt = 0;
-        if (name.lastIndexOf(".") != -1) {
+        if (name.lastIndexOf(".") != -1 && name.lastIndexOf(".") != 0) {
             name = name.substring(0, name.lastIndexOf("."));
         }
 
