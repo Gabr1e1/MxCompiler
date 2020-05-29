@@ -39,6 +39,7 @@ public class RegAllocator {
         build(func);
         makeWorklist();
         do {
+//            System.err.printf("SIZE: %d\n", adjSet.size());
             if (!simplifyWorklist.isEmpty()) simplify();
             else if (!worklistMoves.isEmpty()) coalesce();
             else if (!freezeWorklist.isEmpty()) freeze();
@@ -125,6 +126,7 @@ public class RegAllocator {
         if (u != v && !adjSet.contains(new Pair<>(u, v))) {
             adjSet.add(new Pair<>(u, v));
             adjSet.add(new Pair<>(v, u));
+//            System.err.printf("ADD EDGE: %s %s\n", u, v);
             if (!precolored.contains(u)) {
                 adjList.get(u).add(v);
                 degree.put(u, degree.getOrDefault(u, 0) + 1);
@@ -162,6 +164,7 @@ public class RegAllocator {
 
     private Set<Register.base> getAdjacent(Register.base n) {
         var ret = new HashSet<>(adjList.get(n));
+//        System.err.println(adjList.get(n).size());
         ret.removeAll(selectStack);
         ret.removeAll(coalescedNodes);
         return ret;
@@ -272,6 +275,7 @@ public class RegAllocator {
 
     private void combine(Register.base u, Register.base v) {
         assert u != Register.Machine.get("zero");
+//        System.err.printf("Combine: %s %s\n", u, v);
         if (freezeWorklist.contains(v)) {
             freezeWorklist.remove(v);
         } else {
