@@ -14,7 +14,7 @@ import java.util.Map;
 public class SSADestructor {
 
     private void splitCriticalEdge(IRConstant.Function func) {
-        var cfg = new CFG(func.blocks.get(0), false);
+        var cfg = new CFG(func.getEntryBlock(), false);
         var blocks_original = new ArrayList<>(func.blocks);
         for (var block : blocks_original) {
             if (!block.hasPhiInst()) continue;
@@ -39,6 +39,10 @@ public class SSADestructor {
                     var v = inst.operands.get(i);
                     if (v == null) continue;
                     var b = (BasicBlock) inst.operands.get(i + 1);
+
+                    //WARNING: might be wrong
+                    if (pc.get(b) == null) continue;
+
                     var newV = new Value(v);
                     pc.get(b).addCopy(v, newV);
                     inst.replaceOperand(v, newV);
@@ -73,6 +77,7 @@ public class SSADestructor {
         for (var block : func.blocks) {
             for (var inst : block.instructions) {
                 for (var op : inst.operands) {
+                    if (op == null) continue;
                     if (!value2index.containsKey(op)) {
                         value2index.put(op, cnt);
                         index2value.put(cnt++, op);
@@ -93,6 +98,7 @@ public class SSADestructor {
                 if (!(inst instanceof IRInst.PhiInst)) continue;
                 for (int i = 0; i < inst.operands.size(); i += 2) {
 //                    System.err.printf("Union %s with %s\n", inst, inst.operands.get(i));
+                    if (inst.operands.get(i) == null) continue;
                     union(value2index.get(inst), value2index.get(inst.operands.get(i)));
                 }
             }

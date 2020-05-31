@@ -7,7 +7,7 @@ import com.gabriel.compiler.util.Pair;
 import java.util.*;
 
 public class InlineFunction extends Optimizer.runOnModule {
-    final int DEPTH = 2;
+    final int DEPTH = 3;
     final int THRESHOLD = 100;
     final int LIMIT = 40;
 
@@ -51,6 +51,7 @@ public class InlineFunction extends Optimizer.runOnModule {
             newInst.name = newInst.gen(newInst.originalName);
             newInst.operands = new ArrayList<>();
             newInst.user = new Use();
+            newInst.lattice = new Value.ConditionalLattice(origInst.lattice);
 
             newInst.addOperand(origInst.operands);
             newBlock.addInst(newInst);

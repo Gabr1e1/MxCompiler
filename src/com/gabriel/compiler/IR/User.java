@@ -55,4 +55,15 @@ public class User extends Value {
     public int findOperand(Value v) {
         return operands.indexOf(v);
     }
+
+    public void rewrite() {
+        for (Value op : operands) {
+            if (op == null) continue;
+
+            if (op.lattice.isConst()) {
+                assert op.type instanceof IRType.IntegerType;
+                replaceOperand(op, new IRConstant.ConstInteger(op.lattice.value, op.type));
+            }
+        }
+    }
 }

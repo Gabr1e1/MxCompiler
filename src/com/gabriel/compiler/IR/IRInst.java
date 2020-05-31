@@ -1,5 +1,6 @@
 package com.gabriel.compiler.IR;
 
+import com.gabriel.compiler.optimization.CFG;
 import com.gabriel.compiler.util.Pair;
 
 import java.util.ArrayList;
@@ -8,13 +9,13 @@ import java.util.Map;
 
 public class IRInst {
     public abstract static class Instruction extends User implements Cloneable {
-        //    enum OpType {ADD, SUB, MUL, DIV}
         public BasicBlock belong;
 
         Instruction(String name, IRType.Type type, BasicBlock basicBlock) {
             super(name, type);
             belong = basicBlock;
             basicBlock.addInst(this);
+            this.lattice.setLower(); //upper only for binary & cmp
         }
 
         Instruction(String name, IRType.Type type, BasicBlock basicBlock, boolean front) {
@@ -22,6 +23,7 @@ public class IRInst {
             belong = basicBlock;
             if (!front) basicBlock.addInst(this);
             else basicBlock.addInstToFront(this);
+            this.lattice.setLower();
         }
 
         @Override
@@ -37,6 +39,10 @@ public class IRInst {
         public void delete() {
             delOperand(operands.toArray(new Value[0]));
             delOperand(this);
+        }
+
+        public void propagate() {
+            /* EMPTY */
         }
     }
 
@@ -79,6 +85,23 @@ public class IRInst {
             return visitor.visit(this);
         }
 
+        @Override
+        public void rewrite() {
+            super.rewrite();
+            if (operands.size() == 1) return;
+            if (!operands.get(0).lattice.isConst()) return;
+            System.err.printf("Rewriting Jump %s", this.print());
+
+            if (operands.get(0).lattice.value == 0) {
+                delOperand(1);
+            } else {
+                delOperand(2);
+            }
+            delOperand(0);
+
+            System.err.printf(" to %s\n", this.print());
+        }
+
         public boolean isConditional() {
             return operands.size() > 1;
         }
@@ -114,6 +137,7 @@ public class IRInst {
             super("T", lhs.type, belong);
             addOperand(lhs, rhs);
             this.op = op; //OpMap.get(op);
+            this.lattice.setUpper();
         }
 
         String getCorresOp() {
@@ -127,6 +151,61 @@ public class IRInst {
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
+        }
+
+        @Override
+        public void propagate() {
+            Value lhs = operands.get(0), rhs = operands.get(1);
+            if (lhs.lattice.isLower() || rhs.lattice.isLower()) this.lattice.setLower();
+            else if (rhs.lattice.isUpper() || lhs.lattice.isUpper()) this.lattice.setUpper();
+            else {
+                // Both are constant
+                int a = lhs.lattice.value, b = rhs.lattice.value;
+                Integer c = null;
+                switch (op) {
+                    case "+":
+                        c = a + b;
+                        break;
+                    case "-":
+                        c = a - b;
+                        break;
+                    case "*":
+                        c = a * b;
+                        break;
+                    case "/":
+                        if (b != 0) c = a / b;
+                        break;
+                    case "%":
+                        if (b != 0) c = a % b;
+                        break;
+                    case "<<":
+                        c = a << b;
+                        break;
+                    case ">>":
+                        c = a >> b;
+                        break;
+                    case "&":
+                        c = a & b;
+                        break;
+                    case "|":
+                        c = a | b;
+                        break;
+                    case "^":
+                        c = a ^ b;
+                        break;
+                    case "&&":
+                        c = ((a > 0) && (b > 0)) ? 1 : 0;
+                        break;
+                    case "||":
+                        c = ((a > 0) || (b > 0)) ? 1 : 0;
+                        break;
+                    default:
+                        assert false;
+                }
+                if (c != null) this.lattice.setConst(c);
+                else this.lattice.setLower();
+//                System.err.printf("%s is constant %d\n", this.print(), c);
+            }
         }
     }
 
@@ -153,6 +232,7 @@ public class IRInst {
             super("T", new IRType.IntegerType(1), belong);
             addOperand(lhs, rhs);
             this.op = op;
+            this.lattice.setUpper();
         }
 
         String getCorresOp() {
@@ -166,6 +246,43 @@ public class IRInst {
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
+        }
+
+        @Override
+        public void propagate() {
+            Value lhs = operands.get(0), rhs = operands.get(1);
+            if (lhs.lattice.isLower() || rhs.lattice.isLower()) this.lattice.setLower();
+            else if (rhs.lattice.isUpper() || lhs.lattice.isUpper()) this.lattice.setUpper();
+            else {
+                // Both are constant
+                int a = lhs.lattice.value, b = rhs.lattice.value;
+                boolean c;
+                switch (op) {
+                    case "<":
+                        c = (a < b);
+                        break;
+                    case "<=":
+                        c = (a <= b);
+                        break;
+                    case ">":
+                        c = (a > b);
+                        break;
+                    case ">=":
+                        c = (a >= b);
+                        break;
+                    case "==":
+                        c = (a == b);
+                        break;
+                    case "!=":
+                        c = (a != b);
+                        break;
+                    default:
+                        c = false;
+                        assert false;
+                }
+                this.lattice.setConst(c ? 1 : 0);
+//                System.err.printf("%s is constant %d\n", this.print(), c ? 1 : 0);
+            }
         }
     }
 
@@ -297,6 +414,32 @@ public class IRInst {
             var ret = new ArrayList<BasicBlock>();
             for (int i = 1; i < operands.size(); i += 2) ret.add((BasicBlock) operands.get(i));
             return ret;
+        }
+
+        @Override
+        public void rewrite() {
+            super.rewrite();
+            var cfg = new CFG(belong.belong.getEntryBlock(), false);
+            var pred = cfg.getPredecessors(this.belong);
+
+            boolean flg = true;
+            while (flg) {
+                flg = false;
+                for (int i = 0; i < operands.size(); i += 2) {
+                    var v = operands.get(i);
+                    var b = (BasicBlock) operands.get(i + 1);
+                    if (!pred.contains(b)) {
+                        System.err.printf("Rewriting Phi Inst %s", this.print());
+
+                        delOperand(i);
+                        delOperand(b);
+                        flg = true;
+
+                        System.err.printf(" to %s\n", this.print());
+                        break;
+                    }
+                }
+            }
         }
 
         @Override

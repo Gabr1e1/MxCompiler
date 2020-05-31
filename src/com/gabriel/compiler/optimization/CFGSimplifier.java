@@ -42,7 +42,9 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
 
             for (var inst : succ.instructions) {
                 if (inst instanceof IRInst.PhiInst) {
+//                    if (!inst.operands.contains(block)) continue;
                     System.err.printf("Before: %s\n", inst.print());
+//                    System.err.println(block.getName());
 
                     int i = inst.operands.indexOf(block);
                     var v = inst.operands.get(i - 1);
@@ -69,7 +71,6 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
         if (block == succ) return false;
 
         if (cfg.getPredecessors(succ).size() == 1) {
-            block.replaceAllUsesWith(succ);
             for (int i = block.instructions.size() - 1; i >= 0; i--) {
                 var inst = block.instructions.get(i);
                 if (inst instanceof IRInst.BranchInst) continue;
@@ -77,6 +78,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
                 succ.addInstToFront(inst);
             }
             if (block.isEntry()) succ.setAsEntry();
+            block.replaceAllUsesWith(succ);
             func.delBlock(block);
             succ.hoistPhiInst();
             return true;
@@ -110,19 +112,19 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
         cfg = new CFG(func.getEntryBlock(), false);
         for (var block : cfg.getPostOrder()) {
             //Conditional Branch with same target
-//            if (foldBranch(block)) return true;
+            if (foldBranch(block)) return true;
 
             //Ends in a direct jump
             var last = block.instructions.get(block.instructions.size() - 1);
             if (last instanceof IRInst.BranchInst && last.operands.size() == 1) {
                 //block with only a branch
-//                if (removeEmptyBlock(func, block)) return true;
+                if (removeEmptyBlock(func, block)) return true;
 
                 //merge two blocks
                 if (mergeBlocks(func, block)) return true;
 
                 //hoist Branch
-//                if (hoistBranch(func, block)) return true;
+                if (hoistBranch(func, block)) return true;
             }
         }
         return false;
@@ -131,7 +133,12 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
     @Override
     void exec(IRConstant.Function func) {
         // Iterate till no change
-        while (func.isNormal())
+        int cnt = 0;
+        while (func.isNormal()) {
+//            IRPrinter irCodeGen = new IRPrinter("./testcases/mycode_opt" + cnt + ".ll");
+//            irCodeGen.visit(func.belong);
             if (!onePass(func)) break;
+            cnt++;
+        }
     }
 }

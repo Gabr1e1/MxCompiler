@@ -22,6 +22,7 @@
       <w>preds</w>
       <w>prog</w>
       <w>progbits</w>
+      <w>sccp</w>
       <w>sdata</w>
       <w>sdiv</w>
       <w>sema</w>

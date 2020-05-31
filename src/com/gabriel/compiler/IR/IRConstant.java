@@ -16,16 +16,19 @@ public class IRConstant {
         public ConstInteger(int num) {
             super("const", new IRType.IntegerType("int"));
             this.num = num;
+            this.lattice.setConst(num);
         }
 
         public ConstInteger(int num, String type) {
             super("const", new IRType.IntegerType(type));
             this.num = num;
+            this.lattice.setConst(num);
         }
 
         public ConstInteger(int num, IRType.Type type) {
             super("const", type);
             this.num = num;
+            this.lattice.setConst(num);
         }
 
         @Override
@@ -140,6 +143,7 @@ public class IRConstant {
 
     public static class Function extends Constant {
         public List<BasicBlock> blocks = new ArrayList<>();
+        public Module belong;
 
         Function(String name, IRType.Type type) {
             super(name, type);

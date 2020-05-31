@@ -193,9 +193,9 @@ public class AsmInst {
             this.target = func;
             //Implicit use for arg registers and def for all caller-save registers
 //            System.err.printf("%s's arg num: %d\n", func.label, func.getArgCount());
-//            for (int i = 0; i < min(8, func.getArgCount()); i++) {
-//                addUse(Register.Machine.get("a" + i));
-//            }
+            for (int i = 0; i < min(8, func.getArgCount()); i++) {
+                addUse(Register.Machine.get("a" + i));
+            }
             for (var arg : Register.Machine.callerSave.keySet()) {
                 addDef(Register.Machine.get(arg));
             }

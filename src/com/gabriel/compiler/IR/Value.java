@@ -5,6 +5,70 @@ import java.util.List;
 import java.util.Map;
 
 public class Value {
+    public enum Lattice {UPPER, LOWER, CONST}
+
+    public static class ConditionalLattice {
+        public Lattice type;
+        public int value;
+
+        public ConditionalLattice() {
+            type = Lattice.UPPER;
+        }
+
+        public ConditionalLattice(Lattice type) {
+            this.type = type;
+        }
+
+        public ConditionalLattice(ConditionalLattice other) {
+            this.type = other.type;
+            this.value = other.value;
+        }
+
+        public static ConditionalLattice and(ConditionalLattice left, ConditionalLattice right) {
+            if (left.type == Lattice.LOWER) return new ConditionalLattice(Lattice.LOWER);
+            if (right.type == Lattice.LOWER) return new ConditionalLattice(Lattice.LOWER);
+
+            if (left.type == Lattice.UPPER) return new ConditionalLattice(right);
+            if (right.type == Lattice.UPPER) return new ConditionalLattice(left);
+
+            assert left.type == Lattice.CONST && right.type == Lattice.CONST;
+            if (left.value != right.value) return new ConditionalLattice(Lattice.LOWER);
+            else return new ConditionalLattice(right);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            return type == ((ConditionalLattice) obj).type && value == ((ConditionalLattice) obj).value;
+        }
+
+        public boolean isUpper() {
+            return type == Lattice.UPPER;
+        }
+
+        public boolean isLower() {
+            return type == Lattice.LOWER;
+        }
+
+        public boolean isConst() {
+            return type == Lattice.CONST;
+        }
+
+        public void setUpper() {
+            type = Lattice.UPPER;
+        }
+
+        public void setLower() {
+            type = Lattice.LOWER;
+        }
+
+        public void setConst(int num) {
+            this.type = Lattice.CONST;
+            this.value = num;
+        }
+    }
+
     static Map<String, Integer> counter = new HashMap<>();
     static int label = 0;
 
@@ -12,6 +76,7 @@ public class Value {
     public String name;
     public IRType.Type type;
     public Use user;
+    public ConditionalLattice lattice = new ConditionalLattice();
 
     public String gen(String name) {
         int cnt = 0;
@@ -44,6 +109,7 @@ public class Value {
         this.type = other.type;
         this.name = noName() ? "" : gen(this.originalName);
         this.user = new Use();
+        this.lattice = other.lattice;
     }
 
     public void duplicate(Value other) {

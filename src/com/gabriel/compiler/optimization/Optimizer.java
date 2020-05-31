@@ -34,10 +34,15 @@ public class Optimizer {
     public void useDefaultPass() {
         addPass(new Global2Local());
         addPass(new Mem2Reg());
-        addPass(new MSDCE());
-        addPass(new CFGSimplifier());
-        addPass(new InlineFunction(), new MSDCE(), new CFGSimplifier());
-        addPass(new InlineFunction(), new MSDCE(), new CFGSimplifier());
+
+        addPass(new SCCP(), new MSDCE(), new CFGSimplifier());
+        addPass(new InlineFunction());
+
+        for (int i = 0; i < 5; i++) {
+            addPass(new SCCP());
+            addPass(new MSDCE());
+            addPass(new CFGSimplifier());
+        }
     }
 
     public void optimize() {

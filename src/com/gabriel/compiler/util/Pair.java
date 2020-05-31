@@ -19,6 +19,6 @@ public class Pair<U, V> {
 
     @Override
     public int hashCode() {
-        return first.hashCode() ^ second.hashCode();
+        return (first != null ? first.hashCode() : 0) + (second != null ? second.hashCode() : 0);
     }
 }

@@ -21,7 +21,7 @@ import static java.lang.System.exit;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String path = "./testcases/codegen/t55.mx";
+        String path = "code.mx"; //"./testcases/codegen/t35.mx";
 
         //        Build Concrete Syntax Tree
         CharStream code = CharStreams.fromFileName(args.length != 0 ? args[0] : path);

@@ -111,7 +111,7 @@ public class BasicBlock extends Value {
                 hoistList.add(inst);
             }
         }
-        hoistList.forEach(this::delInst);
+        hoistList.forEach(inst -> instructions.remove(inst));
         hoistList.forEach(this::addInstToFront);
     }
 

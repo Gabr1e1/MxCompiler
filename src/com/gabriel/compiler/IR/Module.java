@@ -21,6 +21,7 @@ public class Module {
 
     void addFunction(IRConstant.Function function) {
         functions.add(function);
+        function.belong = this;
     }
 
     public void delFunction(IRConstant.Function function) {

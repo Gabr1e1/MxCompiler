@@ -1,6 +1,6 @@
-int fun() {
-    return 0;
-}
+#include <iostream>
+using namespace std;
+
 int main() {
-    return fun();
+    cout << (51810 << 16) << endl;
 }

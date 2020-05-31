@@ -189,15 +189,12 @@ public class IRType {
             this.params = params;
             this.returnType = returnType;
             this.funcName = funcName;
+            for (var p : params) p.lattice.setLower();
         }
 
         @Override
         public Object accept(IRVisitor visitor) {
             return visitor.visit(this);
-        }
-
-        void addFront(Value v) {
-            params.add(0, v);
         }
     }
 
