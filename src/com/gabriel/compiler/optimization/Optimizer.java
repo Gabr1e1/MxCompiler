@@ -36,9 +36,9 @@ public class Optimizer {
         addPass(new Mem2Reg());
 
         addPass(new SCCP(), new MSDCE(), new CFGSimplifier());
-        addPass(new InlineFunction());
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 2; i++) {
+            addPass(new InlineFunction());
             addPass(new SCCP());
             addPass(new MSDCE());
             addPass(new CFGSimplifier());

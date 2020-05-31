@@ -376,6 +376,13 @@ public class IRInst {
             super("M", to, belong);
             addOperand(from);
             this.to = to;
+            this.lattice.setUpper();
+        }
+
+        @Override
+        public void propagate() {
+            var lattice = operands.get(0).lattice;
+            this.lattice = new Value.ConditionalLattice(lattice);
         }
 
         @Override
