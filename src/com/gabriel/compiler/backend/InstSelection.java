@@ -219,6 +219,14 @@ public class InstSelection implements IRVisitor {
             return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
         }
 
+        if (op.equals("rem")) {
+            if (rhs instanceof IRConstant.ConstInteger && isPowerOfTwo(((IRConstant.ConstInteger) rhs).num)) {
+                var p = ((IRConstant.ConstInteger) rhs).num - 1;
+                return new AsmInst.ComputeRegImm("and", getRegister(lhs), p, dest, curBlock);
+            }
+            return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
+        }
+
         if (mustReg(op))
             return new AsmInst.ComputeRegReg(op, getRegister(lhs), getRegister(rhs), dest, curBlock);
 
@@ -307,7 +315,8 @@ public class InstSelection implements IRVisitor {
                         inst.operands.get(i).getType().getByteNum(), curBlock);
             }
         }
-        new AsmInst.call(func, curBlock);
+//        inst.checkTailCall();
+        new AsmInst.call(func, curBlock, inst.tail);
 
         //Get Return Value
         var ret = getRegister(inst);

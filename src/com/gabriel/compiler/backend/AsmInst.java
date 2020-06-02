@@ -57,6 +57,10 @@ public class AsmInst {
             belong.addInst(this);
         }
 
+        public String print() {
+            return (String) (new AsmPrinter()).visit(this);
+        }
+
         public Set<Register.base> getDef() {
             return def;
         }
@@ -149,15 +153,18 @@ public class AsmInst {
 
     public static class load extends Instruction {
         private static final Map<Integer, String> width = Map.of(1, "lb", 2, "lh", 4, "lw");
+        public int byteNum;
 
         public load(Register.base baseAddr, int offset, int byteNum, Register.base rd, AsmStruct.Block belong) {
             super(baseAddr, null, rd, offset, width.get(byteNum), belong);
             assert width.containsKey(byteNum);
+            this.byteNum = byteNum;
         }
 
         public load(Register.base baseAddr, String offset, int byteNum, Register.base rd, AsmStruct.Block belong) {
             super(baseAddr, null, rd, offset, width.get(byteNum), belong);
             assert width.containsKey(byteNum);
+            this.byteNum = byteNum;
         }
 
         @Override
@@ -168,15 +175,19 @@ public class AsmInst {
 
     public static class store extends Instruction {
         private static final Map<Integer, String> width = Map.of(1, "sb", 2, "sh", 4, "sw");
+        public int byteNum;
 
         public store(Register.base src, Register.base baseAddr, int offset, int byteNum, AsmStruct.Block belong) {
             super(baseAddr, src, null, offset, width.get(byteNum), belong);
             assert width.containsKey(byteNum);
+            this.byteNum = byteNum;
+
         }
 
         public store(Register.base src, Register.base baseAddr, String offset, int byteNum, AsmStruct.Block belong) {
             super(baseAddr, src, null, offset, width.get(byteNum), belong);
             assert width.containsKey(byteNum);
+            this.byteNum = byteNum;
         }
 
         @Override
@@ -187,10 +198,12 @@ public class AsmInst {
 
     public static class call extends Instruction {
         AsmStruct.Function target;
+        boolean tail;
 
-        public call(AsmStruct.Function func, AsmStruct.Block belong) {
+        public call(AsmStruct.Function func, AsmStruct.Block belong, boolean tail) {
             super(belong);
             this.target = func;
+            this.tail = tail;
             //Implicit use for arg registers and def for all caller-save registers
 //            System.err.printf("%s's arg num: %d\n", func.label, func.getArgCount());
             for (int i = 0; i < min(8, func.getArgCount()); i++) {

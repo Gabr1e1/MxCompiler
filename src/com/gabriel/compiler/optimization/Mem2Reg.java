@@ -109,7 +109,7 @@ public class Mem2Reg extends Optimizer.runOnFunction {
                 for (var frontier : curDF) {
                     if (vis.contains(frontier)) continue;
                     //Insert in frontier block
-                    System.err.printf("Added Phi Node in %s for %s\n", frontier, defs.get(0).getName());
+//                    System.err.printf("Added Phi Node in %s for %s\n", frontier, defs.get(0).getName());
                     new IRInst.PhiInst(defs.get(0).getName(), IRType.dePointer(defs.get(0).getType()), frontier);
                     //Iterative Dominance Frontier
                     blocks.add(frontier);

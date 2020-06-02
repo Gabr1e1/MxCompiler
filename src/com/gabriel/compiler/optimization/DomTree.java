@@ -96,6 +96,12 @@ public class DomTree {
         return corres.get(block);
     }
 
+    public List<BasicBlock> getChildrenBlocks(BasicBlock block) {
+        var ret = new ArrayList<BasicBlock>();
+        corres.get(block).children.forEach(child -> ret.add(child.block));
+        return ret;
+    }
+
     public void print() {
         for (var block : rpo) {
             System.out.printf("IDom of %s is %s\n",

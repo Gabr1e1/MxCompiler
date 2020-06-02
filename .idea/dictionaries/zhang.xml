@@ -6,7 +6,10 @@
       <w>asciz</w>
       <w>ashr</w>
       <w>bitcast</w>
+      <w>conststr</w>
       <w>corres</w>
+      <w>downgradable</w>
+      <w>dvnt</w>
       <w>funct</w>
       <w>getelementptr</w>
       <w>globl</w>
@@ -28,7 +31,9 @@
       <w>sema</w>
       <w>seqz</w>
       <w>sext</w>
+      <w>slli</w>
       <w>snez</w>
+      <w>srai</w>
       <w>srem</w>
       <w>subi</w>
       <w>succ</w>
@@ -36,6 +41,7 @@
       <w>usee</w>
       <w>vregs</w>
       <w>worklist</w>
+      <w>xori</w>
     </words>
   </dictionary>
 </component>

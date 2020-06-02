@@ -43,10 +43,12 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
             for (var inst : succ.instructions) {
                 if (inst instanceof IRInst.PhiInst) {
 //                    if (!inst.operands.contains(block)) continue;
-                    System.err.printf("Before: %s\n", inst.print());
+//                    System.err.printf("Before: %s\n", inst.print());
 //                    System.err.println(block.getName());
 
                     int i = inst.operands.indexOf(block);
+                    if (i == -1) continue;
+
                     var v = inst.operands.get(i - 1);
                     pred.forEach((b) -> ((IRInst.PhiInst) inst).addIncoming(v, b));
 
@@ -55,7 +57,7 @@ public class CFGSimplifier extends Optimizer.runOnFunction {
                         inst.delOperand(block);
                     }
 
-                    System.err.printf("After: %s\n", inst.print());
+//                    System.err.printf("After: %s\n", inst.print());
                 }
             }
             block.replaceAllUsesWith(succ);

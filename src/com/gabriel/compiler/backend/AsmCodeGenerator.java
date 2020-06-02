@@ -18,10 +18,14 @@ public class AsmCodeGenerator {
 //        (new AsmPrinter("./testcases/mycode-before.s")).visit(program);
         System.err.println("Instruction Selection Done");
 
+//        new Peephole(program, false);
+
         //Register Allocation
         new RegAllocator(program);
         program.cleanUp();
+        new Peephole(program, true);
+
         (new AsmPrinter("./output.s")).visit(program);
-        System.err.println("Register Allocation Done");
+        System.err.println("Compilation Done");
     }
 }

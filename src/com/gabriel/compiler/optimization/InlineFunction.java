@@ -7,17 +7,26 @@ import com.gabriel.compiler.util.Pair;
 import java.util.*;
 
 public class InlineFunction extends Optimizer.runOnModule {
-    final int DEPTH = 2;
-    final int THRESHOLD = 100;
-    final int LIMIT = 30;
+    final int DEPTH = 1;
+    final int THRESHOLD = 150;
+    final int LIMIT = 40;
 
-    private Set<IRConstant.Function> find(Module module) {
-        var ret = new HashSet<IRConstant.Function>();
+    static class FuncComparator implements Comparator<IRConstant.Function> {
+        @Override
+        public int compare(IRConstant.Function o1, IRConstant.Function o2) {
+            return Integer.compare(o1.getInstCount(), o2.getInstCount());
+        }
+    }
+
+    private List<IRConstant.Function> find(Module module) {
+        var set = new HashSet<IRConstant.Function>();
         for (var func : module.functions) {
             if (func.getInstCount() < THRESHOLD && func.ableToInline()) {
-                ret.add(func);
+                set.add(func);
             }
         }
+        var ret = new ArrayList<>(set);
+        ret.sort(new FuncComparator());
         return ret;
     }
 
@@ -98,6 +107,22 @@ public class InlineFunction extends Optimizer.runOnModule {
             corres.put(origBlock, newBlock);
         }
         new IRInst.BranchInst((BasicBlock) corres.get(entry), first);
+
+        //Copy old inst to new function
+        copy(blocks);
+
+        var exitBlock = ((BasicBlock) corres.get(exit));
+        for (var inst : exitBlock.instructions) {
+            if (inst instanceof IRInst.ReturnInst) {
+                callSite.replaceAllUsesWith(inst.getOperand(0));
+                exitBlock.delInst(inst);
+                break;
+            }
+        }
+        new IRInst.BranchInst(second, exitBlock);
+    }
+
+    private void copy(List<BasicBlock> blocks) {
         //Step 1: gather information
         for (var origBlock : blocks) {
             var curBlock = (BasicBlock) corres.get(origBlock);
@@ -112,16 +137,32 @@ public class InlineFunction extends Optimizer.runOnModule {
                 replace(origInst, curBlock);
             }
         }
+    }
 
-        var exitBlock = ((BasicBlock) corres.get(exit));
-        for (var inst : exitBlock.instructions) {
-            if (inst instanceof IRInst.ReturnInst) {
-                callSite.replaceAllUsesWith(inst.getOperand(0));
-                exitBlock.delInst(inst);
-                break;
-            }
+//    static Map<IRConstant.Function, IRConstant.Function> backup = new HashMap<>();
+
+    private IRConstant.Function getBackup(IRConstant.Function func) {
+//        if (backup.get(func) != null) return backup.get(func);
+
+        var curFunc = new IRConstant.Function(func.name, func.type);
+        var newParams = new ArrayList<Value>();
+        for (var param : ((IRType.FunctionType) func.type).params) {
+            var n = new Value(param);
+            corres.put(param, n);
+            newParams.add(n);
         }
-        new IRInst.BranchInst(second, exitBlock);
+        curFunc.type = new IRType.FunctionType(newParams, ((IRType.FunctionType) func.type).returnType, curFunc.name);
+
+        //Same as above
+        for (var origBlock : func.blocks) {
+            var newBlock = new BasicBlock(origBlock.getName(), curFunc);
+            corres.put(origBlock, newBlock);
+        }
+        copy(func.blocks);
+        corres.clear();
+
+//        backup.put(func, curFunc);
+        return curFunc;
     }
 
     private void inline(IRConstant.Function inlineTarget) {
@@ -131,8 +172,10 @@ public class InlineFunction extends Optimizer.runOnModule {
         for (var callSite : new HashSet<>(callSites)) {
             corres.clear();
             assert callSite instanceof IRInst.CallInst;
-            //TODO: RECURSION INLINE
-            if (((IRInst.CallInst) callSite).belong.belong == inlineTarget) continue;
+
+            //In order to do inline for recursive function
+            inlineTarget = getBackup(inlineTarget);
+
             rewrite((IRInst.CallInst) callSite, inlineTarget);
             ((IRInst.CallInst) callSite).belong.delInst((IRInst.CallInst) callSite);
             if (++cnt > LIMIT) break;
@@ -141,6 +184,7 @@ public class InlineFunction extends Optimizer.runOnModule {
 
     @Override
     void exec(Module module) {
+//        backup.clear();
         for (int i = 0; i < DEPTH; i++) {
             var funcToInline = find(module);
             funcToInline.forEach(this::inline);

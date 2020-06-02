@@ -185,7 +185,7 @@ public class IRType {
         public Type returnType;
         String funcName;
 
-        FunctionType(List<Value> params, Type returnType, String funcName) {
+        public FunctionType(List<Value> params, Type returnType, String funcName) {
             this.params = params;
             this.returnType = returnType;
             this.funcName = funcName;

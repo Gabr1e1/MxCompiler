@@ -48,6 +48,7 @@ public class IRBuilder implements ASTVisitor {
                     args.add(new Value("_", IRType.convert(t[i])));
                 }
                 var func = new IRConstant.Function(funcName, new IRType.FunctionType(args, returnType, funcName));
+                func.setAsBuiltin();
                 line = reader.readLine();
                 module.builtin.add(new Pair<>(func, line));
                 builtin.put(funcName, func);
@@ -654,7 +655,6 @@ public class IRBuilder implements ASTVisitor {
             rhs = loadUntilType(rhs, 1);
             node.val = new IRInst.CallInst(func, Arrays.asList(lhs, rhs), curBlock);
         } else {
-            //TODO: SHITTY CODE
             if (rhs instanceof IRConstant.Null) {
                 lhs = loadTimes(lhs, 1);
                 rhs = new IRConstant.Null(lhs.type);
@@ -670,14 +670,13 @@ public class IRBuilder implements ASTVisitor {
         return node.val;
     }
 
-
     @Override
     public Object visit(ASTNode.LogicExpression node) {
-        //TODO: RHS Could jump directly to the global short_circuit block, instead of jumping several times between different sc blocks
         Value lhs = loadTimes((Value) node.expr1.accept(this), 1);
         //Short circuit eval
         BasicBlock cont = new BasicBlock("continue", curFunc);
         BasicBlock short_circuit = new BasicBlock("short_circuit", curFunc);
+
         var logic = new IRInst.AllocaInst("", new IRType.IntegerType("bool"), curBlock);
         new IRInst.StoreInst(logic, lhs, curBlock);
 

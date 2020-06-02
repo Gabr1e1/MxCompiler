@@ -144,8 +144,9 @@ public class IRConstant {
     public static class Function extends Constant {
         public List<BasicBlock> blocks = new ArrayList<>();
         public Module belong;
+        public boolean builtin = false;
 
-        Function(String name, IRType.Type type) {
+        public Function(String name, IRType.Type type) {
             super(name, type);
         }
 
@@ -177,7 +178,7 @@ public class IRConstant {
         }
 
         public boolean ableToInline() {
-            return isNormal() && !getName().equals("main");
+            return isNormal() && !getName().equals("main") && !getName().equals("__global_init");
         }
 
         public int getInstCount() {
@@ -206,6 +207,20 @@ public class IRConstant {
             }
             assert false;
             return null;
+        }
+
+        public void setAsBuiltin() {
+            this.builtin = true;
+        }
+
+        public boolean mayHaveSideEffects() {
+            if (builtin) return true;
+            for (var block : blocks) {
+                for (var inst : block.instructions) {
+                    if (IRInst.mayHaveSideEffects(inst)) return true;
+                }
+            }
+            return false;
         }
 
         @Override

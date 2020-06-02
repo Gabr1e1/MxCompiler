@@ -2,6 +2,8 @@ package com.gabriel.compiler.backend;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AsmPrinter implements AsmVisitor {
     String filename;
@@ -15,6 +17,10 @@ public class AsmPrinter implements AsmVisitor {
         } catch (IOException e) {
             System.out.println("Can't even create a fucking file");
         }
+    }
+
+    public AsmPrinter() {
+        /* EMPTY */
     }
 
     public void finish() {
@@ -38,6 +44,8 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmStruct.Program program) {
+        visited = new HashSet<>();
+
         writeCode(".text", true);
         for (var func : program.functions) {
             func.accept(this);
@@ -64,21 +72,51 @@ public class AsmPrinter implements AsmVisitor {
         return null;
     }
 
+    Set<AsmStruct.Block> visited;
+
+    private void dfs(AsmStruct.Block block) {
+        if (visited.contains(block)) return;
+        visited.add(block);
+        AsmStruct.Block next = null;
+        if (block.instructions.get(block.instructions.size() - 1) instanceof AsmInst.jump) {
+            next = ((AsmInst.jump) block.instructions.get(block.instructions.size() - 1)).target;
+            if (!visited.contains(next))
+                block.instructions.remove(block.instructions.size() - 1);
+        }
+        block.accept(this);
+        writeCode("", false);
+
+        if (next != null) dfs(next);
+
+        for (var inst : block.instructions) {
+            if (inst instanceof AsmInst.branch) {
+                dfs(((AsmInst.branch) inst).target);
+            }
+        }
+
+        for (int i = 0; i < block.instructions.size() - 2; i++) {
+            assert !(block.instructions.get(i) instanceof AsmInst.jump);
+        }
+    }
+
     @Override
     public Object visit(AsmStruct.Function func) {
         writeCode(".globl " + func.label, true);
         writeCode(".p2align	2", true);
         writeCode(".type " + func.label + ", @function", true);
         writeCode(func.label + ":", false);
-        for (var block : func.blocks) {
-            block.accept(this);
-            writeCode("", false);
-        }
+        dfs(func.blocks.get(0));
+
+//        for (var block : func.blocks) {
+//            block.accept(this);
+//            writeCode("", false);
+//        }
         return null;
     }
 
     @Override
     public Object visit(AsmStruct.Block block) {
+
         if (!block.isFirst()) writeCode(block.label + ":", false);
         for (var inst : block.instructions) {
             writeCode(inst.accept(this), true);
@@ -88,9 +126,7 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.Instruction inst) {
-        System.err.println("Missing overrode method for " + inst);
-        assert false;
-        return null;
+        return inst.accept(this);
     }
 
     @Override
@@ -146,7 +182,7 @@ public class AsmPrinter implements AsmVisitor {
 
     @Override
     public Object visit(AsmInst.call inst) {
-        return String.format("call %s", inst.target);
+        return inst.tail ? String.format("tail call %s", inst.target) : String.format("call %s", inst.target);
     }
 
     @Override

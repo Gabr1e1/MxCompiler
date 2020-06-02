@@ -153,7 +153,6 @@ public class SSADestructor {
     }
 
     public void exec(IRConstant.Function func) {
-        //TODO: maybe shouldn't split all critical edges
         splitCriticalEdge(func);
         knitPhiWeb(func);
         func.blocks.forEach(this::parallel2seq);

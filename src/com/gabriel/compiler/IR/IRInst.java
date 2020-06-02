@@ -6,6 +6,7 @@ import com.gabriel.compiler.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class IRInst {
     public abstract static class Instruction extends User implements Cloneable {
@@ -43,6 +44,10 @@ public class IRInst {
 
         public void propagate() {
             /* EMPTY */
+        }
+
+        public boolean isCommutative() {
+            return false;
         }
     }
 
@@ -120,18 +125,18 @@ public class IRInst {
     }
 
     public static class BinaryOpInst extends Instruction {
-        private static Map<String, String> OpMap = Map.ofEntries(Map.entry("+", "add"), Map.entry("-", "sub"),
+        private static final Map<String, String> OpMap = Map.ofEntries(Map.entry("+", "add"), Map.entry("-", "sub"),
                 Map.entry("*", "mul"), Map.entry("/", "sdiv"), Map.entry("%", "srem"),
                 Map.entry("<<", "shl"), Map.entry(">>", "ashr"),
                 Map.entry("&", "and"), Map.entry("|", "or"), Map.entry("^", "xor"),
                 Map.entry("&&", "and"), Map.entry("||", "or"));
-        private static Map<String, String> AsmMap = Map.ofEntries(Map.entry("+", "add"), Map.entry("-", "sub"),
+        private static final Map<String, String> AsmMap = Map.ofEntries(Map.entry("+", "add"), Map.entry("-", "sub"),
                 Map.entry("*", "mul"), Map.entry("/", "div"), Map.entry("%", "rem"),
                 Map.entry("<<", "sll"), Map.entry(">>", "sra"),
                 Map.entry("&", "and"), Map.entry("|", "or"), Map.entry("^", "xor"),
                 Map.entry("&&", "and"), Map.entry("||", "or"));
 
-        String op;
+        public String op;
 
         BinaryOpInst(Value lhs, Value rhs, String op, BasicBlock belong) {
             super("T", lhs.type, belong);
@@ -206,6 +211,13 @@ public class IRInst {
                 else this.lattice.setLower();
 //                System.err.printf("%s is constant %d\n", this.print(), c);
             }
+        }
+
+        private static final Set<String> commutative = Set.of("+", "-", "*", "&", "|", "^", "&&", "||");
+
+        @Override
+        public boolean isCommutative() {
+            return commutative.contains(op);
         }
     }
 
@@ -284,6 +296,13 @@ public class IRInst {
 //                System.err.printf("%s is constant %d\n", this.print(), c ? 1 : 0);
             }
         }
+
+        private static final Set<String> commutative = Set.of("==", "!=");
+
+        @Override
+        public boolean isCommutative() {
+            return commutative.contains(op);
+        }
     }
 
     public static class StoreInst extends Instruction {
@@ -330,10 +349,25 @@ public class IRInst {
 
     public static class CallInst extends Instruction {
 
+        public boolean tail = false;
+
         CallInst(IRConstant.Function func, List<Value> args, BasicBlock belong) {
             super("call_" + func.name, ((IRType.FunctionType) func.type).returnType, belong);
             addOperand(func);
             addOperand(args);
+        }
+
+        public void checkTailCall() {
+            if (belong.instructions.indexOf(this) + 1 == belong.instructions.size() - 1) {
+                var last = belong.instructions.get(belong.instructions.size() - 1);
+                if (last instanceof IRInst.ReturnInst) {
+                    if (last.operands.get(0) == this) {
+                        System.err.println("Tail Call Optimized");
+                        tail = true;
+//                        assert false;
+                    }
+                }
+            }
         }
 
         @Override

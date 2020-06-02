@@ -20,6 +20,12 @@ public class MSDCE extends Optimizer.runOnFunction {
     private final Set<BasicBlock> markedBlocks = new HashSet<>();
     private DomTree rdf;
 
+    private void init() {
+        workList.clear();
+        marked.clear();
+        markedBlocks.clear();
+    }
+
     private void mark(IRConstant.Function func) {
         rdf = new DomTree(func.getExitBlock(), true);
 
@@ -80,13 +86,14 @@ public class MSDCE extends Optimizer.runOnFunction {
                     if (inst.operands.size() == 1) continue;
                     //Jump to nearest marked postdominator
                     boolean found = false;
-                    for (var node = rdf.getDomNode(block).father; node != null && node != node.father; node = node.father) {
+                    for (var node = rdf.getDomNode(block).father; node != null; node = node.father) {
                         if (markedBlocks.contains(node.block)) {
                             originalInst = inst;
                             newInstBlock = node.block;
                             found = true;
                             break;
                         }
+                        if (node == node.father) break;
                     }
                     assert found;
                 } else {
@@ -104,6 +111,7 @@ public class MSDCE extends Optimizer.runOnFunction {
 
     @Override
     void exec(IRConstant.Function func) {
+        init();
         mark(func);
         sweep(func);
     }

@@ -135,6 +135,8 @@ public class AsmStruct {
         }
 
         public void moveInst(AsmInst.Instruction inst, int targetIndex) {
+            if ((!instructions.contains(inst)) || targetIndex < 0 || targetIndex >= instructions.size())
+                return;
             instructions.remove(inst);
             instructions.add(targetIndex, inst);
         }

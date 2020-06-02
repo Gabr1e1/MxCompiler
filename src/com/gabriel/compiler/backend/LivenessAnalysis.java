@@ -39,7 +39,7 @@ public class LivenessAnalysis {
 
                 var newOut = new HashSet<Register.base>();
                 for (var succ : block.getSuccessor()) {
-                    newOut.addAll(liveIn.get(succ));
+                    newOut.addAll(liveIn.getOrDefault(succ, new HashSet<>()));
                 }
                 flg |= !newOut.equals(liveOut.get(block));
                 liveOut.put(block, newOut);

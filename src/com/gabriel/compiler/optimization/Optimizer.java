@@ -31,17 +31,31 @@ public class Optimizer {
         optims.addAll(Arrays.asList(pass));
     }
 
+    public void bundle() {
+//        for (int i = 0; i < 3; i++) {
+        addPass(new SCCP());
+        addPass(new MSDCE());
+        addPass(new DVNT());
+        addPass(new CFGSimplifier());
+//        }
+    }
+
     public void useDefaultPass() {
-        addPass(new Global2Local());
+        for (int i = 0; i < 2; i++) bundle();
+
         addPass(new Mem2Reg());
 
-        addPass(new SCCP(), new MSDCE(), new CFGSimplifier());
+        for (int i = 0; i < 2; i++) bundle();
 
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 1; i++) {
+            addPass(new Global2Local());
+            bundle();
+            addPass(new Mem2Reg());
+        }
+
+        for (int i = 0; i < 3; i++) {
             addPass(new InlineFunction());
-            addPass(new SCCP());
-            addPass(new MSDCE());
-            addPass(new CFGSimplifier());
+            bundle();
         }
     }
 
