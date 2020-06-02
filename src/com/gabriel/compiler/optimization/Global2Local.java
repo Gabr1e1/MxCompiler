@@ -56,6 +56,12 @@ public class Global2Local extends Optimizer.runOnModule {
                             int orig = mark.get(func).size();
                             mark.get(func).addAll(mark.get(callee));
                             changed |= orig != mark.get(func).size();
+
+                            orig = loadOnly.get(func).size();
+                            var tmp = new HashSet<>(gv);
+                            tmp.removeAll(loadOnly.get(callee));
+                            loadOnly.get(func).removeAll(tmp);
+                            changed |= orig != loadOnly.get(func).size();
                         }
                     }
                 }
@@ -71,11 +77,10 @@ public class Global2Local extends Optimizer.runOnModule {
     }
 
     private boolean isDowngradable(IRConstant.Function func, IRConstant.GlobalVariable variable) {
+        if (loadOnly.get(func).contains(variable)) return true;
         for (var block : func.blocks) {
             for (var inst : block.instructions) {
                 if (inst instanceof IRInst.CallInst) {
-                    if (loadOnly.get((IRConstant.Function) inst.operands.get(0)).contains(variable)
-                            && loadOnly.get(func).contains(variable)) continue;
                     if (mark.get((IRConstant.Function) inst.operands.get(0)).contains(variable)) return false;
                 }
             }
